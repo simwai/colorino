@@ -1,0 +1,27 @@
+{
+  "env": {
+    "node": true,
+    "es2024": true
+  },
+  "rules": {
+    "suspicious/no-empty-interface": "warn",
+    "correctness/no-unreachable": "error",
+    "correctness/no-constant-condition": "warn",
+    "correctness/no-duplicate-case": "error",
+    "correctness/no-self-compare": "error",
+    "correctness/no-unsafe-optional-chaining": "warn",
+    "correctness/use-isnan": "error",
+    "style/no-debugger": "warn",
+    "style/no-lonely-if": "warn",
+    "style/no-var": "error",
+    "performance/no-accumulating-spread": "warn",
+    "eslint/no-control-regex": "off"
+  },
+  "ignorePatterns": [
+    "node_modules",
+    "dist",
+    "coverage",
+    "build",
+    "*.min.js"
+  ]
+}

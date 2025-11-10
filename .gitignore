@@ -1,0 +1,96 @@
+# Dependencies
+node_modules/
+pnpm-lock.yaml
+yarn.lock
+package-lock.json
+.pnpm-store/
+
+# Build outputs
+dist/
+build/
+*.tsbuildinfo
+.unbuild/
+
+# Test coverage
+coverage/
+.nyc_output/
+*.lcov
+
+# Vitest
+.vitest/
+
+# IDE & Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+*.sublime-workspace
+*.sublime-project
+.env.local
+.env.*.local
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+.env.production
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+pnpm-debug.log*
+
+# Runtime
+tmp/
+temp/
+*.pid
+*.pid.lock
+.cache/
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+
+# Temporary files
+*.tmp
+*.bak
+*.swp
+*~
+
+# System
+Thumbs.db
+.env.example
+
+# Turbo
+.turbo/
+
+# Editor directories and files
+.idea/
+.vscode
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Husky
+.husky/_/
+
+# Misc
+.eslintcache
+.stylelintcache
+*.tsbuildinfo
+dist
+dist-ssr
+out

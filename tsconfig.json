@@ -1,0 +1,15 @@
+{
+  "extends": "@sindresorhus/tsconfig",
+  "compilerOptions": {
+    "erasableSyntaxOnly": false
+  },
+  "include": [
+    "src/**/*",
+    "src/tests/**/*",
+    "build.config.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist"
+  ]
+}
