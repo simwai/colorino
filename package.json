@@ -20,14 +20,19 @@
   "bugs": {
     "url": "https://github.com/simwai/colorino/issues"
   },
-  "main": "./dist/colorino.cjs",
-  "module": "./dist/colorino.mjs",
-  "types": "./dist/colorino.d.ts",
+  "main": "./dist/node.cjs",
+  "module": "./dist/browser.mjs",
+  "types": "./dist/browser.d.ts",
   "exports": {
-    ".": {
-      "types": "./dist/colorino.d.ts",
-      "import": "./dist/colorino.mjs",
-      "require": "./dist/colorino.cjs"
+    "node": {
+      "types": "./dist/node.d.ts",
+      "import": "./dist/node.mjs",
+      "require": "./dist/node.cjs"
+    },
+    "browser": {
+      "types": "./dist/browser.d.ts",
+      "import": "./dist/browser.mjs",
+      "require": "./dist/browser.cjs"
     }
   },
   "files": [

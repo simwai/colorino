@@ -5,7 +5,10 @@ export default defineConfig({
     globals: true,
     environment: 'jsdom',
     // Only run browser tests
-    include: ['src/tests/browser/**/*.spec.ts'],
+    include: [
+      'src/tests/browser/**/*.spec.ts',
+      'src/tests/shared/**/*.spec.ts'
+    ],
     exclude: ['node_modules/', 'dist/'],
     coverage: {
       provider: 'v8',

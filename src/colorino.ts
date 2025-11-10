@@ -12,7 +12,8 @@ import { InputValidator } from './input-validator.js'
 
 export class Colorino {
   private _alreadyWarned = false
-  private _colorLevel: ColorLevel | 'UnknownEnv'
+  private readonly _colorLevel: ColorLevel | 'UnknownEnv'
+  private readonly isBrowser: boolean
 
   constructor(
     private readonly _palette: Palette,
@@ -21,53 +22,20 @@ export class Colorino {
     private readonly _nodeColorSupportDetector?: NodeColorSupportDetector,
     private readonly _options: ColorinoOptions = {}
   ) {
+    this.isBrowser = !!this._browserColorSupportDetector
+
     this._colorLevel = this._detectColorSupport()
 
     const validatePaletteResult = this._validator.validatePalette(this._palette)
     if (validatePaletteResult.isErr()) throw validatePaletteResult.error
-
     if (
+      !this.isBrowser &&
       (this._colorLevel === ColorLevel.NO_COLOR ||
         this._colorLevel === 'UnknownEnv') &&
       !this._options.disableWarnings
     ) {
       this._maybeWarnUser()
     }
-  }
-
-  color(level: LogLevel, text: string): string {
-    const hex = this._palette[level]
-
-    let ansiCode: string
-
-    switch (this._colorLevel) {
-      case ColorLevel.TRUECOLOR: {
-        const [r, g, b] = colorConverter.hex.toRgb(hex)
-        ansiCode = `\x1b[38;2;${r};${g};${b}m`
-        break
-      }
-      case ColorLevel.ANSI256: {
-        const code = colorConverter.hex.toAnsi256(hex)
-        ansiCode = `\x1b[38;5;${code}m`
-        break
-      }
-      case ColorLevel.ANSI: {
-        const code = colorConverter.hex.toAnsi16(hex)
-        if (code < 38) {
-          ansiCode = `\x1b[${code}m`
-        } else {
-          ansiCode = `\x1b[${code}m`
-        }
-        break
-      }
-      case 'UnknownEnv': {
-        return text
-      }
-      default:
-        return text
-    }
-
-    return `${ansiCode}${text}\x1b[0m`
   }
 
   log(...args: unknown[]): void {
@@ -95,20 +63,12 @@ export class Colorino {
   }
 
   private _detectColorSupport(): ColorLevel | 'UnknownEnv' {
-    const isBrowserEnv = this._browserColorSupportDetector?.isBrowserEnv()
-    if (isBrowserEnv) {
-      this._colorLevel =
-        this._browserColorSupportDetector?.getColorLevel() ?? 'UnknownEnv'
-      return this._colorLevel
+    if (this.isBrowser) {
+      return this._browserColorSupportDetector?.getColorLevel() ?? 'UnknownEnv'
     }
-
-    const isNodeEnv = this._nodeColorSupportDetector?.isNodeEnv()
-    if (isNodeEnv) {
-      this._colorLevel =
-        this._nodeColorSupportDetector?.getColorLevel() ?? 'UnknownEnv'
-      return this._colorLevel
+    if (this._nodeColorSupportDetector?.isNodeEnv()) {
+      return this._nodeColorSupportDetector?.getColorLevel() ?? 'UnknownEnv'
     }
-
     return 'UnknownEnv'
   }
 
@@ -116,15 +76,57 @@ export class Colorino {
     if (this._alreadyWarned) return
     this._alreadyWarned = true
     console.warn(
-      '[Colorino] No ANSI color support detected in this terminal. See https://github.com/chalk/supports-color#support-matrix to learn how to enable terminal color.'
+      '[Colorino] No ANSI color support detected in this terminal. See [https://github.com/chalk/supports-color#support-matrix](https://github.com/chalk/supports-color#support-matrix) to learn how to enable terminal color.'
     )
   }
 
   private _out(level: LogLevel, args: unknown[]): void {
-    const processedArgs = args.map(arg =>
-      typeof arg === 'string' ? this.color(level, arg) : arg
-    )
-    if (isConsoleMethod(level)) console[level](...processedArgs)
-    else console.log(...processedArgs)
+    const consoleMethod = isConsoleMethod(level) ? level : 'log'
+    if (this._colorLevel === ColorLevel.NO_COLOR || this._colorLevel === 'UnknownEnv') {
+      if (level === 'trace') console.trace(...args)
+      else console[consoleMethod](...args)
+      return
+    }
+    if (this.isBrowser) {
+      const hex = this._palette[level]
+      if (typeof args[0] === 'string') {
+        console[consoleMethod](`%c${args[0]}`, `color:${hex}`, ...args.slice(1))
+      } else {
+        console[consoleMethod](...args)
+      }
+      return
+    }
+    const hex = this._palette[level]
+    let ansiCode: string
+
+    switch (this._colorLevel) {
+      case ColorLevel.TRUECOLOR: {
+        const [r, g, b] = colorConverter.hex.toRgb(hex)
+        ansiCode = `\x1b[38;2;${r};${g};${b}m`
+        break
+      }
+      case ColorLevel.ANSI256: {
+        const code = colorConverter.hex.toAnsi256(hex)
+        ansiCode = `\x1b[38;5;${code}m`
+        break
+      }
+      case ColorLevel.ANSI:
+      default: {
+        const code = colorConverter.hex.toAnsi16(hex)
+        ansiCode = `\x1b[${code}m`
+        break
+      }
+    }
+    const processedArgs = [...args]
+    const firstStringIndex = processedArgs.findIndex(arg => typeof arg === 'string')
+    if (firstStringIndex !== -1) {
+      processedArgs[firstStringIndex] = `${ansiCode}${processedArgs[firstStringIndex]}\x1b[0m`
+    }
+
+    if (level === 'trace') {
+      console.trace(...processedArgs);
+    } else {
+      console[consoleMethod](...processedArgs)
+    }
   }
 }

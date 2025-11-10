@@ -4,11 +4,13 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'node',
-    // Only run Node tests, skip browser
+    include: [
+      'src/tests/node/**/*.spec.ts',
+      'src/tests/shared/**/*.spec.ts'
+    ],
     exclude: [
       'node_modules/',
       'dist/',
-      'src/tests/browser/**/*.spec.ts', // Skip browser tests
     ],
     coverage: {
       provider: 'v8',

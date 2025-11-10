@@ -46,7 +46,7 @@ export function withEnv<T>(
 /**
  * Preset environments for common test scenarios
  */
-export const ENV_PRESETS = {
+export const envPresets = {
   // Force truecolor support
   TRUECOLOR: {
     FORCE_COLOR: '3',

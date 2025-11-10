@@ -1,6 +1,6 @@
 import type { Palette } from '../../types.js'
 
-const DEFAULT_PALETTE: Palette = {
+const defaultPalette: Palette = {
   log: '#ffffff',
   info: '#00ffff',
   warn: '#ffff00',
@@ -9,5 +9,5 @@ const DEFAULT_PALETTE: Palette = {
   debug: '#f1fa8c',
 }
 export function createTestPalette(overrides: Partial<Palette> = {}): Palette {
-  return { ...DEFAULT_PALETTE, ...overrides }
+  return { ...defaultPalette, ...overrides }
 }
