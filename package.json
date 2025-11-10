@@ -54,7 +54,14 @@
     "test:browser": "vitest run --config vitest.browser.config.ts",
     "test:coverage": "vitest run --config vitest.config.ts --coverage",
     "test:ui": "vitest --ui --config vitest.config.ts",
-    "prepublishonly": "npm run build && npm run test:all && npm run check",
+    "version:patch": "npm version patch",
+    "version:minor": "npm version minor",
+    "version:major": "npm version major",
+    "publish:patch": "npm run version:patch && npm publish --access public",
+    "publish:minor": "npm run version:minor && npm publish --access public",
+    "publish:major": "npm run version:major && npm publish --access public",
+    "publish": "npm publish --access public",
+    "prepublishOnly": "npm run build && npm run test:all && npm run check",
     "prepare": "husky"
   },
   "dependencies": {
