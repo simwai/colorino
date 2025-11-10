@@ -33,6 +33,7 @@
   "files": [
     "dist",
     "README.md",
+    "package.json",
     "LICENSE"
   ],
   "scripts": {
@@ -43,9 +44,9 @@
     "format:check": "prettier --check .",
     "check": "npm run lint && npm run format:check",
     "fix": "npm run lint:fix && npm run format",
+    "test": "npm run test:node && npm run test:browser",
     "test:node": "vitest run --config vitest.config.ts",
     "test:browser": "vitest run --config vitest.browser.config.ts",
-    "test:all": "npm run test:node && npm run test:browser",
     "test:coverage": "vitest run --config vitest.config.ts --coverage",
     "test:ui": "vitest --ui --config vitest.config.ts",
     "prepublishonly": "npm run build && npm run test:all && npm run check",
