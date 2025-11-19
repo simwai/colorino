@@ -1,4 +1,4 @@
-import type { ColorinoOptions, Palette } from './types.js'
+import { ColorinoOptions, Palette } from './types.js'
 import { Colorino } from './colorino.js'
 import { BrowserColorSupportDetector } from './browser-color-support-detector.js'
 import { InputValidator } from './input-validator.js'
