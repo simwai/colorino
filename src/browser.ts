@@ -6,7 +6,7 @@ import { InputValidator } from './input-validator.js'
 import { darkDraculaPalette } from './theme.js'
 
 export function createColorino(
-  palette: Palette,
+  palette: Partial<Palette>,
   options: ColorinoOptions = {}
 ): Colorino {
   const validator = new InputValidator()
@@ -16,8 +16,11 @@ export function createColorino(
     options.theme
   )
 
+  // The user's colors will override the defaults.
+  const finalPalette: Palette = { ...darkDraculaPalette, ...palette }
+
   return new Colorino(
-    palette,
+    finalPalette,
     validator,
     browserDetector, // Always use browser detector
     undefined, // Node detector is never available
