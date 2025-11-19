@@ -1,4 +1,5 @@
-import { ColorinoOptions, Palette } from './types.js'
+// @ts-ignore
+import type { ColorinoOptions, Palette, LogLevel, TerminalTheme } from './types.js'
 import { Colorino } from './colorino.js'
 import { BrowserColorSupportDetector } from './browser-color-support-detector.js'
 import { InputValidator } from './input-validator.js'
@@ -24,6 +25,6 @@ export function createColorino(
   )
 }
 
-export { Palette, ColorinoOptions, LogLevel, TerminalTheme } from './types.js'
+export type { Palette, ColorinoOptions, LogLevel, TerminalTheme } from './types.js'
 
 export const colorino = createColorino(darkDraculaPalette)
