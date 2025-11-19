@@ -8,8 +8,7 @@ export const catppuccinMochaPalette: Palette = {
   error: '#f38ba8', // Red
   debug: '#a6adc8', // Subtext0
   trace: '#9399b2', // Subtext1
-};
-
+}
 
 // Low-contrast palette for light backgrounds (dark text)
 export const catppuccinLattePalette: Palette = {
@@ -19,8 +18,7 @@ export const catppuccinLattePalette: Palette = {
   error: '#d20f39', // Red
   debug: '#7c7f93', // Subtext0
   trace: '#8c8fa1', // Subtext1
-};
-
+}
 
 // High-contrast palette for dark backgrounds (light text)
 export const draculaPalette: Palette = {
@@ -30,8 +28,7 @@ export const draculaPalette: Palette = {
   error: '#ff5555', // Red
   debug: '#bd93f9', // Purple
   trace: '#6272a4', // Comment
-};
-
+}
 
 // High-contrast palette for light backgrounds (dark text)
 export const githubLightPalette: Palette = {
@@ -41,4 +38,4 @@ export const githubLightPalette: Palette = {
   error: '#d73a49', // Red
   debug: '#586069', // Gray
   trace: '#6a737d', // Gray-light
-};
+}
