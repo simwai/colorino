@@ -43,7 +43,7 @@
   ],
   "scripts": {
     "build": "unbuild",
-    "fix": "oxlint --fix && oxfmt",
+    "format": "oxlint --fix && oxfmt",
     "test:all": "npm run test:node && npm run test:browser",
     "test:node": "vitest run --config vitest.config.ts",
     "test:browser": "vitest run --config vitest.browser.config.ts",
