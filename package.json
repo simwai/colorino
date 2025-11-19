@@ -75,7 +75,7 @@
     "vitest": "^4.0.6"
   },
   "lint-staged": {
-    "*.{ts,json,jsonc,md,yml,yaml}": [
+    "*.{ts,json}": [
       "oxlint --fix",
       "oxfmt"
     ],
