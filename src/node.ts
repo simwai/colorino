@@ -14,8 +14,8 @@ export function createColorino(
   return new Colorino(
     palette,
     validator,
-    undefined,        // Browser detector is never available
-    nodeDetector,     // Always use node detector
+    undefined, // Browser detector is never available
+    nodeDetector, // Always use node detector
     options
   )
 }

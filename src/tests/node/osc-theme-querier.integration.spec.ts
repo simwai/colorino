@@ -41,7 +41,10 @@ describe('OscThemeQuerier - Node Environment - Integration Test', () => {
   })
 
   it('should return "dark" for a dark background response', async () => {
-    const querier = new OscThemeQuerier(mockStdin as unknown as ReadStream, mockStdout as unknown as WriteStream)
+    const querier = new OscThemeQuerier(
+      mockStdin as unknown as ReadStream,
+      mockStdout as unknown as WriteStream
+    )
     const queryPromise = querier.query()
 
     mockStdin.pushData('\x1b]11;rgb:0a/0b/0c\x1b\\')
@@ -53,7 +56,10 @@ describe('OscThemeQuerier - Node Environment - Integration Test', () => {
   })
 
   it('should return "light" for a light background response', async () => {
-    const querier = new OscThemeQuerier(mockStdin as unknown as ReadStream, mockStdout as unknown as WriteStream)
+    const querier = new OscThemeQuerier(
+      mockStdin as unknown as ReadStream,
+      mockStdout as unknown as WriteStream
+    )
     const queryPromise = querier.query()
 
     mockStdin.pushData('\x1b]11;rgb:ff/fa/f1\x1b\\')
@@ -64,7 +70,10 @@ describe('OscThemeQuerier - Node Environment - Integration Test', () => {
   })
 
   it('should return a cached result on subsequent queries', async () => {
-    const querier = new OscThemeQuerier(mockStdin as unknown as ReadStream, mockStdout as unknown as WriteStream)
+    const querier = new OscThemeQuerier(
+      mockStdin as unknown as ReadStream,
+      mockStdout as unknown as WriteStream
+    )
     const firstQuery = querier.query()
     mockStdin.pushData('\x1b]11;rgb:00/00/00\x1b\\')
     await firstQuery
@@ -76,7 +85,11 @@ describe('OscThemeQuerier - Node Environment - Integration Test', () => {
   })
 
   it('should return a timeout error if the terminal does not respond', async () => {
-    const querier = new OscThemeQuerier(mockStdin as unknown as ReadStream, mockStdout as unknown as WriteStream, 100)
+    const querier = new OscThemeQuerier(
+      mockStdin as unknown as ReadStream,
+      mockStdout as unknown as WriteStream,
+      100
+    )
     const queryPromise = querier.query()
 
     await vi.advanceTimersByTimeAsync(101)
@@ -88,7 +101,10 @@ describe('OscThemeQuerier - Node Environment - Integration Test', () => {
 
   it('should return a TTY error if not in a TTY environment', async () => {
     mockStdout.isTTY = false
-    const querier = new OscThemeQuerier(mockStdin as unknown as ReadStream, mockStdout as unknown as WriteStream)
+    const querier = new OscThemeQuerier(
+      mockStdin as unknown as ReadStream,
+      mockStdout as unknown as WriteStream
+    )
     const result = await querier.query()
 
     expect(result.isErr()).toBe(true)

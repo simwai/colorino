@@ -7,7 +7,7 @@ export default defineConfig({
     // Only run browser tests
     include: [
       'src/tests/browser/**/*.spec.ts',
-      'src/tests/shared/**/*.spec.ts'
+      'src/tests/shared/**/*.spec.ts',
     ],
     exclude: ['node_modules/', 'dist/'],
     coverage: {

@@ -82,7 +82,10 @@ export class Colorino {
 
   private _out(level: LogLevel, args: unknown[]): void {
     const consoleMethod = isConsoleMethod(level) ? level : 'log'
-    if (this._colorLevel === ColorLevel.NO_COLOR || this._colorLevel === 'UnknownEnv') {
+    if (
+      this._colorLevel === ColorLevel.NO_COLOR ||
+      this._colorLevel === 'UnknownEnv'
+    ) {
       if (level === 'trace') console.trace(...args)
       else console[consoleMethod](...args)
       return
@@ -118,13 +121,16 @@ export class Colorino {
       }
     }
     const processedArgs = [...args]
-    const firstStringIndex = processedArgs.findIndex(arg => typeof arg === 'string')
+    const firstStringIndex = processedArgs.findIndex(
+      arg => typeof arg === 'string'
+    )
     if (firstStringIndex !== -1) {
-      processedArgs[firstStringIndex] = `${ansiCode}${processedArgs[firstStringIndex]}\x1b[0m`
+      processedArgs[firstStringIndex] =
+        `${ansiCode}${processedArgs[firstStringIndex]}\x1b[0m`
     }
 
     if (level === 'trace') {
-      console.trace(...processedArgs);
+      console.trace(...processedArgs)
     } else {
       console[consoleMethod](...processedArgs)
     }

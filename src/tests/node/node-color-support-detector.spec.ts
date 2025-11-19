@@ -1,10 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { NodeColorSupportDetector } from '../../node-color-support-detector.js'
 import { ColorLevel } from '../../enums.js'
-const createDetector = (
-  env: NodeJS.ProcessEnv = {},
-  isTTY = true,
-) => {
+const createDetector = (env: NodeJS.ProcessEnv = {}, isTTY = true) => {
   const mockProcess = {
     env,
     stdout: { isTTY },

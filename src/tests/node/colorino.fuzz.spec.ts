@@ -6,7 +6,6 @@ import { createColorino } from '../../node.js'
 import { generateRandomString } from '../helpers/random.js'
 import { ColorinoError } from '../../errors.js'
 
-
 describe('Colorino - Node Environment - Fuzz Test', () => {
   describe('Random String Inputs', () => {
     it('should handle 1000 random strings without crashing', async () => {
@@ -119,7 +118,16 @@ describe('Colorino - Node Environment - Fuzz Test', () => {
         createColorino(createTestPalette(), { disableWarnings: true })
       )
       const largeArray = Array.from({ length: 1000 }, (_, i) => {
-        const types = [i, `string-${i}`, { index: i }, null, undefined, true, false, [i, i * 2]]
+        const types = [
+          i,
+          `string-${i}`,
+          { index: i },
+          null,
+          undefined,
+          true,
+          false,
+          [i, i * 2],
+        ]
         return types[i % types.length]
       })
 
@@ -137,7 +145,9 @@ describe('Colorino - Node Environment - Fuzz Test', () => {
 
     it('should handle 1000 random hex colors', async () => {
       for (let i = 0; i < 1000; i++) {
-        const hex = `#${Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0')}`
+        const hex = `#${Math.floor(Math.random() * 16777215)
+          .toString(16)
+          .padStart(6, '0')}`
         const logger = withEnv(envPresets.ANSI256, () =>
           createColorino(createTestPalette({ log: hex }), {
             disableWarnings: true,
@@ -152,7 +162,13 @@ describe('Colorino - Node Environment - Fuzz Test', () => {
 
   describe('Random Environment Configurations', () => {
     it('should handle random environment variable combinations', async () => {
-      const envVars = ['NO_COLOR', 'FORCE_COLOR', 'TERM', 'COLORTERM', 'WT_SESSION']
+      const envVars = [
+        'NO_COLOR',
+        'FORCE_COLOR',
+        'TERM',
+        'COLORTERM',
+        'WT_SESSION',
+      ]
       const values = ['', '0', '1', 'true', 'false', 'xterm', 'dumb', undefined]
 
       for (let i = 0; i < 100; i++) {

@@ -119,7 +119,7 @@ export class NodeColorSupportDetector implements ColorSupportDetectorInterface {
       return ColorLevel.ANSI
     }
 
-    return (this._isTTY || isForced) ? ColorLevel.ANSI : ColorLevel.NO_COLOR
+    return this._isTTY || isForced ? ColorLevel.ANSI : ColorLevel.NO_COLOR
   }
 
   async getTheme(): Promise<TerminalTheme> {

@@ -19,7 +19,7 @@ export function createColorino(
     palette,
     validator,
     browserDetector, // Always use browser detector
-    undefined,       // Node detector is never available
+    undefined, // Node detector is never available
     options
   )
 }

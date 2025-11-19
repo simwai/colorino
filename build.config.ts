@@ -1,10 +1,7 @@
 import { defineBuildConfig } from 'unbuild'
 
 export default defineBuildConfig({
-  entries: [
-    'src/browser',
-    'src/node',
-  ],
+  entries: ['src/browser', 'src/node'],
   declaration: true,
   rollup: {
     emitCJS: true,
