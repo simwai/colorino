@@ -15,7 +15,7 @@
   "homepage": "https://github.com/simwai/colorino",
   "repository": {
     "type": "git",
-    "url": "https://github.com/simwai/colorino.git"
+    "url": "git+https://github.com/simwai/colorino.git"
   },
   "bugs": {
     "url": "https://github.com/simwai/colorino/issues"
