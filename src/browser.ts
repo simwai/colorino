@@ -24,4 +24,6 @@ export function createColorino(
   )
 }
 
+export type { Palette, ColorinoOptions } from './types.js'
+
 export const colorino = createColorino(darkDraculaPalette)
