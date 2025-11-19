@@ -39,16 +39,11 @@
     "dist",
     "README.md",
     "package.json",
-    "LICENSE"
+    "LICENSE.md"
   ],
   "scripts": {
     "build": "unbuild",
-    "lint": "oxlint",
-    "lint:fix": "oxlint --fix",
-    "format": "npm run lint:fix && oxfmt",
-    "format:check": "prettier --check .",
-    "check": "npm run lint && npm run format:check",
-    "fix": "npm run lint:fix && npm run format",
+    "fix": "oxlint --fix && oxfmt",
     "test:all": "npm run test:node && npm run test:browser",
     "test:node": "vitest run --config vitest.config.ts",
     "test:browser": "vitest run --config vitest.browser.config.ts",
@@ -61,7 +56,7 @@
     "publish:minor": "npm run version:minor && npm publish --access public",
     "publish:major": "npm run version:major && npm publish --access public",
     "publish": "npm publish --access public",
-    "prepublishOnly": "npm run build && npm run test:all && npm run check",
+    "prepublishOnly": "npm run build && npm run test:all",
     "prepare": "husky"
   },
   "dependencies": {
@@ -85,7 +80,8 @@
     "*.{ts,json,md,yml,yaml}": [
       "oxlint --fix",
       "oxfmt"
-    ]
+    ],
+    "*.ts": "vitest related --run"
   },
   "engines": {
     "node": ">=16.0.0",
