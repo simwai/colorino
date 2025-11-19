@@ -4,7 +4,7 @@
 
 Colorino automatically adapts its palette to your terminal or browser DevTools theme.
 
-***
+---
 
 ## Table of Contents
 
@@ -23,7 +23,7 @@ Colorino automatically adapts its palette to your terminal or browser DevTools t
 - [Contributing](#contributing)
 - [License](#license)
 
-***
+---
 
 ## Why use Colorino?
 
@@ -31,7 +31,7 @@ Plain `console.log` is colorless and inconsistent. Libraries like `chalk` let yo
 
 Colorino is different: it’s a "batteries-included" logging facade with beautiful, theme-aware colors and a familiar API—no learning curve, no configuration. Instantly upgrade your logs everywhere.
 
-***
+---
 
 ## Features
 
@@ -42,7 +42,7 @@ Colorino is different: it’s a "batteries-included" logging facade with beautif
 - 🔒 **Robust:** Handles bad inputs and weird environments safely.
 - 🛠️ **Customizable:** Override individual log colors for your own branding.
 
-***
+---
 
 ## Installation
 
@@ -52,7 +52,7 @@ npm install colorino
 yarn add colorino
 ```
 
-***
+---
 
 ## Usage
 
@@ -72,7 +72,7 @@ colorino.debug('Debug with objects:', { x: 5, y: 9 })
 colorino.trace('Tracing app start...')
 ```
 
-***
+---
 
 ### Creating a Custom Logger
 
@@ -93,7 +93,7 @@ myLogger.error('Critical!')
 myLogger.info('Rebranded info!')
 ```
 
-***
+---
 
 ### Options & Theme Overrides
 
@@ -120,7 +120,7 @@ forcedDarkLogger.info('This will always use dark-friendly colors.')
 > **Tip:**
 > Forcing `'dark'` or `'light'` bypasses automatic theming, ensuring predictable colors in environments with unknown or unsupported theme detection (like some CI pipelines, dumb terminals, or minimal browsers).
 
-***
+---
 
 ### Customization
 
@@ -136,7 +136,7 @@ myLogger.error('Oh no!') // Uses your custom color
 myLogger.info('Still styled by theme.') // Uses the default theme color
 ```
 
-***
+---
 
 ### Supported Environment Variables
 
@@ -153,7 +153,7 @@ Colorino auto-detects your environment and color support, but you can override b
 | `WT_SESSION`     | Detected for Windows Terminal (enables color)     |                          |
 | `CI`             | Many CI platforms default to *no color*           | `CI=1 node app.js`       |
 
-***
+---
 
 ## Colorino vs. Chalk
 
@@ -165,7 +165,7 @@ Colorino auto-detects your environment and color support, but you can override b
 | CSS console logs         | ✔                          | ✘               |
 | Extensible / Composable  | ✔ (via factory)            | ✘               |
 
-***
+---
 
 ## API Reference
 
@@ -191,7 +191,7 @@ A factory function to create your own customized logger instances.
   - `disableWarnings: boolean` (default `false`): Suppress warnings on environments with no color support.
   - `theme: 'dark' | 'light'` (default `auto`): Force a specific theme instead of auto-detecting.
 
-***
+---
 
 ## Extending Colorino
 
@@ -244,7 +244,7 @@ logger.fatal('Missing config: Exiting')
 - **Clean**: No messing with `super()` or constructor parameters
 - **Composable**: You can layer multiple extensions
 
-***
+---
 
 ## Contributing
 
@@ -256,12 +256,12 @@ PRs and issues welcome!
 4. Run `npm test:all` to ensure all tests pass in both Node and browser.
 5. Open a Pull Request.
 
-***
+---
 
 ## License
 
 MIT
 
-***
+---
 
 > *Note:* When running tests, browser output is simulated. Visual styling only appears in real browsers/devtools, but Colorino always routes logs correctly for every environment.
