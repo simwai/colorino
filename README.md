@@ -76,7 +76,7 @@ colorino.trace('Tracing app start...')
 
 ### Creating a Custom Logger
 
-Need your own colors or different settings?  
+Need your own colors or different settings?
 Use the factory to create as many loggers as you want (each with its own palette and options):
 
 ```typescript
@@ -97,12 +97,12 @@ myLogger.info('Rebranded info!')
 
 ### Options & Theme Overrides
 
-Both `createColorino(palette?, options?)` and `new Colorino(palette?, options?)` accept:
+`createColorino(palette?, options?)` accepts:
 
-| Option             | Type                  | Default     | Description                                                                    |
-|--------------------|----------------------|-------------|--------------------------------------------------------------------------------|
-| `disableWarnings`  | `boolean`            | `false`     | Suppress warnings when color support can't be detected or is disabled           |
-| `theme`            | `'dark' \| 'light' \| 'unknown'` | *(auto)*      | Override auto-theme detection: force `'dark'` or `'light'` for palette selection |
+| Option            | Type                         | Default | Description                                                                    |
+|-------------------|------------------------------|---------|--------------------------------------------------------------------------------|
+| `disableWarnings` | `boolean`                    | `false` | Suppress warnings when color support can't be detected or is disabled          |
+| `theme`           | `'dark' \| 'light' \| 'unknown'` | *(auto)*| Override auto-theme detection: force `'dark'` or `'light'` for palette selection |
 
 #### Example: Forcing a theme
 
@@ -117,23 +117,23 @@ const forcedDarkLogger = createColorino({}, { theme: 'dark' })
 forcedDarkLogger.info('This will always use dark-friendly colors.')
 ```
 
-> **Tip:**  
+> **Tip:**
 > Forcing `'dark'` or `'light'` bypasses automatic theming, ensuring predictable colors in environments with unknown or unsupported theme detection (like some CI pipelines, dumb terminals, or minimal browsers).
 
 ***
 
 ### Customization
 
-Use your brand colors or tweak log levels as desired. Unspecified colors use the smart palette.
+Use your brand colors by passing a partial palette to the `createColorino` factory. Any log levels you don't specify will use the smart theme defaults.
 
 ```typescript
-import { Colorino } from 'colorino'
+import { createColorino } from 'colorino'
 
 // Custom error color; others use theme defaults
-const myLogger = new Colorino({ error: '#ff007b' })
+const myLogger = createColorino({ error: '#ff007b' })
 
-myLogger.error('Oh no!')
-myLogger.info('Still styled by theme.')
+myLogger.error('Oh no!') // Uses your custom color
+myLogger.info('Still styled by theme.') // Uses the default theme color
 ```
 
 ***
@@ -142,7 +142,7 @@ myLogger.info('Still styled by theme.')
 
 Colorino auto-detects your environment and color support, but you can override behavior using these standard environment variables (compatible with Chalk):
 
-| Variable         | Effect                                             | Example                  |
+| Variable         | Effect                                            | Example                  |
 |------------------|---------------------------------------------------|--------------------------|
 | `NO_COLOR`       | Forces *no color* output                          | `NO_COLOR=1 node app.js` |
 | `FORCE_COLOR`    | Forces color (`1`=ANSI, `2`=256, `3`=truecolor)   | `FORCE_COLOR=3 node app.js` |
@@ -157,21 +157,23 @@ Colorino auto-detects your environment and color support, but you can override b
 
 ## Colorino vs. Chalk
 
-| Feature           | 🎨 **Colorino**                  | 🖍️ **Chalk**     |
-|-------------------|----------------------------------|------------------|
-| Out-of-box logs   | ✔ themed, all log levels         | ✘ string styling |
-| Zero-config       | ✔                                | ✘ manual, per-use|
-| Node + browser    | ✔                                | ✘ (Node only)    |
-| CSS console logs  | ✔                                | ✘                |
-| Extendable class  | ✔                                | ✘                |
+| Feature                  | 🎨 **Colorino**            | 🖍️ **Chalk**    |
+|--------------------------|----------------------------|-----------------|
+| Out-of-box logs          | ✔ themed, all log levels   | ✘ string styling|
+| Zero-config              | ✔                          | ✘ manual, per-use|
+| Node + browser           | ✔                          | ✘ (Node only)   |
+| CSS console logs         | ✔                          | ✘               |
+| Extensible / Composable  | ✔ (via factory)            | ✘               |
 
 ***
 
 ## API Reference
 
-### colorino (default export)
+The `colorino` package exports two main items:
 
-Preconfigured logger.
+### 1. `colorino` (default instance)
+
+A pre-configured, zero-setup logger instance. Just import and use.
 
 - `.log(...args)`
 - `.info(...args)`
@@ -180,10 +182,14 @@ Preconfigured logger.
 - `.debug(...args)`
 - `.trace(...args)`
 
-### new Colorino(palette?, options?)
+### 2. `createColorino(palette?, options?)` (factory)
 
-- `palette` (`Partial<Palette>`): Override colors for log types.
-- `options` (`{ disableWarnings?: boolean; theme?: 'dark' | 'light' | 'unknown' }`): Control warnings and explicit theme.
+A factory function to create your own customized logger instances.
+
+- `palette` (`Partial<Palette>`): An object to override default colors for specific log levels (e.g., `{ error: '#ff007b' }`).
+- `options` (`ColorinoOptions`): An object to control behavior:
+  - `disableWarnings: boolean` (default `false`): Suppress warnings on environments with no color support.
+  - `theme: 'dark' | 'light'` (default `auto`): Force a specific theme instead of auto-detecting.
 
 ***
 
@@ -191,18 +197,32 @@ Preconfigured logger.
 
 Example: Add a `fatal()` logger for critical errors.
 
-```typescript
-import { Colorino, type Palette } from 'colorino'
+Since colorino uses a factory pattern, extend it by creating your own factory that composes the base logger with additional methods:
 
-export class MyLogger extends Colorino {
-  constructor(palette?: Partial<Palette>, options?: { disableWarnings?: boolean }) {
-    super(palette, options)
-  }
-  public fatal(...args: unknown[]): void {
-    super.error(...args)
+```typescript
+import { createColorino, type ColorinoOptions, type Palette } from 'colorino'
+
+// Create a factory for your custom logger
+export function createMyLogger(palette?: Partial<Palette>, options?: ColorinoOptions) {
+  // Get the base logger instance
+  const baseLogger = createColorino(palette, options)
+
+  // Define your custom method
+  function fatal(...args: unknown[]): void {
+    // Reuse the base logger's error method
+    baseLogger.error(...args)
+
+    // Add your custom behavior
     if (typeof process !== 'undefined' && process.exit) {
       process.exit(1)
     }
+  }
+
+  // Return a new object with all base methods + your custom ones
+  // This preserves type safety and the original API
+  return {
+    ...baseLogger,
+    fatal,
   }
 }
 ```
@@ -210,11 +230,19 @@ export class MyLogger extends Colorino {
 Usage:
 
 ```typescript
-const logger = new MyLogger({ error: '#d92626' })
+const logger = createMyLogger({ error: '#d92626' })
 
 logger.info('Starting!')
 logger.fatal('Missing config: Exiting')
 ```
+
+### Why This Pattern?
+
+- **Composition > Inheritance**: No fragile base class problems
+- **Type Safe**: TypeScript infers the return type correctly
+- **Future Proof**: Works even if colorino's internal implementation changes
+- **Clean**: No messing with `super()` or constructor parameters
+- **Composable**: You can layer multiple extensions
 
 ***
 
