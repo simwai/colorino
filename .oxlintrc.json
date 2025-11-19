@@ -14,8 +14,7 @@
     "style/no-debugger": "warn",
     "style/no-lonely-if": "warn",
     "style/no-var": "error",
-    "performance/no-accumulating-spread": "warn",
-    "eslint/no-control-regex": "off"
+    "performance/no-accumulating-spread": "warn"
   },
   "ignorePatterns": [
     "node_modules",
