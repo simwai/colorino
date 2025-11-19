@@ -1,0 +1,11 @@
+{
+  "oxc.enable": true,
+  "editor.defaultFormatter": "oxc.oxc-vscode",
+  "editor.formatOnSave": true,
+  "files.eol": "\n",
+  "editor.tabSize": 2,
+  "editor.insertSpaces": true,
+  "python.analysis.ignore": [
+    "**"
+  ]
+}

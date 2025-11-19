@@ -20,7 +20,6 @@ coverage/
 .vitest/
 
 # IDE & Editors
-.vscode/
 .idea/
 *.swp
 *.swo
