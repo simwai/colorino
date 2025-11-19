@@ -54,7 +54,6 @@
     "version:major": "npm version major",
     "preversion": "npm run build && npm run test:all",
     "prepublishOnly": "npm run build && npm run test:all",
-    "postversion": "npm publish --access public",
     "prepare": "husky"
   },
   "dependencies": {
