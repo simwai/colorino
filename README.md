@@ -253,7 +253,7 @@ PRs and issues welcome!
 1. Fork the repo.
 2. Make a branch (`git checkout -b feat/my-feature`)
 3. Add your change, with tests.
-4. Run `npm test` to ensure all tests pass in both Node and browser.
+4. Run `npm test:all` to ensure all tests pass in both Node and browser.
 5. Open a Pull Request.
 
 ***
