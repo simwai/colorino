@@ -38,7 +38,10 @@ export class BrowserColorSupportDetector
       return this._overrideTheme
     }
 
-    if (!this.isBrowserEnv()) {
+    if (
+      !this.isBrowserEnv() ||
+      typeof this._window!.matchMedia !== 'function'
+    ) {
       return 'unknown'
     }
 

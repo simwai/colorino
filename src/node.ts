@@ -1,19 +1,42 @@
 // @ts-ignore
-import type { ColorinoOptions, Palette, LogLevel, TerminalTheme } from './types.js'
+import {
+  type ColorinoOptions,
+  type Palette,
+  type TerminalTheme,
+} from './types.js'
 import { Colorino } from './colorino.js'
 import { NodeColorSupportDetector } from './node-color-support-detector.js'
 import { InputValidator } from './input-validator.js'
-import { darkDraculaPalette } from './theme.js'
+import { themePalettes } from './theme.js'
+import { determineBaseTheme } from './determine-base-theme.js'
 
 export function createColorino(
-  palette: Partial<Palette>,
+  palette: Partial<Palette> = {},
   options: ColorinoOptions = {}
 ): Colorino {
   const validator = new InputValidator()
-  const nodeDetector = new NodeColorSupportDetector(process, options.theme)
 
-  // The user's colors will override the defaults.
-  const finalPalette: Palette = { ...darkDraculaPalette, ...palette }
+  let detectorThemeOverride: TerminalTheme | undefined
+  if (options.theme === 'dark' || options.theme === 'light') {
+    detectorThemeOverride = options.theme
+  }
+
+  const nodeDetector = new NodeColorSupportDetector(
+    process,
+    detectorThemeOverride
+  )
+
+  const detectedTerminalTheme = nodeDetector.getTheme()
+
+  // 1. Determine the base theme name
+  const themeOpt = options.theme ?? 'auto'
+  const baseThemeName = determineBaseTheme(themeOpt, detectedTerminalTheme)
+
+  // 2. Get the base palette from the registry
+  const basePalette = themePalettes[baseThemeName]
+
+  // 3. The user's colors will override the selected base theme.
+  const finalPalette: Palette = { ...basePalette, ...palette }
 
   return new Colorino(
     finalPalette,
@@ -24,6 +47,6 @@ export function createColorino(
   )
 }
 
-export type { Palette, ColorinoOptions, LogLevel, TerminalTheme } from './types.js'
+export type { Palette, ColorinoOptions, LogLevel, ThemeName } from './types.js'
 
-export const colorino = createColorino(darkDraculaPalette)
+export const colorino = createColorino()

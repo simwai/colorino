@@ -1,8 +1,10 @@
+import { fileURLToPath } from 'node:url'
 import type { ColorSupportDetectorInterface } from './color-support-detector-interface.js'
 import { ColorLevel } from './enums.js'
-import { OscThemeQuerier } from './osc-theme-querier.js'
 import type { TerminalTheme } from './types.js'
-import type { ReadStream, WriteStream } from 'node:tty'
+import { spawnSync } from 'node:child_process'
+import { dirname, join } from 'node:path'
+import { Result } from 'neverthrow'
 
 export class NodeColorSupportDetector implements ColorSupportDetectorInterface {
   private readonly _envForceColor?: string
@@ -13,7 +15,6 @@ export class NodeColorSupportDetector implements ColorSupportDetectorInterface {
   private readonly _envCliColorForce?: string
   private readonly _envWtSession?: string
   private readonly _isTTY?: boolean
-  private readonly _querier?: OscThemeQuerier
   private readonly _overrideTheme?: TerminalTheme
 
   constructor(
@@ -33,17 +34,6 @@ export class NodeColorSupportDetector implements ColorSupportDetectorInterface {
 
     this._isTTY = !!_process!.stdout.isTTY
     this._overrideTheme = overrideTheme
-
-    if (
-      !this._overrideTheme &&
-      this._isTTY &&
-      typeof this._process!.stdin.setRawMode === 'function'
-    ) {
-      this._querier = new OscThemeQuerier(
-        this._process!.stdin as ReadStream,
-        this._process!.stdout as WriteStream
-      )
-    }
   }
 
   isNodeEnv(): boolean {
@@ -93,7 +83,7 @@ export class NodeColorSupportDetector implements ColorSupportDetectorInterface {
         /^xterm-kitty$/.test(this._envTerm) ||
         /^xterm-ghostty$/.test(this._envTerm) ||
         /^wezterm$/.test(this._envTerm) ||
-        /-truecolor$/.test(this._envTerm)
+        this._envTerm.endsWith('-truecolor')
       ) {
         return ColorLevel.TRUECOLOR
       }
@@ -122,16 +112,44 @@ export class NodeColorSupportDetector implements ColorSupportDetectorInterface {
     return this._isTTY || isForced ? ColorLevel.ANSI : ColorLevel.NO_COLOR
   }
 
-  async getTheme(): Promise<TerminalTheme> {
-    if (this._overrideTheme) {
-      return this._overrideTheme
-    }
+  getTheme(): TerminalTheme {
+    if (this._overrideTheme) return this._overrideTheme
 
-    if (!this.isNodeEnv() || !this._isTTY || !this._querier) {
+    // 1. Check preconditions (must be Node, TTY, etc.)
+    if (!this.isNodeEnv() || !this._isTTY) return 'unknown'
+
+    const __dirname = dirname(fileURLToPath(import.meta.url))
+    const scriptPath = join(__dirname, './run-osc-querier.js')
+
+    // 2. Execute the spawn safely
+    const spawnResult = Result.fromThrowable(
+      () =>
+        spawnSync(process.execPath, [scriptPath], {
+          stdio: ['inherit', 'pipe', 'pipe'],
+          timeout: 1000,
+          encoding: 'utf-8',
+        }),
+      error => error
+    )()
+
+    // 3. Process the result
+    if (spawnResult.isErr()) {
       return 'unknown'
     }
 
-    const result = await this._querier.query()
-    return result.unwrapOr('unknown')
+    const processOutput = spawnResult.value
+
+    // Check if the process exited successfully
+    if (processOutput.status !== 0 || processOutput.error) {
+      return 'unknown'
+    }
+
+    // 4. Parse the output string
+    const output = processOutput.stdout?.trim()
+
+    if (output === 'dark') return 'dark'
+    if (output === 'light') return 'light'
+
+    return 'unknown'
   }
 }

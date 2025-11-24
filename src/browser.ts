@@ -1,23 +1,48 @@
-// @ts-ignore
-import type { ColorinoOptions, Palette, LogLevel, TerminalTheme } from './types.js'
 import { Colorino } from './colorino.js'
 import { BrowserColorSupportDetector } from './browser-color-support-detector.js'
 import { InputValidator } from './input-validator.js'
-import { darkDraculaPalette } from './theme.js'
+import { themePalettes } from './theme.js'
+
+import {
+  type ColorinoOptions,
+  type Palette,
+  type LogLevel,
+  type ThemeName,
+  type TerminalTheme,
+} from './types.js'
+import { determineBaseTheme } from './determine-base-theme.js'
 
 export function createColorino(
-  palette: Partial<Palette>,
+  palette: Partial<Palette> = {},
   options: ColorinoOptions = {}
 ): Colorino {
   const validator = new InputValidator()
+
+  let detectorThemeOverride: TerminalTheme | undefined
+  if (options.theme === 'dark' || options.theme === 'light') {
+    detectorThemeOverride = options.theme
+  }
+
   const browserDetector = new BrowserColorSupportDetector(
     window,
     navigator,
-    options.theme
+    detectorThemeOverride
   )
 
-  // The user's colors will override the defaults.
-  const finalPalette: Palette = { ...darkDraculaPalette, ...palette }
+  const detectedBrowserTheme = browserDetector.getTheme()
+
+  // 1. Determine the base theme name
+  const themeOpt = options.theme ?? 'auto'
+  const baseThemeName: ThemeName = determineBaseTheme(
+    themeOpt,
+    detectedBrowserTheme
+  )
+
+  // 2. Get the base palette from the registry
+  const basePalette = themePalettes[baseThemeName]
+
+  // 3. The user's colors will override the selected base theme.
+  const finalPalette: Palette = { ...basePalette, ...palette }
 
   return new Colorino(
     finalPalette,
@@ -28,6 +53,6 @@ export function createColorino(
   )
 }
 
-export type { Palette, ColorinoOptions, LogLevel, TerminalTheme } from './types.js'
+export type { Palette, ColorinoOptions, LogLevel, ThemeName }
 
-export const colorino = createColorino(darkDraculaPalette)
+export const colorino = createColorino()

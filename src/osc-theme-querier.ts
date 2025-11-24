@@ -1,8 +1,7 @@
 import { Result, ok, err } from 'neverthrow'
 import type { ReadStream, WriteStream } from 'node:tty'
 import { OscQueryError } from './errors.js'
-
-export type TerminalTheme = 'dark' | 'light' | 'unknown'
+import type { TerminalTheme } from './types.js'
 
 export class OscThemeQuerier {
   private cachedResult?: Result<TerminalTheme, OscQueryError>
