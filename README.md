@@ -1,39 +1,40 @@
-# 🎨 Colorino
+# <a id="0"></a>🎨 Colorino
 
 **The zero-configuration, context-aware `console` logger for Node.js and the browser.**
 
 Colorino automatically adapts its palette to your terminal or browser DevTools theme.
 
----
+# <a id="0"></a>
 
-## Table of Contents
+- [Why use Colorino?](#1)
+- [Features](#2)
+- [Installation](#3)
+- [Usage](#4)
+  - [Quick Start](#4-1)
+  - [Creating a Custom Logger](#4-2)
+  - [Options & Theme Overrides](#4-3)
+    - [Available Theme Presets](#4-3-1)
+    - [Examples](#4-3-2)
+  - [Customization](#4-4)
+  - [Supported Environment Variables](#4-5)
+- [Colorino vs. Chalk](#5)
+- [API Reference](#6)
+  - [1. `colorino` (default instance)](#6-1)
+  - [2. `createColorino(palette?, options?)` (factory)](#6-2)
+- [Extending Colorino](#7)
+  - [Why This Pattern?](#7-1)
+- [Contributing](#8)
+- [License](#9)
 
-- [Why use Colorino?](#why-use-colorino)
-- [Features](#features)
-- [Installation](#installation)
-- [Usage](#usage)
-  - [Quick Start](#quick-start)
-  - [Creating a Custom Logger](#creating-a-custom-logger)
-  - [Options & Theme Overrides](#options--theme-overrides)
-  - [Customization](#customization)
-  - [Supported Environment Variables](#supported-environment-variables)
-- [Colorino vs. Chalk](#colorino-vs-chalk)
-- [API Reference](#api-reference)
-- [Extending Colorino](#extending-colorino)
-- [Contributing](#contributing)
-- [License](#license)
+<!-- Table of contents is made with https://github.com/eugene-khyst/md-toc-cli -->
 
----
-
-## Why use Colorino?
+## <a id="1"></a>Why use Colorino?
 
 Plain `console.log` is colorless and inconsistent. Libraries like `chalk` let you style strings, but you have to decorate every message and manually manage color choices.
 
 Colorino is different: it’s a "batteries-included" logging facade with beautiful, theme-aware colors and a familiar API—no learning curve, no configuration. Instantly upgrade your logs everywhere.
 
----
-
-## Features
+## <a id="2"></a>Features
 
 - 🎨 **Smart Theming:** Automatically detects *dark/light* mode and uses a coordinated color palette.
 - 🤝 **Familiar API:** If you know `console.log`, you already know Colorino: all standard log levels are supported.
@@ -42,21 +43,15 @@ Colorino is different: it’s a "batteries-included" logging facade with beautif
 - 🔒 **Robust:** Handles bad inputs and weird environments safely.
 - 🛠️ **Customizable:** Override individual log colors for your own branding.
 
----
+## <a id="3"></a>Installation
 
-## Installation
-
-```sh
+```bash
 npm install colorino
-# or
-yarn add colorino
 ```
 
----
+## <a id="4"></a>Usage
 
-## Usage
-
-### Quick Start
+### <a id="4-1"></a>Quick Start
 
 Just import the default instance and log away!
 
@@ -72,9 +67,7 @@ colorino.debug('Debug with objects:', { x: 5, y: 9 })
 colorino.trace('Tracing app start...')
 ```
 
----
-
-### Creating a Custom Logger
+### <a id="4-2"></a>Creating a Custom Logger
 
 Need your own colors or different settings?
 Use the factory to create as many loggers as you want (each with its own palette and options):
@@ -93,36 +86,65 @@ myLogger.error('Critical!')
 myLogger.info('Rebranded info!')
 ```
 
----
-
-### Options & Theme Overrides
+### <a id="4-3"></a>Options & Theme Overrides
 
 `createColorino(palette?, options?)` accepts:
 
-| Option            | Type                         | Default | Description                                                                    |
-|-------------------|------------------------------|---------|--------------------------------------------------------------------------------|
-| `disableWarnings` | `boolean`                    | `false` | Suppress warnings when color support can't be detected or is disabled          |
-| `theme`           | `'dark' \| 'light' \| 'unknown'` | *(auto)*| Override auto-theme detection: force `'dark'` or `'light'` for palette selection |
+| Option            | Type                           | Default | Description                                                                    |
+|-------------------|--------------------------------|---------|--------------------------------------------------------------------------------|
+| `disableWarnings` | `boolean`                      | `false` | Suppress warnings when color support can't be detected or is disabled.         |
+| `theme`           | `ThemeOption` (see below)      | `'auto'`| Control the active color theme or force a specific mode.                       |
 
-#### Example: Forcing a theme
+**`theme` accepts three types of values:**
 
-If the auto-contrast and theme detection doesn't work (e.g., in some CI/CD, headless, or basic terminals), **force the color scheme**:
+1. **`'auto'`** (Default): Automatically detects your terminal or browser theme (dark/light) and applies the matching default preset.
+2. **`'dark' | 'light'`**: Forces the logger into a specific mode using the default preset for that mode.
+3. **`ThemeName`**: Forces a specific built-in palette (e.g., `'dracula'`).
+
+#### <a id="4-3-1"></a>Available Theme Presets
+
+Pass any of these names to the `theme` option to use a specific palette:
+
+| Theme Name           | Type            | Description                                      |
+|----------------------|-----------------|--------------------------------------------------|
+| `'dracula'`          | **Dark** (High) | Vibrant pinks, purples, and cyans.               |
+| `'catppuccin-mocha'` | **Dark** (Low)  | *Default Dark.* Soothing pastel colors.          |
+| `'github-light'`     | **Light** (High)| *Default Light.* Clean, sharp, high-contrast.    |
+| `'catppuccin-latte'` | **Light** (Low) | Warm, cozy light mode with soft colors.          |
+
+#### <a id="4-3-2"></a>Examples
+
+**1. Force a specific mode (uses defaults):**
+Useful for CI/CD or environments where detection fails.
 
 ```typescript
-import { createColorino } from 'colorino'
+// Forces the default dark theme (Catppuccin Mocha)
+const darkLogger = createColorino({}, { theme: 'dark' })
+```
 
-// Force dark palette regardless of environment
-const forcedDarkLogger = createColorino({}, { theme: 'dark' })
+**2. Use a specific preset:**
+Instant branding with zero configuration.
 
-forcedDarkLogger.info('This will always use dark-friendly colors.')
+```typescript
+// Forces the Dracula palette
+const draculaLogger = createColorino({}, { theme: 'dracula' })
+```
+
+**3. Customize a preset:**
+Overlay your own colors on top of a built-in theme.
+
+```typescript
+// Use GitHub Light but with a custom error color
+const myLogger = createColorino(
+  { error: '#ff007b' }, 
+  { theme: 'github-light' }
+)
 ```
 
 > **Tip:**
 > Forcing `'dark'` or `'light'` bypasses automatic theming, ensuring predictable colors in environments with unknown or unsupported theme detection (like some CI pipelines, dumb terminals, or minimal browsers).
 
----
-
-### Customization
+### <a id="4-4"></a>Customization
 
 Use your brand colors by passing a partial palette to the `createColorino` factory. Any log levels you don't specify will use the smart theme defaults.
 
@@ -136,9 +158,7 @@ myLogger.error('Oh no!') // Uses your custom color
 myLogger.info('Still styled by theme.') // Uses the default theme color
 ```
 
----
-
-### Supported Environment Variables
+### <a id="4-5"></a>Supported Environment Variables
 
 Colorino auto-detects your environment and color support, but you can override behavior using these standard environment variables (compatible with Chalk):
 
@@ -153,9 +173,7 @@ Colorino auto-detects your environment and color support, but you can override b
 | `WT_SESSION`     | Detected for Windows Terminal (enables color)     |                          |
 | `CI`             | Many CI platforms default to *no color*           | `CI=1 node app.js`       |
 
----
-
-## Colorino vs. Chalk
+## <a id="5"></a>Colorino vs. Chalk
 
 | Feature                  | 🎨 **Colorino**            | 🖍️ **Chalk**    |
 |--------------------------|----------------------------|-----------------|
@@ -165,13 +183,11 @@ Colorino auto-detects your environment and color support, but you can override b
 | CSS console logs         | ✔                          | ✘               |
 | Extensible / Composable  | ✔ (via factory)            | ✘               |
 
----
-
-## API Reference
+## <a id="6"></a>API Reference
 
 The `colorino` package exports two main items:
 
-### 1. `colorino` (default instance)
+### <a id="6-1"></a>1. `colorino` (default instance)
 
 A pre-configured, zero-setup logger instance. Just import and use.
 
@@ -182,7 +198,7 @@ A pre-configured, zero-setup logger instance. Just import and use.
 - `.debug(...args)`
 - `.trace(...args)`
 
-### 2. `createColorino(palette?, options?)` (factory)
+### <a id="6-2"></a>2. `createColorino(palette?, options?)` (factory)
 
 A factory function to create your own customized logger instances.
 
@@ -191,9 +207,7 @@ A factory function to create your own customized logger instances.
   - `disableWarnings: boolean` (default `false`): Suppress warnings on environments with no color support.
   - `theme: 'dark' | 'light'` (default `auto`): Force a specific theme instead of auto-detecting.
 
----
-
-## Extending Colorino
+## <a id="7"></a>Extending Colorino
 
 Example: Add a `fatal()` logger for critical errors.
 
@@ -236,7 +250,7 @@ logger.info('Starting!')
 logger.fatal('Missing config: Exiting')
 ```
 
-### Why This Pattern?
+### <a id="7-1"></a>Why This Pattern?
 
 - **Composition > Inheritance**: No fragile base class problems
 - **Type Safe**: TypeScript infers the return type correctly
@@ -244,23 +258,76 @@ logger.fatal('Missing config: Exiting')
 - **Clean**: No messing with `super()` or constructor parameters
 - **Composable**: You can layer multiple extensions
 
----
+## <a id="8"></a>Contributing
 
-## Contributing
+We welcome contributions! Here's exactly how to get started:
 
-PRs and issues welcome!
+1. **Setup**
+    Fork the repo and install dependencies. This will also set up Git hooks via `husky`.
 
-1. Fork the repo.
-2. Make a branch (`git checkout -b feat/my-feature`)
-3. Add your change, with tests.
-4. Run `npm test:all` to ensure all tests pass in both Node and browser.
-5. Open a Pull Request.
+    ```bash
+    git clone https://github.com/simwai/colorino.git
+    cd colorino
+    npm install
+    ```
 
----
+2. **Development Workflow**
+    Create a branch for your feature or fix.
 
-## License
+    ```bash
+    git checkout -b feat/my-cool-feature
+    ```
 
-MIT
+3. **Running Tests**
+    We use **Vitest** for testing. Please run the full suite to ensure compatibility with both Node.js and Browsers.
+
+    ```bash
+    # Run all tests (Node + Browser)
+    npm run test:all
+    
+    # Run only Node.js tests
+    npm run test:node
+    
+    # Run only Browser tests (JSDOM)
+    npm run test:browser
+    
+    # Watch mode with UI (great for dev!)
+    npm run test:ui
+    ```
+
+4. **Linting & Formatting**
+    We use **Oxlint** and **Oxfmt** for fast, robust linting.
+
+    ```bash
+    # Fix lint issues and format code
+    npm run format
+    ```
+
+5. **Commit Changes**
+    Commit your work. This triggers our `lint-staged` hooks to automatically lint, format, and run related tests on your staged files.
+
+    ```bash
+    git add .
+    git commit -m "feat: ✨ Add amazing new feature"
+    ```
+
+6. **Building**
+    To verify the build output (using `unbuild`):
+
+    ```bash
+    npm run build
+    ```
+
+7. **Submission**
+    Push your branch and open a Pull Request.
+
+    ```bash
+    git push origin feat/my-cool-feature
+    ```
+
+## <a id="9"></a>License
+
+[MIT](LICENSE.md)
 
 ---
 
