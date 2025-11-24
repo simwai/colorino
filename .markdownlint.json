@@ -38,5 +38,6 @@
   "line-length": false,
   "ul-style": {
     "style": "dash"
-  }
+  },
+  "single-h1": false
 }
