@@ -10,5 +10,6 @@ export class OscQueryError extends Error {
   constructor(message: string) {
     super(message)
     this.name = 'OscQueryError'
+    Object.setPrototypeOf(this, OscQueryError.prototype)
   }
 }
