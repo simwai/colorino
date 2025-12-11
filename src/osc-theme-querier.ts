@@ -4,8 +4,8 @@ import { OscQueryError } from './errors.js'
 import type { TerminalTheme } from './types.js'
 
 export class OscThemeQuerier {
-  private cachedResult?: Result<TerminalTheme, OscQueryError>
-  private cacheTimestamp?: number
+  private _cachedResult?: Result<TerminalTheme, OscQueryError>
+  private _cacheTimestamp?: number
 
   constructor(
     private readonly _stdin: ReadStream,
@@ -14,7 +14,7 @@ export class OscThemeQuerier {
     private readonly _cacheTtl = 3600000
   ) {}
 
-  async query(): Promise<Result<TerminalTheme, OscQueryError>> {
+  query(): Result<TerminalTheme, OscQueryError> {
     if (!this._stdout.isTTY || typeof this._stdin.setRawMode !== 'function') {
       return err(new OscQueryError('Not a TTY environment'))
     }
@@ -22,59 +22,65 @@ export class OscThemeQuerier {
     const now = Date.now()
 
     if (
-      this.cachedResult !== undefined &&
-      this.cacheTimestamp !== undefined &&
-      now - this.cacheTimestamp < this._cacheTtl
+      this._cachedResult !== undefined &&
+      this._cacheTimestamp !== undefined &&
+      now - this._cacheTimestamp < this._cacheTtl
     ) {
-      return this.cachedResult
+      return this._cachedResult
     }
 
-    const result = await this._performQuery()
+    const result = this._performQuery()
 
-    this.cachedResult = result
-    this.cacheTimestamp = now
+    this._cachedResult = result
+    this._cacheTimestamp = now
 
     return result
   }
 
-  private async _performQuery(): Promise<Result<TerminalTheme, OscQueryError>> {
-    return new Promise(resolve => {
-      const originalRawMode = this._stdin.isRaw
-      let buffer = ''
-      let isResolved = false
+  private _performQuery(): Result<TerminalTheme, OscQueryError> {
+    const originalRawMode = this._stdin.isRaw
+    let buffer = ''
 
-      const cleanup = () => {
-        if (isResolved) return
-        isResolved = true
+    this._stdin.setRawMode(true)
+    this._stdin.resume()
 
-        clearTimeout(timer)
-        this._stdin.removeListener('data', onData)
-        this._stdin.setRawMode(originalRawMode)
-      }
+    this._stdout.write('\x1b]11;?\x1b\\')
 
-      const onData = (chunk: string | Buffer) => {
+    const startTime = Date.now()
+    const pollInterval = 10
+
+    while (Date.now() - startTime < this._timeout) {
+      const chunk = this._stdin.read()
+
+      if (chunk !== null) {
         buffer += chunk.toString()
 
         const parseResult = this._parseResponse(buffer)
 
         if (parseResult.isOk()) {
-          cleanup()
-          resolve(parseResult)
+          this._cleanup(originalRawMode)
+          return parseResult
         }
       }
 
-      const timer = setTimeout(() => {
-        cleanup()
-        resolve(
-          err(new OscQueryError('OSC query timeout - terminal did not respond'))
-        )
-      }, this._timeout)
+      this._sleepSync(pollInterval)
+    }
 
-      this._stdin.setRawMode(true)
-      this._stdin.on('data', onData)
+    this._cleanup(originalRawMode)
+    return err(
+      new OscQueryError('OSC query timeout - terminal did not respond')
+    )
+  }
 
-      this._stdout.write('\x1b]11;?\x1b\\')
-    })
+  private _cleanup(originalRawMode: boolean): void {
+    this._stdin.setRawMode(originalRawMode)
+    this._stdin.pause()
+  }
+
+  private _sleepSync(ms: number): void {
+    const buffer = new SharedArrayBuffer(4)
+    const view = new Int32Array(buffer)
+    Atomics.wait(view, 0, 0, ms)
   }
 
   private _parseResponse(
