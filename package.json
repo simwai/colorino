@@ -1,6 +1,6 @@
 {
   "name": "colorino",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "A super simple colorized logger that gets the most out of your terminal",
   "type": "module",
   "license": "MIT",
