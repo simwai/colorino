@@ -288,7 +288,7 @@ We welcome contributions! Here's exactly how to get started:
     # Run only Node.js tests
     npm run test:node
     
-    # Run only Browser tests (JSDOM)
+    # Run only Browser tests
     npm run test:browser
     
     # Watch mode with UI (great for dev!)
