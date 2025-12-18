@@ -1,8 +1,3 @@
-import { Colorino } from './colorino.js'
-import { BrowserColorSupportDetector } from './browser-color-support-detector.js'
-import { InputValidator } from './input-validator.js'
-import { themePalettes } from './theme.js'
-
 import {
   type ColorinoOptions,
   type Palette,
@@ -10,6 +5,10 @@ import {
   type ThemeName,
   type TerminalTheme,
 } from './types.js'
+import { Colorino } from './colorino.js'
+import { BrowserColorSupportDetector } from './browser-color-support-detector.js'
+import { InputValidator } from './input-validator.js'
+import { themePalettes } from './theme.js'
 import { determineBaseTheme } from './determine-base-theme.js'
 
 export function createColorino(
@@ -54,5 +53,5 @@ export function createColorino(
 }
 
 export type { Palette, ColorinoOptions, LogLevel, ThemeName }
-
+export { themePalettes }
 export const colorino = createColorino()
