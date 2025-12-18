@@ -4,7 +4,7 @@
 
 Colorino automatically adapts its palette to your terminal or browser DevTools theme.
 
-# <a id="0"></a>
+# <a id="0"></a><a id="0"></a>
 
 - [Why use Colorino?](#1)
 - [Features](#2)
@@ -23,8 +23,7 @@ Colorino automatically adapts its palette to your terminal or browser DevTools t
   - [2. `createColorino(palette?, options?)` (factory)](#6-2)
 - [Extending Colorino](#7)
   - [Why This Pattern?](#7-1)
-- [Contributing](#8)
-- [License](#9)
+- [License](#8)
 
 <!-- Table of contents is made with https://github.com/eugene-khyst/md-toc-cli -->
 
@@ -258,77 +257,6 @@ logger.fatal('Missing config: Exiting')
 - **Clean**: No messing with `super()` or constructor parameters
 - **Composable**: You can layer multiple extensions
 
-## <a id="8"></a>Contributing
-
-We welcome contributions! Here's exactly how to get started:
-
-1. **Setup**
-    Fork the repo and install dependencies. This will also set up Git hooks via `husky`.
-
-    ```bash
-    git clone https://github.com/simwai/colorino.git
-    cd colorino
-    npm install
-    ```
-
-2. **Development Workflow**
-    Create a branch for your feature or fix.
-
-    ```bash
-    git checkout -b feat/my-cool-feature
-    ```
-
-3. **Running Tests**
-    We use **Vitest** for testing. Please run the full suite to ensure compatibility with both Node.js and Browsers.
-
-    ```bash
-    # Run all tests (Node + Browser)
-    npm run test:all
-    
-    # Run only Node.js tests
-    npm run test:node
-    
-    # Run only Browser tests
-    npm run test:browser
-    
-    # Watch mode with UI (great for dev!)
-    npm run test:ui
-    ```
-
-4. **Linting & Formatting**
-    We use **Oxlint** and **Oxfmt** for fast, robust linting.
-
-    ```bash
-    # Fix lint issues and format code
-    npm run format
-    ```
-
-5. **Commit Changes**
-    Commit your work. This triggers our `lint-staged` hooks to automatically lint, format, and run related tests on your staged files.
-
-    ```bash
-    git add .
-    git commit -m "feat: ✨ Add amazing new feature"
-    ```
-
-6. **Building**
-    To verify the build output (using `unbuild`):
-
-    ```bash
-    npm run build
-    ```
-
-7. **Submission**
-    Push your branch and open a Pull Request.
-
-    ```bash
-    git push origin feat/my-cool-feature
-    ```
-
-## <a id="9"></a>License
+## <a id="8"></a>License
 
 [MIT](LICENSE.md)
-
----
-
-> *Note:* When running tests, browser output is simulated. Visual styling only appears in real browsers/devtools, but Colorino always routes logs correctly for every environment.
