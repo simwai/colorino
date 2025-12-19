@@ -79,7 +79,7 @@ describe('Colorino - Real Browser - Unit Test', () => {
     expect(mocks.log).toHaveBeenCalledWith(
       '%cObject data:',
       'color:#ffffff',
-      JSON.stringify(testObject, null, 2)
+      `\n${JSON.stringify(testObject, null, 2)}`
     )
   })
 

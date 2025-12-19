@@ -108,17 +108,28 @@ export class Colorino {
   private _out(level: LogLevel, args: unknown[]): void {
     const consoleMethod = isConsoleMethod(level) ? level : 'log'
 
-    const processedArgs = args.map(arg => {
-      if (
+    const processedArgs: unknown[] = []
+    let previousWasObject = false
+
+    for (const arg of args) {
+      const isObject =
         arg !== null &&
         typeof arg === 'object' &&
         typeof arg !== 'string' &&
         !(arg instanceof Error)
-      ) {
-        return this._formatValue(arg)
+
+      if (isObject) {
+        processedArgs.push('\n' + this._formatValue(arg))
+        previousWasObject = true
+      } else {
+        if (typeof arg === 'string' && previousWasObject) {
+          processedArgs.push(`\n${arg}`)
+        } else {
+          processedArgs.push(arg)
+        }
+        previousWasObject = false
       }
-      return arg
-    })
+    }
 
     if (
       this._colorLevel === ColorLevel.NO_COLOR ||
