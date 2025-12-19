@@ -80,7 +80,7 @@ export class Colorino {
     )
   }
 
-  private _formatValue(value: unknown, maxDepth = 3): string {
+  private _formatValue(value: unknown, maxDepth = 5): string {
     const seen = new WeakSet<object>()
 
     const sanitize = (val: unknown, currentDepth: number): unknown => {
