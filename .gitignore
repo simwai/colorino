@@ -45,6 +45,7 @@ logs/
 test-results/
 playwright-report/
 playwright/.cache/
+src/tests/browser/__screenshots__/
 
 # Runtime
 tmp/

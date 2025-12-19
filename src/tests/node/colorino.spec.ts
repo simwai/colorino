@@ -15,6 +15,7 @@ interface ColorinoFixtures {
 }
 
 const test = base.extend<ColorinoFixtures>({
+  // eslint-disable-next-line
   stdoutSpy: async ({}, use) => {
     const chunks: string[] = []
 
@@ -49,6 +50,7 @@ const test = base.extend<ColorinoFixtures>({
     spies.forEach(spy => spy.mockRestore())
   },
 
+  // eslint-disable-next-line
   stderrSpy: async ({}, use) => {
     const chunks: string[] = []
 
@@ -190,9 +192,10 @@ describe('Colorino - Node Environment - Unit Test', () => {
           disableWarnings: true,
         })
 
-        logger.log('Count:', 42, { active: true })
+        const loggedObject = { active: true }
+        logger.log('Count:', 42, loggedObject)
 
-        expect(stdoutSpy.getOutput()).toBe('Count: 42 { active: true }\n')
+        expect(stdoutSpy.getOutput()).toBe('Count: 42 {\n  "active": true\n}\n')
       })
     })
   })

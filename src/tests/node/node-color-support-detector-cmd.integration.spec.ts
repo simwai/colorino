@@ -22,6 +22,7 @@ interface CmdIntegrationFixtures {
 }
 
 const test = base.extend<CmdIntegrationFixtures>({
+  // eslint-disable-next-line
   scriptPaths: async ({}, use) => {
     await use({
       testCmdColors: join(__dirname, '../helpers/test-cmd-colors.ts'),
@@ -29,6 +30,7 @@ const test = base.extend<CmdIntegrationFixtures>({
     })
   },
 
+  // eslint-disable-next-line
   runInCmd: async ({}, use) => {
     await use((scriptPath: string, env?: Record<string, string>) => {
       return new Promise(resolve => {

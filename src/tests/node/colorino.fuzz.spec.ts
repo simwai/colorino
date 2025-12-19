@@ -16,6 +16,7 @@ interface FuzzTestFixtures {
 }
 
 const test = base.extend<FuzzTestFixtures>({
+  // eslint-disable-next-line
   stdoutSpy: async ({}, use) => {
     const chunks: string[] = []
 
@@ -42,6 +43,7 @@ const test = base.extend<FuzzTestFixtures>({
     spies.forEach(spy => spy.mockRestore())
   },
 
+  // eslint-disable-next-line
   stderrSpy: async ({}, use) => {
     const chunks: string[] = []
 

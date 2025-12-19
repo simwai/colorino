@@ -80,25 +80,69 @@ export class Colorino {
     )
   }
 
+  private _formatValue(value: unknown, maxDepth = 3): string {
+    const seen = new WeakSet<object>()
+
+    const sanitize = (val: unknown, currentDepth: number): unknown => {
+      if (val === null || typeof val !== 'object') return val
+
+      if (seen.has(val)) return '[Circular]'
+      seen.add(val)
+
+      if (currentDepth >= maxDepth) return '[Object]'
+
+      if (Array.isArray(val)) {
+        return val.map(item => sanitize(item, currentDepth + 1))
+      }
+
+      const result: Record<string, unknown> = {}
+      for (const key in val) {
+        result[key] = sanitize((val as any)[key], currentDepth + 1)
+      }
+      return result
+    }
+
+    return JSON.stringify(sanitize(value, 0), null, 2)
+  }
+
   private _out(level: LogLevel, args: unknown[]): void {
     const consoleMethod = isConsoleMethod(level) ? level : 'log'
+
+    const processedArgs = args.map(arg => {
+      if (
+        arg !== null &&
+        typeof arg === 'object' &&
+        typeof arg !== 'string' &&
+        !(arg instanceof Error)
+      ) {
+        return this._formatValue(arg)
+      }
+      return arg
+    })
+
     if (
       this._colorLevel === ColorLevel.NO_COLOR ||
       this._colorLevel === 'UnknownEnv'
     ) {
-      if (level === 'trace') console.trace(...args)
-      else console[consoleMethod](...args)
+      if (level === 'trace') console.trace(...processedArgs)
+      else console[consoleMethod](...processedArgs)
       return
     }
+
     if (this.isBrowser) {
       const hex = this._palette[level]
-      if (typeof args[0] === 'string') {
-        console[consoleMethod](`%c${args[0]}`, `color:${hex}`, ...args.slice(1))
+      if (typeof processedArgs[0] === 'string') {
+        console[consoleMethod](
+          `%c${processedArgs[0]}`,
+          `color:${hex}`,
+          ...processedArgs.slice(1)
+        )
       } else {
-        console[consoleMethod](...args)
+        console[consoleMethod](...processedArgs)
       }
       return
     }
+
     const hex = this._palette[level]
     let ansiCode: string
 
@@ -120,19 +164,20 @@ export class Colorino {
         break
       }
     }
-    const processedArgs = [...args]
-    const firstStringIndex = processedArgs.findIndex(
+
+    const coloredArgs = [...processedArgs]
+    const firstStringIndex = coloredArgs.findIndex(
       arg => typeof arg === 'string'
     )
     if (firstStringIndex !== -1) {
-      processedArgs[firstStringIndex] =
-        `${ansiCode}${processedArgs[firstStringIndex]}\x1b[0m`
+      coloredArgs[firstStringIndex] =
+        `${ansiCode}${coloredArgs[firstStringIndex]}\x1b[0m`
     }
 
     if (level === 'trace') {
-      console.trace(...processedArgs)
+      console.trace(...coloredArgs)
     } else {
-      console[consoleMethod](...processedArgs)
+      console[consoleMethod](...coloredArgs)
     }
   }
 }

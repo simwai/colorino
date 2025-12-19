@@ -27,6 +27,7 @@ interface ColorDetectorFixtures {
 }
 
 const test = base.extend<ColorDetectorFixtures>({
+  // eslint-disable-next-line
   mockStdin: async ({}, use) => {
     await use({
       isTTY: true,
@@ -40,6 +41,7 @@ const test = base.extend<ColorDetectorFixtures>({
     })
   },
 
+  // eslint-disable-next-line
   mockStdout: async ({}, use) => {
     await use({
       isTTY: true,

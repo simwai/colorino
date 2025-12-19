@@ -24,6 +24,7 @@ interface OscQuerierFixtures {
 }
 
 const test = base.extend<OscQuerierFixtures>({
+  // eslint-disable-next-line
   mockStdout: async ({}, use) => {
     await use({
       isTTY: true,
@@ -34,6 +35,7 @@ const test = base.extend<OscQuerierFixtures>({
     })
   },
 
+  // eslint-disable-next-line
   mockStdin: async ({}, use) => {
     let onDataCallback: ((chunk: string | Buffer) => void) | undefined
     const dataQueue: (string | null)[] = []
