@@ -112,14 +112,19 @@ export class Colorino {
     let previousWasObject = false
 
     for (const arg of args) {
-      const isObject =
+      const isFormattableObject =
         arg !== null &&
         typeof arg === 'object' &&
         typeof arg !== 'string' &&
         !(arg instanceof Error)
 
-      if (isObject) {
+      const isError = arg instanceof Error
+
+      if (isFormattableObject) {
         processedArgs.push('\n' + this._formatValue(arg))
+        previousWasObject = true
+      } else if (isError) {
+        processedArgs.push('\n', arg)
         previousWasObject = true
       } else {
         if (typeof arg === 'string' && previousWasObject) {

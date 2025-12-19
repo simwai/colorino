@@ -300,4 +300,141 @@ describe('Colorino - Node Environment - Unit Test', () => {
       vi.unstubAllEnvs()
     })
   })
+
+  describe('Object and Error Formatting with Newlines', () => {
+    describe('with NO_COLOR=1', () => {
+      test.scoped({ env: { NO_COLOR: '1' } })
+
+      test('should add leading newline before objects', ({ stdoutSpy }) => {
+        const logger = createColorino(createTestPalette(), {
+          disableWarnings: true,
+        })
+
+        const obj = { id: 1, active: true }
+        logger.log('Data:', obj)
+
+        expect(stdoutSpy.getOutput()).toBe(
+          `Data: \n${JSON.stringify(obj, null, 2)}\n`
+        )
+      })
+
+      test('should add newline before string after object', ({ stdoutSpy }) => {
+        const logger = createColorino(createTestPalette(), {
+          disableWarnings: true,
+        })
+
+        const obj = { id: 1 }
+        logger.log('Start', obj, 'End')
+
+        expect(stdoutSpy.getOutput()).toBe(
+          `Start \n${JSON.stringify(obj, null, 2)} \nEnd\n`
+        )
+      })
+
+      test('should handle consecutive strings without extra newlines', ({
+        stdoutSpy,
+      }) => {
+        const logger = createColorino(createTestPalette(), {
+          disableWarnings: true,
+        })
+
+        logger.log('First', 'Second', 'Third')
+
+        expect(stdoutSpy.getOutput()).toBe('First Second Third\n')
+      })
+
+      test('should handle complex mixed sequences', ({ stdoutSpy }) => {
+        const logger = createColorino(createTestPalette(), {
+          disableWarnings: true,
+        })
+
+        const obj1 = { a: 1 }
+        const obj2 = { b: 2 }
+        const obj3 = { c: 3 }
+        logger.log('A', obj1, obj2, 'B', obj3, 'C', 'D', obj3)
+
+        const expected = `A \n${JSON.stringify(obj1, null, 2)} \n${JSON.stringify(obj2, null, 2)} \nB \n${JSON.stringify(obj3, null, 2)} \nC D \n${JSON.stringify(obj3, null, 2)}\n`
+
+        expect(stdoutSpy.getOutput()).toBe(expected)
+      })
+
+      test('should add leading newline before Error objects', ({
+        stderrSpy,
+      }) => {
+        const logger = createColorino(createTestPalette(), {
+          disableWarnings: true,
+        })
+
+        const error = new Error('Test error')
+        logger.error('Failed:', error)
+
+        const output = stderrSpy.getOutput()
+        expect(output).toContain('Failed:')
+        expect(output).toContain('\n')
+        expect(output).toContain('Error: Test error')
+      })
+
+      test('should add newline before string after Error', ({ stderrSpy }) => {
+        const logger = createColorino(createTestPalette(), {
+          disableWarnings: true,
+        })
+
+        const error = new Error('Test error')
+        logger.error('Failed:', error, 'Retrying...')
+
+        const output = stderrSpy.getOutput()
+        expect(output).toContain('Failed:')
+        expect(output).toContain('Error: Test error')
+        expect(output).toMatch(/Error: Test error[\s\S]*Retrying/)
+      })
+
+      test('should handle objects at max depth', ({ stdoutSpy }) => {
+        const logger = createColorino(createTestPalette(), {
+          disableWarnings: true,
+        })
+
+        const deepObj = {
+          l1: { l2: { l3: { l4: { l5: { l6: 'too deep' } } } } },
+        }
+        logger.log(deepObj)
+
+        const output = stdoutSpy.getOutput()
+        expect(output).toContain('[Object]')
+        expect(output).not.toContain('too deep')
+      })
+
+      test('should handle circular references', ({ stdoutSpy }) => {
+        const logger = createColorino(createTestPalette(), {
+          disableWarnings: true,
+        })
+
+        const circular: any = { name: 'test' }
+        circular.self = circular
+
+        logger.log(circular)
+
+        const output = stdoutSpy.getOutput()
+        expect(output).toContain('[Circular]')
+      })
+    })
+
+    describe('with FORCE_COLOR=2', () => {
+      test.scoped({ env: { FORCE_COLOR: '2' } })
+
+      test('should colorize first string with objects in args', ({
+        stdoutSpy,
+      }) => {
+        const logger = createColorino(createTestPalette({ log: '#00ff00' }), {
+          disableWarnings: true,
+        })
+
+        const obj = { id: 1 }
+        logger.log('Status:', obj)
+
+        const output = stdoutSpy.getOutput()
+        expect(output).toContain('\u001B[38;5;46mStatus:\u001B[0m')
+        expect(output).toContain(JSON.stringify(obj, null, 2))
+      })
+    })
+  })
 })
