@@ -202,22 +202,6 @@ describe('Colorino - Node Environment - Unit Test', () => {
     })
   })
 
-  describe('Color Support Detection Warning', () => {
-    describe('with NO_COLOR=1', () => {
-      test.scoped({ env: { NO_COLOR: '1' } })
-
-      test('should warn when no color support detected (by default)', ({
-        stderrSpy,
-      }) => {
-        createColorino(createTestPalette())
-
-        const stderr = stderrSpy.getOutput()
-        expect(stderr).toContain('[Colorino]')
-        expect(stderr).toContain('No ANSI color support detected')
-      })
-    })
-  })
-
   describe('Edge Cases', () => {
     test('should throw an error for invalid palette entries at construction', () => {
       expect(() => {

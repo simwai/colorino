@@ -29,10 +29,9 @@ export class Colorino {
     const validatePaletteResult = this._validator.validatePalette(this._palette)
     if (validatePaletteResult.isErr()) throw validatePaletteResult.error
     if (
-      !this.isBrowser &&
-      (this._colorLevel === ColorLevel.NO_COLOR ||
-        this._colorLevel === 'UnknownEnv') &&
-      !this._options.disableWarnings
+      this._colorLevel !== ColorLevel.NO_COLOR &&
+      !this._options.disableWarnings &&
+      this._colorLevel === 'UnknownEnv'
     ) {
       this._maybeWarnUser()
     }
