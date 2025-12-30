@@ -106,16 +106,37 @@ Pass any of these names to the `theme` option to use a specific palette:
 
 | Theme Name           | Type            | Description                                      |
 |----------------------|-----------------|--------------------------------------------------|
-| `'dracula'`          | **Dark** (High) | Vibrant pinks, purples, and cyans.
-| `'catppuccin-mocha'` | **Dark** (Low)  | Soothing pastel colors.
-| `'minimal-dark'`     | **Dark**        | *Default Dark (auto).* Minimal, high-contrast.
-| `'minimal-light'`    | **Light**       | *Default Light (auto).* Minimal, high-contrast.
-| `'github-light'`     | **Light** (High)| Clean, sharp, high-contrast.
-| `'catppuccin-latte'` | **Light** (Low) | Warm, cozy light mode with soft colors.
+| `'dracula'`          | **Dark** (High) | Vibrant pinks, purples, and cyans.               |
+| `'catppuccin-mocha'` | **Dark** (Low)  | Soothing pastel colors.                          |
+| `'minimal-dark'`     | **Dark**        | *Default Dark (auto).* Minimal, high-contrast.   |
+| `'minimal-light'`    | **Light**       | *Default Light (auto).* Minimal, high-contrast.  |
+| `'github-light'`     | **Light** (High)| Clean, sharp, high-contrast.                     |
+| `'catppuccin-latte'` | **Light** (Low) | Warm, cozy light mode with soft colors.          |
 
 #### <a id="4-3-2"></a>Examples
 
-**1. Force a specific mode (uses defaults):**
+**1. Minimal defaults with custom branding (recommended):**
+Set only the colors you care about; everything else stays maximally readable.
+
+```typescript
+// Only customize error and warn
+const myLogger = createColorino({ 
+  error: '#ff007b',
+  warn: '#ffa500'
+})
+
+// Detected dark terminal:
+// - error: #ff007b (your custom red)
+// - warn: #ffa500 (your custom orange)  
+// - info, log, debug, trace: #ffffff (white - safe on dark)
+
+// Detected light terminal:
+// - error: #ff007b (your custom red)
+// - warn: #ffa500 (your custom orange)
+// - info, log, debug, trace: #000000 (black - safe on light)
+```
+
+**2. Force a specific mode (uses defaults):**
 Useful for CI/CD or environments where detection fails.
 
 ```typescript
@@ -123,7 +144,7 @@ Useful for CI/CD or environments where detection fails.
 const darkLogger = createColorino({}, { theme: 'dark' })
 ```
 
-**2. Use a specific preset:**
+**3. Use a specific preset:**
 Instant branding with zero configuration.
 
 ```typescript
@@ -131,7 +152,7 @@ Instant branding with zero configuration.
 const draculaLogger = createColorino({}, { theme: 'dracula' })
 ```
 
-**3. Customize a preset:**
+**4. Customize a preset:**
 Overlay your own colors on top of a built-in theme.
 
 ```typescript
