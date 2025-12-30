@@ -1,5 +1,6 @@
 import { Result, ok, err } from 'neverthrow'
 import type { ReadStream, WriteStream } from 'node:tty'
+import { spawnSync } from 'node:child_process'
 import { OscQueryError } from './errors.js'
 import type { TerminalTheme } from './types.js'
 
@@ -78,9 +79,14 @@ export class OscThemeQuerier {
   }
 
   private _sleepSync(ms: number): void {
-    const buffer = new SharedArrayBuffer(4)
-    const view = new Int32Array(buffer)
-    Atomics.wait(view, 0, 0, ms)
+    if (process.platform === 'win32') {
+      spawnSync('timeout', ['/T', String(Math.ceil(ms / 1000)), '/NOBREAK'], {
+        stdio: 'ignore',
+        shell: true,
+      })
+    } else {
+      spawnSync('sleep', [String(ms / 1000)], { stdio: 'ignore' })
+    }
   }
 
   private _parseResponse(
