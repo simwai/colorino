@@ -68,6 +68,7 @@ export class Colorino {
     if (this._nodeColorSupportDetector?.isNodeEnv()) {
       return this._nodeColorSupportDetector?.getColorLevel() ?? 'UnknownEnv'
     }
+
     return 'UnknownEnv'
   }
 
@@ -96,7 +97,10 @@ export class Colorino {
 
       const result: Record<string, unknown> = {}
       for (const key in val) {
-        result[key] = sanitize((val as any)[key], currentDepth + 1)
+        result[key] = sanitize(
+          (val as Record<string, unknown>)[key],
+          currentDepth + 1
+        )
       }
       return result
     }
@@ -104,9 +108,7 @@ export class Colorino {
     return JSON.stringify(sanitize(value, 0), null, 2)
   }
 
-  private _out(level: LogLevel, args: unknown[]): void {
-    const consoleMethod = isConsoleMethod(level) ? level : 'log'
-
+  private _processArgs(args: unknown[]): unknown[] {
     const processedArgs: unknown[] = []
     let previousWasObject = false
 
@@ -120,10 +122,10 @@ export class Colorino {
       const isError = arg instanceof Error
 
       if (isFormattableObject) {
-        processedArgs.push('\n' + this._formatValue(arg))
+        processedArgs.push(`\n${this._formatValue(arg)}`)
         previousWasObject = true
       } else if (isError) {
-        processedArgs.push('\n', arg)
+        processedArgs.push('\n', this._cleanErrorStack(arg))
         previousWasObject = true
       } else {
         if (typeof arg === 'string' && previousWasObject) {
@@ -135,30 +137,27 @@ export class Colorino {
       }
     }
 
-    if (
-      this._colorLevel === ColorLevel.NO_COLOR ||
-      this._colorLevel === 'UnknownEnv'
-    ) {
-      if (level === 'trace') console.trace(...processedArgs)
-      else console[consoleMethod](...processedArgs)
-      return
+    return processedArgs
+  }
+
+  private _applyBrowserColors(
+    consoleMethod: 'log' | 'info' | 'warn' | 'error' | 'debug' | 'trace',
+    args: unknown[]
+  ): unknown[] {
+    const hex = this._palette[consoleMethod]
+
+    if (typeof args[0] === 'string') {
+      return [`%c${args[0]}`, `color:${hex}`, ...args.slice(1)]
     }
 
-    if (this.isBrowser) {
-      const hex = this._palette[level]
-      if (typeof processedArgs[0] === 'string') {
-        console[consoleMethod](
-          `%c${processedArgs[0]}`,
-          `color:${hex}`,
-          ...processedArgs.slice(1)
-        )
-      } else {
-        console[consoleMethod](...processedArgs)
-      }
-      return
-    }
+    return args
+  }
 
-    const hex = this._palette[level]
+  private _applyNodeColors(
+    consoleMethod: 'log' | 'info' | 'warn' | 'error' | 'debug' | 'trace',
+    args: unknown[]
+  ): unknown[] {
+    const hex = this._palette[consoleMethod]
     let ansiCode: string
 
     switch (this._colorLevel) {
@@ -180,19 +179,92 @@ export class Colorino {
       }
     }
 
-    const coloredArgs = [...processedArgs]
+    const coloredArgs = [...args]
     const firstStringIndex = coloredArgs.findIndex(
       arg => typeof arg === 'string'
     )
+
     if (firstStringIndex !== -1) {
       coloredArgs[firstStringIndex] =
         `${ansiCode}${coloredArgs[firstStringIndex]}\x1b[0m`
     }
 
-    if (level === 'trace') {
-      console.trace(...coloredArgs)
+    return coloredArgs
+  }
+
+  private _output(
+    consoleMethod: 'log' | 'info' | 'warn' | 'error' | 'debug' | 'trace',
+    args: unknown[]
+  ): void {
+    if (consoleMethod === 'trace') {
+      this._printCleanTrace(args, consoleMethod)
     } else {
-      console[consoleMethod](...coloredArgs)
+      console[consoleMethod](...args)
+    }
+  }
+
+  private _out(level: LogLevel, args: unknown[]): void {
+    const consoleMethod = isConsoleMethod(level) ? level : 'log'
+    const processedArgs = this._processArgs(args)
+
+    if (
+      this._colorLevel === ColorLevel.NO_COLOR ||
+      this._colorLevel === 'UnknownEnv'
+    ) {
+      this._output(consoleMethod, processedArgs)
+      return
+    }
+
+    if (this.isBrowser) {
+      const coloredArgs = this._applyBrowserColors(consoleMethod, processedArgs)
+      this._output(consoleMethod, coloredArgs)
+      return
+    }
+
+    const coloredArgs = this._applyNodeColors(consoleMethod, processedArgs)
+    this._output(consoleMethod, coloredArgs)
+  }
+
+  private _filterStack(stack: string): string {
+    return stack
+      .split('\n')
+      .filter(
+        line =>
+          !line.includes('colorino.js') &&
+          !line.includes('Colorino._out') &&
+          !line.includes('Colorino.error') &&
+          !line.includes('Colorino.warn') &&
+          !line.includes('Colorino.debug') &&
+          !line.includes('Colorino.info') &&
+          !line.includes('Colorino.log') &&
+          !line.includes('Colorino.trace') &&
+          !line.includes('Colorino._cleanErrorStack') &&
+          !line.includes('Colorino._printCleanTrace') &&
+          !line.includes('Colorino._filterStack')
+      )
+      .join('\n')
+  }
+
+  private _cleanErrorStack(error: Error): Error {
+    if (!error.stack) return error
+
+    const cleanStack = this._filterStack(error.stack)
+
+    const cloned = Object.create(Object.getPrototypeOf(error)) as Error
+    Object.assign(cloned, error)
+    cloned.stack = cleanStack
+
+    return cloned
+  }
+
+  private _printCleanTrace(args: unknown[], method: 'trace'): void {
+    const error = new Error()
+
+    if (error.stack) {
+      const cleanStack = this._filterStack(error.stack)
+      console[method](...args, `\n${cleanStack}`)
+    } else {
+      console[method](...args)
     }
   }
 }
