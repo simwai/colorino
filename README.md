@@ -2,7 +2,7 @@
 
 **The zero-configuration, context-aware `console` logger for Node.js and the browser.**
 
-Colorino automatically adapts its palette to your terminal or browser DevTools theme.
+Colorino automatically adapts its palette to your terminal or browser DevTools theme, and defaults to **minimal, high-contrast** colors unless you opt into a specific theme preset.
 
 # <a id="0"></a><a id="0"></a>
 
@@ -35,7 +35,7 @@ Colorino is different: it’s a "batteries-included" logging facade with beautif
 
 ## <a id="2"></a>Features
 
-- 🎨 **Smart Theming:** Automatically detects *dark/light* mode and uses a coordinated color palette.
+- 🎨 **Smart Theming:** Automatically detects *dark/light* mode and applies a **minimal** high-contrast base palette by default; opt into a coordinated theme preset when you want richer colors.
 - 🤝 **Familiar API:** If you know `console.log`, you already know Colorino: all standard log levels are supported.
 - 🔀 **Environment-Aware:** Works in **Node.js** (ANSI color and truecolor) and all major **Browsers** (CSS styles).
 - ⚡️ **Fast, Lightweight:** Minimal dependencies, works great in modern frameworks and CLIs.
@@ -106,10 +106,12 @@ Pass any of these names to the `theme` option to use a specific palette:
 
 | Theme Name           | Type            | Description                                      |
 |----------------------|-----------------|--------------------------------------------------|
-| `'dracula'`          | **Dark** (High) | Vibrant pinks, purples, and cyans.               |
-| `'catppuccin-mocha'` | **Dark** (Low)  | *Default Dark.* Soothing pastel colors.          |
-| `'github-light'`     | **Light** (High)| *Default Light.* Clean, sharp, high-contrast.    |
-| `'catppuccin-latte'` | **Light** (Low) | Warm, cozy light mode with soft colors.          |
+| `'dracula'`          | **Dark** (High) | Vibrant pinks, purples, and cyans.
+| `'catppuccin-mocha'` | **Dark** (Low)  | Soothing pastel colors.
+| `'minimal-dark'`     | **Dark**        | *Default Dark (auto).* Minimal, high-contrast.
+| `'minimal-light'`    | **Light**       | *Default Light (auto).* Minimal, high-contrast.
+| `'github-light'`     | **Light** (High)| Clean, sharp, high-contrast.
+| `'catppuccin-latte'` | **Light** (Low) | Warm, cozy light mode with soft colors.
 
 #### <a id="4-3-2"></a>Examples
 
@@ -117,7 +119,7 @@ Pass any of these names to the `theme` option to use a specific palette:
 Useful for CI/CD or environments where detection fails.
 
 ```typescript
-// Forces the default dark theme (Catppuccin Mocha)
+// Forces dark mode using the default minimal palette (minimal-dark)
 const darkLogger = createColorino({}, { theme: 'dark' })
 ```
 
@@ -145,7 +147,7 @@ const myLogger = createColorino(
 
 ### <a id="4-4"></a>Customization
 
-Use your brand colors by passing a partial palette to the `createColorino` factory. Any log levels you don't specify will use the smart theme defaults.
+Use your brand colors by passing a partial palette to the `createColorino` factory. Any log levels you don't specify will use the detected **minimal** defaults (`minimal-dark` / `minimal-light`) unless you explicitly select a theme preset.
 
 ```typescript
 import { createColorino } from 'colorino'

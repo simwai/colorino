@@ -28,6 +28,8 @@ export type ThemeName =
   | 'catppuccin-latte'
   | 'dracula'
   | 'github-light'
+  | 'minimal-dark'
+  | 'minimal-light'
 
 export interface ColorinoOptions {
   disableWarnings?: boolean
