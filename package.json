@@ -42,7 +42,8 @@
     "LICENSE.md"
   ],
   "scripts": {
-    "build": "unbuild",
+    "bundle:browser": "node --loader ts-node/esm node_modules/rollup/dist/bin/rollup -c rollup.browser.config.ts",
+    "build": "unbuild && npm run bundle:browser",
     "format": "oxlint --fix && oxfmt",
     "test:all": "npm run test:node && npm run test:browser",
     "test:node": "vitest run --project=node",
@@ -64,6 +65,9 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.57.0",
+    "@rollup/plugin-commonjs": "^29.0.0",
+    "@rollup/plugin-node-resolve": "^16.0.3",
+    "@swc/core": "^1.15.8",
     "@types/node": "^24.9.2",
     "@vitest/browser-playwright": "^4.0.15",
     "@vitest/coverage-v8": "^4.0.15",
@@ -74,6 +78,8 @@
     "oxfmt": "^0.9.0",
     "oxlint": "^0.2.0",
     "playwright": "^1.57.0",
+    "rollup": "^4.54.0",
+    "ts-node": "^10.9.2",
     "tsx": "^4.20.6",
     "typescript": "^5.9.3",
     "unbuild": "^3.6.1",

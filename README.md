@@ -9,21 +9,22 @@ Colorino automatically adapts its palette to your terminal or browser DevTools t
 - [Why use Colorino?](#1)
 - [Features](#2)
 - [Installation](#3)
-- [Usage](#4)
-  - [Quick Start](#4-1)
-  - [Creating a Custom Logger](#4-2)
-  - [Options & Theme Overrides](#4-3)
-    - [Available Theme Presets](#4-3-1)
-    - [Examples](#4-3-2)
-  - [Customization](#4-4)
-  - [Supported Environment Variables](#4-5)
-- [Colorino vs. Chalk](#5)
-- [API Reference](#6)
-  - [1. `colorino` (default instance)](#6-1)
-  - [2. `createColorino(palette?, options?)` (factory)](#6-2)
-- [Extending Colorino](#7)
-  - [Why This Pattern?](#7-1)
-- [License](#8)
+- [Browser via CDN (unpkg)](#4)
+- [Usage](#5)
+  - [Quick Start](#5-1)
+  - [Creating a Custom Logger](#5-2)
+  - [Options & Theme Overrides](#5-3)
+    - [Available Theme Presets](#5-3-1)
+    - [Examples](#5-3-2)
+  - [Customization](#5-4)
+  - [Supported Environment Variables](#5-5)
+- [Colorino vs. Chalk](#6)
+- [API Reference](#7)
+  - [1. `colorino` (default instance)](#7-1)
+  - [2. `createColorino(palette?, options?)` (factory)](#7-2)
+- [Extending Colorino](#8)
+  - [Why This Pattern?](#8-1)
+- [License](#9)
 
 <!-- Table of contents is made with https://github.com/eugene-khyst/md-toc-cli -->
 
@@ -48,9 +49,46 @@ Colorino is different: it’s a "batteries-included" logging facade with beautif
 npm install colorino
 ```
 
-## <a id="4"></a>Usage
+## <a id="4"></a>Browser via CDN (unpkg)
 
-### <a id="4-1"></a>Quick Start
+You can use Colorino directly in the browser without any build step.
+
+**ESM (recommended):**
+
+```html
+<!DOCTYPE html>
+<html>
+  <head>
+    <script type="module">
+      import { colorino } from 'https://unpkg.com/colorino/dist/browser.bundle.mjs';
+
+      colorino.info('Hello from the browser!');
+      colorino.error('Something went wrong');
+    </script>
+  </head>
+  <body></body>
+</html>
+```
+
+CommonJS-style bundle:
+
+```HTML
+<!DOCTYPE html>
+<html>
+  <head>
+    <script src="https://unpkg.com/colorino/dist/browser.bundle.cjs"></script>
+    <script>
+      // `colorino` is exposed as a global
+      colorino.info('Hello from the CJS bundle!');
+    </script>
+  </head>
+  <body></body>
+</html>
+```
+
+## <a id="5"></a>Usage
+
+### <a id="5-1"></a>Quick Start
 
 Just import the default instance and log away!
 
@@ -66,7 +104,7 @@ colorino.debug('Debug with objects:', { x: 5, y: 9 })
 colorino.trace('Tracing app start...')
 ```
 
-### <a id="4-2"></a>Creating a Custom Logger
+### <a id="5-2"></a>Creating a Custom Logger
 
 Need your own colors or different settings?
 Use the factory to create as many loggers as you want (each with its own palette and options):
@@ -85,7 +123,7 @@ myLogger.error('Critical!')
 myLogger.info('Rebranded info!')
 ```
 
-### <a id="4-3"></a>Options & Theme Overrides
+### <a id="5-3"></a>Options & Theme Overrides
 
 `createColorino(palette?, options?)` accepts:
 
@@ -100,7 +138,7 @@ myLogger.info('Rebranded info!')
 2. **`'dark' | 'light'`**: Forces the logger into a specific mode using the default preset for that mode.
 3. **`ThemeName`**: Forces a specific built-in palette (e.g., `'dracula'`).
 
-#### <a id="4-3-1"></a>Available Theme Presets
+#### <a id="5-3-1"></a>Available Theme Presets
 
 Pass any of these names to the `theme` option to use a specific palette:
 
@@ -113,9 +151,9 @@ Pass any of these names to the `theme` option to use a specific palette:
 | `'github-light'`     | **Light** (High)| Clean, sharp, high-contrast.                     |
 | `'catppuccin-latte'` | **Light** (Low) | Warm, cozy light mode with soft colors.          |
 
-#### <a id="4-3-2"></a>Examples
+#### <a id="5-3-2"></a>Examples
 
-**1. Minimal defaults with custom branding (recommended):**
+**1. Minimal defaults with custom branding:**
 Set only the colors you care about; everything else stays maximally readable.
 
 ```typescript
@@ -166,7 +204,7 @@ const myLogger = createColorino(
 > **Tip:**
 > Forcing `'dark'` or `'light'` bypasses automatic theming, ensuring predictable colors in environments with unknown or unsupported theme detection (like some CI pipelines, dumb terminals, or minimal browsers).
 
-### <a id="4-4"></a>Customization
+### <a id="5-4"></a>Customization
 
 Use your brand colors by passing a partial palette to the `createColorino` factory. Any log levels you don't specify will use the detected **minimal** defaults (`minimal-dark` / `minimal-light`) unless you explicitly select a theme preset.
 
@@ -180,7 +218,7 @@ myLogger.error('Oh no!') // Uses your custom color
 myLogger.info('Still styled by theme.') // Uses the default theme color
 ```
 
-### <a id="4-5"></a>Supported Environment Variables
+### <a id="5-5"></a>Supported Environment Variables
 
 Colorino auto-detects your environment and color support, but you can override behavior using these standard environment variables (compatible with Chalk):
 
@@ -195,7 +233,7 @@ Colorino auto-detects your environment and color support, but you can override b
 | `WT_SESSION`     | Detected for Windows Terminal (enables color)     |                          |
 | `CI`             | Many CI platforms default to *no color*           | `CI=1 node app.js`       |
 
-## <a id="5"></a>Colorino vs. Chalk
+## <a id="6"></a>Colorino vs. Chalk
 
 | Feature                  | 🎨 **Colorino**            | 🖍️ **Chalk**    |
 |--------------------------|----------------------------|-----------------|
@@ -205,11 +243,11 @@ Colorino auto-detects your environment and color support, but you can override b
 | CSS console logs         | ✔                          | ✘               |
 | Extensible / Composable  | ✔ (via factory)            | ✘               |
 
-## <a id="6"></a>API Reference
+## <a id="7"></a>API Reference
 
 The `colorino` package exports two main items:
 
-### <a id="6-1"></a>1. `colorino` (default instance)
+### <a id="7-1"></a>1. `colorino` (default instance)
 
 A pre-configured, zero-setup logger instance. Just import and use.
 
@@ -220,7 +258,7 @@ A pre-configured, zero-setup logger instance. Just import and use.
 - `.debug(...args)`
 - `.trace(...args)`
 
-### <a id="6-2"></a>2. `createColorino(palette?, options?)` (factory)
+### <a id="7-2"></a>2. `createColorino(palette?, options?)` (factory)
 
 A factory function to create your own customized logger instances.
 
@@ -229,7 +267,7 @@ A factory function to create your own customized logger instances.
   - `disableWarnings: boolean` (default `false`): Suppress warnings on environments with no color support.
   - `theme: 'dark' | 'light'` (default `auto`): Force a specific theme instead of auto-detecting.
 
-## <a id="7"></a>Extending Colorino
+## <a id="8"></a>Extending Colorino
 
 Example: Add a `fatal()` logger for critical errors.
 
@@ -272,7 +310,7 @@ logger.info('Starting!')
 logger.fatal('Missing config: Exiting')
 ```
 
-### <a id="7-1"></a>Why This Pattern?
+### <a id="8-1"></a>Why This Pattern?
 
 - **Composition > Inheritance**: No fragile base class problems
 - **Type Safe**: TypeScript infers the return type correctly
@@ -280,6 +318,6 @@ logger.fatal('Missing config: Exiting')
 - **Clean**: No messing with `super()` or constructor parameters
 - **Composable**: You can layer multiple extensions
 
-## <a id="8"></a>License
+## <a id="9"></a>License
 
 [MIT](LICENSE.md)

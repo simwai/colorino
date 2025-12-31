@@ -1,4 +1,5 @@
 {
+  "table-column-style": false,
   "no-inline-html": false,
   "code-block-style": {
     "style": "fenced"

@@ -25,7 +25,13 @@
     "noEmitOnError": true,
     "useDefineForClassFields": true,
     "forceConsistentCasingInFileNames": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "isolatedModules": true,
+    "incremental": true
+  },
+  "ts-node": {
+    "swc": true,
+    "esm": true,
   },
   "include": [
     "src/**/*",
