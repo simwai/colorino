@@ -63,7 +63,7 @@ export class NodeColorSupportDetector implements ColorSupportDetectorInterface {
   }
 
   getColorLevel(): ColorLevel {
-    if (this._envNoColor !== undefined) {
+    if (this._envNoColor !== undefined && this._envNoColor !== '') {
       return ColorLevel.NO_COLOR
     }
 
