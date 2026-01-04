@@ -1,10 +1,10 @@
-// @ts-ignore
 import {
+  Colorino,
   type ColorinoOptions,
   type Palette,
   type TerminalTheme,
 } from './types.js'
-import { Colorino } from './colorino.js'
+import { MyColorino } from './colorino.js'
 import { NodeColorSupportDetector } from './node-color-support-detector.js'
 import { InputValidator } from './input-validator.js'
 import { themePalettes } from './theme.js'
@@ -38,7 +38,7 @@ export function createColorino(
   // 3. The user's colors will override the selected base theme.
   const finalPalette: Palette = { ...basePalette, ...palette }
 
-  return new Colorino(
+  return new MyColorino(
     finalPalette,
     validator,
     undefined, // Browser detector is never available
@@ -47,6 +47,12 @@ export function createColorino(
   )
 }
 
-export type { Palette, ColorinoOptions, LogLevel, ThemeName } from './types.js'
+export type {
+  Palette,
+  ColorinoOptions,
+  LogLevel,
+  ThemeName,
+  Colorino,
+} from './types.js'
 export { themePalettes }
 export const colorino = createColorino()

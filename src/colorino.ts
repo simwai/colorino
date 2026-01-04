@@ -1,16 +1,17 @@
 import { colorConverter } from './color-converter.js'
 import { NodeColorSupportDetector } from './node-color-support-detector.js'
+import { BrowserColorSupportDetector } from './browser-color-support-detector.js'
 import { ColorLevel } from './enums.js'
 import {
   type Palette,
   type LogLevel,
   isConsoleMethod,
   type ColorinoOptions,
+  Colorino,
 } from './types.js'
-import { BrowserColorSupportDetector } from './browser-color-support-detector.js'
 import { InputValidator } from './input-validator.js'
 
-export class Colorino {
+export class MyColorino implements Colorino {
   private _alreadyWarned = false
   private readonly _colorLevel: ColorLevel | 'UnknownEnv'
   private readonly isBrowser: boolean

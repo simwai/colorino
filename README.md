@@ -1,8 +1,8 @@
 # <a id="0"></a>🎨 Colorino
 
-**The zero-configuration, context-aware `console` logger for Node.js and the browser.**
+**The zero‑configuration, context‑aware `console` logger for Node.js and the browser—with smart theming and graceful color degradation.**
 
-Colorino automatically adapts its palette to your terminal or browser DevTools theme, and defaults to **minimal, high-contrast** colors unless you opt into a specific theme preset.
+Colorino automatically adapts its palette to your terminal or browser DevTools theme, and degrades colors gracefully so your logs stay readable and on‑brand even in limited environments
 
 # <a id="0"></a><a id="0"></a>
 
@@ -23,8 +23,10 @@ Colorino automatically adapts its palette to your terminal or browser DevTools t
   - [1. `colorino` (default instance)](#7-1)
   - [2. `createColorino(palette?, options?)` (factory)](#7-2)
 - [Extending Colorino](#8)
-  - [Why This Pattern?](#8-1)
-- [License](#9)
+  - [Use case: automatic file/context info](#8-1)
+- [Internals & Dependencies](#9)
+  - [Why This Pattern?](#9-1)
+- [License](#10)
 
 <!-- Table of contents is made with https://github.com/eugene-khyst/md-toc-cli -->
 
@@ -37,6 +39,7 @@ Colorino is different: it’s a "batteries-included" logging facade with beautif
 ## <a id="2"></a>Features
 
 - 🎨 **Smart Theming:** Automatically detects *dark/light* mode and applies a **minimal** high-contrast base palette by default; opt into a coordinated theme preset when you want richer colors.
+- 🤘 **Graceful Color Degradation**: Accepts rich colors (hex/RGB) and automatically down‑samples to the best ANSI‑16/ANSI‑256/Truecolor match for the current environment.​
 - 🤝 **Familiar API:** If you know `console.log`, you already know Colorino: all standard log levels are supported.
 - 🔀 **Environment-Aware:** Works in **Node.js** (ANSI color and truecolor) and all major **Browsers** (CSS styles).
 - ⚡️ **Fast, Lightweight:** Minimal dependencies, works great in modern frameworks and CLIs.
@@ -174,15 +177,7 @@ const myLogger = createColorino({
 // - info, log, debug, trace: #000000 (black - safe on light)
 ```
 
-**2. Force a specific mode (uses defaults):**
-Useful for CI/CD or environments where detection fails.
-
-```typescript
-// Forces dark mode using the default minimal palette (minimal-dark)
-const darkLogger = createColorino({}, { theme: 'dark' })
-```
-
-**3. Use a specific preset:**
+**2. Use a specific preset:**
 Instant branding with zero configuration.
 
 ```typescript
@@ -190,7 +185,7 @@ Instant branding with zero configuration.
 const draculaLogger = createColorino({}, { theme: 'dracula' })
 ```
 
-**4. Customize a preset:**
+**3. Customize a preset:**
 Overlay your own colors on top of a built-in theme.
 
 ```typescript
@@ -201,12 +196,24 @@ const myLogger = createColorino(
 )
 ```
 
+**4. Force a specific mode (uses defaults):**
+Useful for CI/CD or environments where detection fails.
+
+```typescript
+// Forces dark mode using the default minimal palette (minimal-dark)
+const darkLogger = createColorino({}, { theme: 'dark' })
+```
+
 > **Tip:**
 > Forcing `'dark'` or `'light'` bypasses automatic theming, ensuring predictable colors in environments with unknown or unsupported theme detection (like some CI pipelines, dumb terminals, or minimal browsers).
 
 ### <a id="5-4"></a>Customization
 
 Use your brand colors by passing a partial palette to the `createColorino` factory. Any log levels you don't specify will use the detected **minimal** defaults (`minimal-dark` / `minimal-light`) unless you explicitly select a theme preset.
+
+Colorino always targets the highest color fidelity supported by the environment. If your palette uses hex colors but only ANSI‑16 is available, Colorino computes the nearest ANSI color so your branding stays recognizable, even on limited terminals.
+
+If you pass an invalid color value (e.g. malformed hex) in a custom palette, Colorino throws an InputValidationError at creation time so broken palettes fail fast.
 
 ```typescript
 import { createColorino } from 'colorino'
@@ -222,16 +229,16 @@ myLogger.info('Still styled by theme.') // Uses the default theme color
 
 Colorino auto-detects your environment and color support, but you can override behavior using these standard environment variables (compatible with Chalk):
 
-| Variable         | Effect                                            | Example                  |
-|------------------|---------------------------------------------------|--------------------------|
-| `NO_COLOR`       | Forces *no color* output                          | `NO_COLOR=1 node app.js` |
-| `FORCE_COLOR`    | Forces color (`1`=ANSI, `2`=256, `3`=truecolor)   | `FORCE_COLOR=3 node app.js` |
-| `CLICOLOR`       | `"0"` disables color                              | `CLICOLOR=0 node app.js` |
-| `CLICOLOR_FORCE` | Non-`"0"` value enables color even if not a TTY   | `CLICOLOR_FORCE=1 node app.js` |
-| `TERM`           | Terminal type, can increase/decrease support      | `TERM=xterm-256color`    |
-| `COLORTERM`      | `'truecolor'` or `'24bit'` enables truecolor      | `COLORTERM=truecolor`    |
-| `WT_SESSION`     | Detected for Windows Terminal (enables color)     |                          |
-| `CI`             | Many CI platforms default to *no color*           | `CI=1 node app.js`       |
+| Variable        | Effect                                                                                   | Example                              |
+|-----------------|------------------------------------------------------------------------------------------|--------------------------------------|
+| `NO_COLOR`      | Forces no color output                                                                   | `NO_COLOR=1 node app.js`            |
+| `FORCE_COLOR`   | Forces color level: `0`=off, `1`=ANSI‑16, `2`=ANSI‑256, `3`=Truecolor                    | `FORCE_COLOR=3 node app.js`         |
+| `CLICOLOR`      | `"0"` disables color                                                                     | `CLICOLOR=0 node app.js`            |
+| `CLICOLOR_FORCE`| Non‑`"0"` value enables color even if not a TTY                                          | `CLICOLOR_FORCE=1 node app.js`      |
+| `TERM`          | Terminal type; may influence color support                                               | `TERM=xterm-256color`               |
+| `COLORTERM`     | `'truecolor'` or `'24bit'` enables truecolor                                             | `COLORTERM=truecolor`               |
+| `WT_SESSION`    | Enables color detection for Windows Terminal                                             |                                      |
+| `CI`            | Many CI platforms default to no color                                                    | `CI=1 node app.js`                  |
 
 ## <a id="6"></a>Colorino vs. Chalk
 
@@ -269,48 +276,69 @@ A factory function to create your own customized logger instances.
 
 ## <a id="8"></a>Extending Colorino
 
-Example: Add a `fatal()` logger for critical errors.
+Colorino is designed for composition: create a base logger via `createColorino()`, then extend it by inheriting from the base and overriding only the methods you need.
 
-Since colorino uses a factory pattern, extend it by creating your own factory that composes the base logger with additional methods:
+### <a id="8-1"></a>Use case: automatic file/context info
 
-```typescript
-import { createColorino, type ColorinoOptions, type Palette } from 'colorino'
+This example prefixes every `.info()` and `.error()` call with best‑effort caller context (file/line) derived from a synthetic `Error` stack.
 
-// Create a factory for your custom logger
-export function createMyLogger(palette?: Partial<Palette>, options?: ColorinoOptions) {
-  // Get the base logger instance
-  const baseLogger = createColorino(palette, options)
+```ts
+import { createColorino, type Colorino, type ColorinoOptions, type Palette } from 'colorino'
 
-  // Define your custom method
-  function fatal(...args: unknown[]): void {
-    // Reuse the base logger's error method
-    baseLogger.error(...args)
+function getCallerContext(): string {
+  const err = new Error()
+  if (!err.stack) return 'unknown'
 
-    // Add your custom behavior
-    if (typeof process !== 'undefined' && process.exit) {
-      process.exit(1)
-    }
-  }
+  const lines = err.stack.split('\n').slice(2) // skip "Error" + current frame
+  const frame = lines[0] ?? ''
 
-  // Return a new object with all base methods + your custom ones
-  // This preserves type safety and the original API
-  return {
-    ...baseLogger,
-    fatal,
-  }
+  const match =
+    frame.match(/at (.+?) \((.+?):(\d+):\d+\)/) ??
+    frame.match(/at (.+?):(\d+):\d+/)
+
+  if (!match) return frame.trim() || 'unknown'
+
+  const [_, maybeFn, fileOrLine, maybeLine] = match
+  const file = maybeLine ? fileOrLine : maybeFn
+  const line = maybeLine ?? fileOrLine
+
+  return `${file}:${line}`
 }
+
+export function createContextLogger(
+  palette?: Partial<Palette>,
+  options?: ColorinoOptions,
+): Colorino {
+  const base = createColorino(palette, options)
+
+  // Inherit all default methods from the base logger...
+  const logger = Object.create(base) as Colorino // Object.create uses `base` as the prototype. 
+
+  // ...and override only what you need.
+  Object.assign(logger, { // Object.assign copies these methods onto `logger`. [web:346]
+    info(...args: unknown[]) {
+      base.info(`[${getCallerContext()}]`, ...args)
+    },
+    error(...args: unknown[]) {
+      base.error(`[${getCallerContext()}]`, ...args)
+    },
+  })
+
+  return logger
+}
+
+// Usage
+const logger = createContextLogger({}, { theme: 'dracula' })
+logger.info('User created', { id: 123 })
+logger.error('Failed to load user', { id: 456 })
 ```
 
-Usage:
+## <a id="9"></a>Internals & Dependencies
 
-```typescript
-const logger = createMyLogger({ error: '#d92626' })
+- Colorino’s runtime logic depends on a single bundled library, `neverthrow`, which is MIT‑licensed and used for type‑safe Result handling.
+- `neverthrow` is bundled into the published artifacts, so you do not need to install it separately; your application sees a single runtime dependency: Colorino itself.
 
-logger.info('Starting!')
-logger.fatal('Missing config: Exiting')
-```
-
-### <a id="8-1"></a>Why This Pattern?
+### <a id="9-1"></a>Why This Pattern?
 
 - **Composition > Inheritance**: No fragile base class problems
 - **Type Safe**: TypeScript infers the return type correctly
@@ -318,6 +346,6 @@ logger.fatal('Missing config: Exiting')
 - **Clean**: No messing with `super()` or constructor parameters
 - **Composable**: You can layer multiple extensions
 
-## <a id="9"></a>License
+## <a id="10"></a>License
 
 [MIT](LICENSE.md)

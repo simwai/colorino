@@ -1,8 +1,3 @@
-import type {
-  SpawnSyncOptionsWithStringEncoding,
-  SpawnSyncReturns,
-} from 'node:child_process'
-
 export type ConsoleMethod =
   | 'log'
   | 'info'
@@ -36,25 +31,11 @@ export interface ColorinoOptions {
   theme?: TerminalTheme | ThemeName | 'auto'
 }
 
-export interface PathUtils {
-  join(...paths: string[]): string
-  dirname(path: string): string
-}
-
-export type SpawnSyncFn = (
-  command: string,
-  args: readonly string[],
-  options: SpawnSyncOptionsWithStringEncoding
-) => SpawnSyncReturns<string>
-
-export interface ProcessSpawner {
-  spawnSync(
-    command: string,
-    args: string[],
-    options: { stdio: any[]; timeout: number; encoding: string }
-  ): SpawnSyncReturns<string>
-
-  getExecPath(): string
-
-  resolveScriptPath(scriptName: string): string
+export interface Colorino {
+  log(...args: unknown[]): void
+  info(...args: unknown[]): void
+  warn(...args: unknown[]): void
+  error(...args: unknown[]): void
+  debug(...args: unknown[]): void
+  trace(...args: unknown[]): void
 }
