@@ -38,7 +38,7 @@ Colorino is different: it’s a "batteries-included" logging facade with beautif
 
 ## <a id="2"></a>Features
 
-- 🎨 **Smart Theming:** Automatically detects *dark/light* mode and applies a **minimal** high-contrast base palette by default; opt into a coordinated theme preset when you want richer colors.
+- 🎨 **Smart Theming:** Automatically detects *dark/light* mode and applies a high‑contrast base palette by default (Dracula for dark, GitHub Light for light); opt into a coordinated theme preset when you want richer colors.
 - 🤘 **Graceful Color Degradation**: Accepts rich colors (hex/RGB) and automatically down‑samples to the best ANSI‑16/ANSI‑256/Truecolor match for the current environment.​
 - 🤝 **Familiar API:** If you know `console.log`, you already know Colorino: all standard log levels are supported.
 - 🔀 **Environment-Aware:** Works in **Node.js** (ANSI color and truecolor) and all major **Browsers** (CSS styles).
@@ -150,17 +150,17 @@ Pass any of these names to the `theme` option to use a specific palette:
 
 | Theme Name           | Type            | Description                                      |
 |----------------------|-----------------|--------------------------------------------------|
-| `'dracula'`          | **Dark** (High) | Vibrant pinks, purples, and cyans.               |
-| `'catppuccin-mocha'` | **Dark** (Low)  | Soothing pastel colors.                          |
-| `'minimal-dark'`     | **Dark**        | *Default Dark (auto).* Minimal, high-contrast.   |
-| `'minimal-light'`    | **Light**       | *Default Light (auto).* Minimal, high-contrast.  |
-| `'github-light'`     | **Light** (High)| Clean, sharp, high-contrast.                     |
-| `'catppuccin-latte'` | **Light** (Low) | Warm, cozy light mode with soft colors.          |
+| `'dracula'`          | **Dark** (High Contrast) | Vibrant pinks, purples, and cyans.               |
+| `'catppuccin-mocha'` | **Dark** (Low Contrast)  | Soothing pastel colors.                          |
+| `'github-light'`     | **Light** (High Contrast)| Clean, sharp, high-contrast.                     |
+| `'catppuccin-latte'` | **Light** (Low Contrast) | Warm, cozy light mode with soft colors.          |
+
+In auto mode, Colorino uses dracula in dark environments and github-light in light environments.
 
 #### <a id="5-3-2"></a>Examples
 
-**1. Minimal defaults with custom branding:**
-Set only the colors you care about; everything else stays maximally readable.
+**1. Default palette with custom branding:**
+Set only the colors you care about; everything else uses the detected base theme or your explicitly selected theme.
 
 ```typescript
 // Only customize error and warn
@@ -169,15 +169,21 @@ const myLogger = createColorino({
   warn: '#ffa500'
 })
 
-// Detected dark terminal:
+// Detected dark terminal (uses dracula as base):
 // - error: #ff007b (your custom red)
 // - warn: #ffa500 (your custom orange)  
-// - info, log, debug, trace: #ffffff (white - safe on dark)
+// - info: #8be9fd (dracula cyan)
+// - log: #f8f8f2 (dracula foreground)
+// - debug: #bd93f9 (dracula purple)
+// - trace: #6272a4 (dracula comment)
 
-// Detected light terminal:
+// Detected light terminal (uses github-light as base):
 // - error: #ff007b (your custom red)
 // - warn: #ffa500 (your custom orange)
-// - info, log, debug, trace: #000000 (black - safe on light)
+// - info: #0366d6 (github blue)
+// - log: #24292e (github text)
+// - debug: #586069 (github gray)
+// - trace: #6a737d (github gray-light)
 ```
 
 **2. Use a specific preset:**
@@ -200,10 +206,10 @@ const myLogger = createColorino(
 ```
 
 **4. Force a specific mode (uses defaults):**
-Useful for CI/CD or environments where detection fails.
+Useful for environments where detection fails.
 
 ```typescript
-// Forces dark mode using the default minimal palette (minimal-dark)
+// Forces dark mode using the default palette
 const darkLogger = createColorino({}, { theme: 'dark' })
 ```
 
