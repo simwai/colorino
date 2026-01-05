@@ -326,7 +326,7 @@ export function createContextLogger(
   const logger = Object.create(base) as Colorino // Object.create uses `base` as the prototype. 
 
   // ...and override only what you need.
-  Object.assign(logger, { // Object.assign copies these methods onto `logger`. [web:346]
+  Object.assign(logger, { // Object.assign copies these methods onto `logger`.
     info(...args: unknown[]) {
       base.info(`[${getCallerContext()}]`, ...args)
     },
