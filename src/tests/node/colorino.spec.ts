@@ -4,6 +4,65 @@ import { createColorino } from '../../node.js'
 import { generateRandomString } from '../helpers/random.js'
 import { createTestPalette } from '../helpers/test-setup.js'
 
+type ConsoleMethodName = keyof Pick<
+  Console,
+  'log' | 'info' | 'debug' | 'warn' | 'error' | 'trace'
+>
+
+interface SpyConsoleOptions {
+  callThrough: boolean
+  onCall?: (parameters: unknown[]) => void
+}
+
+function spyConsoleMethod(
+  methodName: ConsoleMethodName,
+  options: SpyConsoleOptions
+) {
+  const originalMethod = (
+    console[methodName] as (...parameters: unknown[]) => void
+  ).bind(console)
+
+  const capturedCalls: unknown[][] = []
+
+  const spy = vi
+    .spyOn(console, methodName)
+    .mockImplementation((...parameters: unknown[]) => {
+      capturedCalls.push(parameters)
+      options.onCall?.(parameters)
+      if (options.callThrough) {
+        originalMethod(...parameters)
+      }
+    })
+
+  return {
+    spy,
+    getCalls: () => capturedCalls,
+    restore: () => spy.mockRestore(),
+  }
+}
+
+function stringifyConsoleParameter(parameter: unknown): string {
+  if (typeof parameter === 'string') {
+    return parameter
+  }
+
+  return util.inspect(parameter)
+}
+
+function stringifyConsoleLine(parameters: unknown[], prefix?: string): string {
+  const parts: string[] = []
+
+  if (prefix !== undefined) {
+    parts.push(prefix)
+  }
+
+  for (const parameter of parameters) {
+    parts.push(stringifyConsoleParameter(parameter))
+  }
+
+  return parts.join(' ') + '\n'
+}
+
 interface ColorinoFixtures {
   stdoutSpy: {
     getOutput: () => string
@@ -18,28 +77,26 @@ const test = base.extend<ColorinoFixtures>({
   // eslint-disable-next-line
   stdoutSpy: async ({}, use) => {
     const chunks: string[] = []
+    const callThrough = true
 
-    const spies = [
-      vi.spyOn(console, 'log').mockImplementation((...args) => {
-        chunks.push(
-          args
-            .map(arg => (typeof arg === 'string' ? arg : util.inspect(arg)))
-            .join(' ') + '\n'
-        )
+    const spyInstances = [
+      spyConsoleMethod('log', {
+        callThrough,
+        onCall: parameters => {
+          chunks.push(stringifyConsoleLine(parameters))
+        },
       }),
-      vi.spyOn(console, 'info').mockImplementation((...args) => {
-        chunks.push(
-          args
-            .map(arg => (typeof arg === 'string' ? arg : util.inspect(arg)))
-            .join(' ') + '\n'
-        )
+      spyConsoleMethod('info', {
+        callThrough,
+        onCall: parameters => {
+          chunks.push(stringifyConsoleLine(parameters))
+        },
       }),
-      vi.spyOn(console, 'debug').mockImplementation((...args) => {
-        chunks.push(
-          args
-            .map(arg => (typeof arg === 'string' ? arg : util.inspect(arg)))
-            .join(' ') + '\n'
-        )
+      spyConsoleMethod('debug', {
+        callThrough,
+        onCall: parameters => {
+          chunks.push(stringifyConsoleLine(parameters))
+        },
       }),
     ]
 
@@ -47,36 +104,34 @@ const test = base.extend<ColorinoFixtures>({
       getOutput: () => chunks.join(''),
     })
 
-    spies.forEach(spy => spy.mockRestore())
+    for (const spyInstance of spyInstances) {
+      spyInstance.restore()
+    }
   },
 
   // eslint-disable-next-line
   stderrSpy: async ({}, use) => {
     const chunks: string[] = []
+    const callThrough = true
 
-    const spies = [
-      vi.spyOn(console, 'warn').mockImplementation((...args) => {
-        chunks.push(
-          args
-            .map(arg => (typeof arg === 'string' ? arg : util.inspect(arg)))
-            .join(' ') + '\n'
-        )
+    const spyInstances = [
+      spyConsoleMethod('warn', {
+        callThrough,
+        onCall: parameters => {
+          chunks.push(stringifyConsoleLine(parameters))
+        },
       }),
-      vi.spyOn(console, 'error').mockImplementation((...args) => {
-        chunks.push(
-          args
-            .map(arg => (typeof arg === 'string' ? arg : util.inspect(arg)))
-            .join(' ') + '\n'
-        )
+      spyConsoleMethod('error', {
+        callThrough,
+        onCall: parameters => {
+          chunks.push(stringifyConsoleLine(parameters))
+        },
       }),
-      vi.spyOn(console, 'trace').mockImplementation((...args) => {
-        chunks.push(
-          'Trace: ' +
-            args
-              .map(arg => (typeof arg === 'string' ? arg : util.inspect(arg)))
-              .join(' ') +
-            '\n'
-        )
+      spyConsoleMethod('trace', {
+        callThrough,
+        onCall: parameters => {
+          chunks.push(stringifyConsoleLine(parameters, 'Trace:'))
+        },
       }),
     ]
 
@@ -84,7 +139,9 @@ const test = base.extend<ColorinoFixtures>({
       getOutput: () => chunks.join(''),
     })
 
-    spies.forEach(spy => spy.mockRestore())
+    for (const spyInstance of spyInstances) {
+      spyInstance.restore()
+    }
   },
 
   env: [{}, { injected: true }],
@@ -199,6 +256,33 @@ describe('Colorino - Node Environment - Unit Test', () => {
           `Count: 42 \n${JSON.stringify(loggedObject, null, 2)}\n`
         )
       })
+    })
+  })
+
+  describe('Error logging with cleaned stack', () => {
+    test('logs error message and cleaned stack without Colorino internals', ({
+      stderrSpy,
+    }) => {
+      const logger = createColorino(createTestPalette(), {
+        disableWarnings: true,
+      })
+
+      const error = new Error('Test error')
+
+      logger.error('Failed:', error)
+
+      const output = stderrSpy.getOutput()
+
+      expect(output).toContain('Failed:')
+      expect(output).toContain('Error: Test error')
+
+      expect(output).toMatch(/^\s*at\s.+/m)
+
+      expect(output).not.toMatch(/Colorino\._out/)
+      expect(output).not.toMatch(/Colorino\._cleanErrorStack/)
+      expect(output).not.toMatch(/Colorino\._printCleanTrace/)
+      expect(output).not.toMatch(/Colorino\._filterStack/)
+      expect(output).not.toMatch(/colorino\.js/)
     })
   })
 
@@ -337,7 +421,15 @@ describe('Colorino - Node Environment - Unit Test', () => {
         const obj3 = { c: 3 }
         logger.log('A', obj1, obj2, 'B', obj3, 'C', 'D', obj3)
 
-        const expected = `A \n${JSON.stringify(obj1, null, 2)} \n${JSON.stringify(obj2, null, 2)} \nB \n${JSON.stringify(obj3, null, 2)} \nC D \n${JSON.stringify(obj3, null, 2)}\n`
+        const expected = `A \n${JSON.stringify(obj1, null, 2)} \n${JSON.stringify(
+          obj2,
+          null,
+          2
+        )} \nB \n${JSON.stringify(obj3, null, 2)} \nC D \n${JSON.stringify(
+          obj3,
+          null,
+          2
+        )}\n`
 
         expect(stdoutSpy.getOutput()).toBe(expected)
       })
