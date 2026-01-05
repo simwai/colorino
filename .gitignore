@@ -93,3 +93,4 @@ Thumbs.db
 dist
 dist-ssr
 out
+*.old
