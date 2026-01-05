@@ -44,7 +44,7 @@ interface OscIntegrationFixtures {
 }
 
 const test = base.extend<OscIntegrationFixtures>({
-  // eslint-disable-next-line no-empty-pattern
+  // oxlint-disable-next-line no-empty-pattern
   scriptPaths: async ({}, use) => {
     await use({
       testOscLeak: join(__dirname, '../helpers/test-osc-leak.ts'),
@@ -53,7 +53,7 @@ const test = base.extend<OscIntegrationFixtures>({
       manualTestCli: join(__dirname, '../helpers/manual-test-cli.ts'),
     })
   },
-  // eslint-disable-next-line no-empty-pattern
+  // oxlint-disable-next-line no-empty-pattern
   runNodeScript: async ({}, use) => {
     await use((scriptPath: string, options = {}) => {
       return new Promise(resolve => {

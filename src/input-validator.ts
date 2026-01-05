@@ -4,7 +4,6 @@ import type { Palette } from './types.js'
 
 export class InputValidator {
   validateHex(hex: string): Result<boolean, ColorinoError> {
-    // Trim whitespace before validating
     const trimmedHex = hex.trim()
     const isHexValid = /^#[0-9A-F]{6}$/i.test(trimmedHex)
     if (!isHexValid) {
