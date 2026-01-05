@@ -16,9 +16,15 @@ export function createColorino(
 ): Colorino {
   const validator = new InputValidator()
 
+  // Determine the base theme name
+  const themeOpt = options.theme ?? 'auto'
+
+  // Only allow terminal theme detection in 'auto' mode.
   let detectorThemeOverride: TerminalTheme | undefined
-  if (options.theme === 'dark' || options.theme === 'light') {
-    detectorThemeOverride = options.theme
+  if (themeOpt === 'dark' || themeOpt === 'light') {
+    detectorThemeOverride = themeOpt
+  } else if (themeOpt !== 'auto') {
+    detectorThemeOverride = 'unknown' // prevents OSC query
   }
 
   const nodeDetector = new NodeColorSupportDetector(
@@ -26,16 +32,15 @@ export function createColorino(
     detectorThemeOverride
   )
 
-  const detectedTerminalTheme = nodeDetector.getTheme()
+  const detectedTerminalTheme =
+    themeOpt === 'auto' ? nodeDetector.getTheme() : 'unknown'
 
-  // 1. Determine the base theme name
-  const themeOpt = options.theme ?? 'auto'
   const baseThemeName = determineBaseTheme(themeOpt, detectedTerminalTheme)
 
-  // 2. Get the base palette from the registry
+  // Get the base palette from the registry
   const basePalette = themePalettes[baseThemeName]
 
-  // 3. The user's colors will override the selected base theme.
+  // The user's colors will override the selected base theme.
   const finalPalette: Palette = { ...basePalette, ...palette }
 
   return new MyColorino(
