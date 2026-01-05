@@ -4,6 +4,8 @@
 
 Colorino automatically adapts its palette to your terminal or browser DevTools theme, and degrades colors gracefully so your logs stay readable and on‑brand even in limited environments
 
+![Demo](https://github.com/simwai/colorino/blob/[branch]/demo-ps.png?raw=true)
+
 # <a id="0"></a><a id="0"></a>
 
 - [Why use Colorino?](#1)
