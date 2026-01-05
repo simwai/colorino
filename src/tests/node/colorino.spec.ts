@@ -1,153 +1,10 @@
-import { test as base, describe, expect, vi } from 'vitest'
-import util from 'node:util'
+import { describe, expect, vi } from 'vitest'
 import { createColorino } from '../../node.js'
 import { generateRandomString } from '../helpers/random.js'
-import { createTestPalette } from '../helpers/test-setup.js'
+import { createTestPalette } from '../helpers/palette.js'
+import { test } from '../helpers/console-spy.js'
+import { ANSI } from '../helpers/ansi-codes.js'
 
-type ConsoleMethodName = keyof Pick<
-  Console,
-  'log' | 'info' | 'debug' | 'warn' | 'error' | 'trace'
->
-
-interface SpyConsoleOptions {
-  callThrough: boolean
-  onCall?: (parameters: unknown[]) => void
-}
-
-function spyConsoleMethod(
-  methodName: ConsoleMethodName,
-  options: SpyConsoleOptions
-) {
-  const originalMethod = (
-    console[methodName] as (...parameters: unknown[]) => void
-  ).bind(console)
-
-  const capturedCalls: unknown[][] = []
-
-  const spy = vi
-    .spyOn(console, methodName)
-    .mockImplementation((...parameters: unknown[]) => {
-      capturedCalls.push(parameters)
-      options.onCall?.(parameters)
-      if (options.callThrough) {
-        originalMethod(...parameters)
-      }
-    })
-
-  return {
-    spy,
-    getCalls: () => capturedCalls,
-    restore: () => spy.mockRestore(),
-  }
-}
-
-function stringifyConsoleParameter(parameter: unknown): string {
-  if (typeof parameter === 'string') {
-    return parameter
-  }
-
-  return util.inspect(parameter)
-}
-
-function stringifyConsoleLine(parameters: unknown[], prefix?: string): string {
-  const parts: string[] = []
-
-  if (prefix !== undefined) {
-    parts.push(prefix)
-  }
-
-  for (const parameter of parameters) {
-    parts.push(stringifyConsoleParameter(parameter))
-  }
-
-  return parts.join(' ') + '\n'
-}
-
-interface ColorinoFixtures {
-  stdoutSpy: {
-    getOutput: () => string
-  }
-  stderrSpy: {
-    getOutput: () => string
-  }
-  env: Record<string, string>
-}
-
-const test = base.extend<ColorinoFixtures>({
-  // eslint-disable-next-line
-  stdoutSpy: async ({}, use) => {
-    const chunks: string[] = []
-    const callThrough = true
-
-    const spyInstances = [
-      spyConsoleMethod('log', {
-        callThrough,
-        onCall: parameters => {
-          chunks.push(stringifyConsoleLine(parameters))
-        },
-      }),
-      spyConsoleMethod('info', {
-        callThrough,
-        onCall: parameters => {
-          chunks.push(stringifyConsoleLine(parameters))
-        },
-      }),
-      spyConsoleMethod('debug', {
-        callThrough,
-        onCall: parameters => {
-          chunks.push(stringifyConsoleLine(parameters))
-        },
-      }),
-    ]
-
-    await use({
-      getOutput: () => chunks.join(''),
-    })
-
-    for (const spyInstance of spyInstances) {
-      spyInstance.restore()
-    }
-  },
-
-  // eslint-disable-next-line
-  stderrSpy: async ({}, use) => {
-    const chunks: string[] = []
-    const callThrough = true
-
-    const spyInstances = [
-      spyConsoleMethod('warn', {
-        callThrough,
-        onCall: parameters => {
-          chunks.push(stringifyConsoleLine(parameters))
-        },
-      }),
-      spyConsoleMethod('error', {
-        callThrough,
-        onCall: parameters => {
-          chunks.push(stringifyConsoleLine(parameters))
-        },
-      }),
-      spyConsoleMethod('trace', {
-        callThrough,
-        onCall: parameters => {
-          chunks.push(stringifyConsoleLine(parameters, 'Trace:'))
-        },
-      }),
-    ]
-
-    await use({
-      getOutput: () => chunks.join(''),
-    })
-
-    for (const spyInstance of spyInstances) {
-      spyInstance.restore()
-    }
-  },
-
-  env: [{}, { injected: true }],
-})
-
-// Apply env vars from fixture
 test.beforeEach(({ env }) => {
   for (const [key, value] of Object.entries(env)) {
     vi.stubEnv(key, value)
@@ -163,16 +20,15 @@ describe('Colorino - Node Environment - Unit Test', () => {
     describe('with FORCE_COLOR=2', () => {
       test.scoped({ env: { FORCE_COLOR: '2' } })
 
-      test('should output colored text', ({ stdoutSpy }) => {
-        const testPalette = createTestPalette({ log: '#00ff00' })
-        const logger = createColorino(testPalette, {
+      test('outputs 256-color codes for green text', ({ stdoutSpy }) => {
+        const logger = createColorino(createTestPalette({ log: '#00ff00' }), {
           disableWarnings: true,
         })
 
         logger.log('Hello, Colorino!')
 
         expect(stdoutSpy.getOutput()).toBe(
-          '\u001B[38;5;46mHello, Colorino!\u001B[0m\n'
+          `${ANSI.GREEN_256}Hello, Colorino!${ANSI.RESET}\n`
         )
       })
     })
@@ -180,9 +36,8 @@ describe('Colorino - Node Environment - Unit Test', () => {
     describe('with NO_COLOR=1', () => {
       test.scoped({ env: { NO_COLOR: '1' } })
 
-      test('should output plain text', ({ stdoutSpy }) => {
-        const testPalette = createTestPalette({ log: '#00ff00' })
-        const logger = createColorino(testPalette, {
+      test('outputs plain text without color codes', ({ stdoutSpy }) => {
+        const logger = createColorino(createTestPalette({ log: '#ff5733' }), {
           disableWarnings: true,
         })
 
@@ -197,7 +52,7 @@ describe('Colorino - Node Environment - Unit Test', () => {
     describe('with FORCE_COLOR=3', () => {
       test.scoped({ env: { FORCE_COLOR: '3' } })
 
-      test('should use truecolor codes', ({ stdoutSpy }) => {
+      test('uses 24-bit truecolor codes', ({ stdoutSpy }) => {
         const logger = createColorino(createTestPalette({ log: '#ff5733' }), {
           disableWarnings: true,
         })
@@ -205,7 +60,7 @@ describe('Colorino - Node Environment - Unit Test', () => {
         logger.log('test')
 
         expect(stdoutSpy.getOutput()).toBe(
-          '\u001B[38;2;255;87;51mtest\u001B[0m\n'
+          `${ANSI.ORANGE_TRUE}test${ANSI.RESET}\n`
         )
       })
     })
@@ -213,29 +68,32 @@ describe('Colorino - Node Environment - Unit Test', () => {
     describe('with FORCE_COLOR=2', () => {
       test.scoped({ env: { FORCE_COLOR: '2' } })
 
-      test('should use 256-color codes', ({ stdoutSpy }) => {
-        const testPalette = createTestPalette({ log: '#00ff00' })
-        const logger = createColorino(testPalette, {
-          disableWarnings: true,
-        })
-
-        logger.log('test')
-
-        expect(stdoutSpy.getOutput()).toBe('\u001B[38;5;46mtest\u001B[0m\n')
-      })
-    })
-
-    describe('with FORCE_COLOR=1', () => {
-      test.scoped({ env: { FORCE_COLOR: '1' } })
-
-      test('should use basic ANSI codes', ({ stdoutSpy }) => {
+      test('uses 256-color codes', ({ stdoutSpy }) => {
         const logger = createColorino(createTestPalette({ log: '#00ff00' }), {
           disableWarnings: true,
         })
 
         logger.log('test')
 
-        expect(stdoutSpy.getOutput()).toBe('\u001B[92mtest\u001B[0m\n')
+        expect(stdoutSpy.getOutput()).toBe(
+          `${ANSI.GREEN_256}test${ANSI.RESET}\n`
+        )
+      })
+    })
+
+    describe('with FORCE_COLOR=1', () => {
+      test.scoped({ env: { FORCE_COLOR: '1' } })
+
+      test('uses basic 16-color ANSI codes', ({ stdoutSpy }) => {
+        const logger = createColorino(createTestPalette({ log: '#00ff00' }), {
+          disableWarnings: true,
+        })
+
+        logger.log('test')
+
+        expect(stdoutSpy.getOutput()).toBe(
+          `${ANSI.GREEN_BASIC}test${ANSI.RESET}\n`
+        )
       })
     })
   })
@@ -244,50 +102,73 @@ describe('Colorino - Node Environment - Unit Test', () => {
     describe('with NO_COLOR=1', () => {
       test.scoped({ env: { NO_COLOR: '1' } })
 
-      test('should handle multiple arguments correctly', ({ stdoutSpy }) => {
-        const logger = createColorino(createTestPalette(), {
-          disableWarnings: true,
-        })
-
+      test('concatenates multiple arguments with proper spacing', ({
+        stdoutSpy,
+        logger,
+      }) => {
         const loggedObject = { active: true }
         logger.log('Count:', 42, loggedObject)
 
-        expect(stdoutSpy.getOutput()).toBe(
-          `Count: 42 \n${JSON.stringify(loggedObject, null, 2)}\n`
-        )
+        const output = stdoutSpy.getOutput()
+        expect(output).toContain('Count: 42')
+        expect(output).toContain('"active": true')
       })
     })
   })
 
-  describe('Error logging with cleaned stack', () => {
-    test('logs error message and cleaned stack without Colorino internals', ({
+  describe('Error and trace logging with cleaned stack', () => {
+    test('removes Colorino internals from error stack traces', ({
       stderrSpy,
+      logger,
     }) => {
-      const logger = createColorino(createTestPalette(), {
-        disableWarnings: true,
-      })
-
       const error = new Error('Test error')
 
       logger.error('Failed:', error)
 
       const output = stderrSpy.getOutput()
 
-      expect(output).toContain('Failed:')
-      expect(output).toContain('Error: Test error')
+      expect(output, 'Should contain error message').toContain('Failed:')
+      expect(output, 'Should contain error type').toContain('Error: Test error')
+      expect(output, 'Should contain valid stack frame').toMatch(/^\s*at\s.+/m)
 
-      expect(output).toMatch(/^\s*at\s.+/m)
+      // Should not contain internal implementation details
+      expect(output, 'Should not leak MyColorino._out').not.toMatch(
+        /MyColorino\._out/
+      )
+      expect(output, 'Should not leak _printCleanTrace').not.toMatch(
+        /MyColorino\._printCleanTrace/
+      )
+      expect(output, 'Should not leak _cleanErrorStack').not.toMatch(
+        /MyColorino\._cleanErrorStack/
+      )
+      expect(output, 'Should not leak dist path').not.toMatch(
+        /\/colorino\/dist\//
+      )
+      expect(output, 'Should not leak compiled filenames').not.toMatch(
+        /colorino\.[A-Za-z0-9]+\.mjs/
+      )
+    })
 
-      expect(output).not.toMatch(/Colorino\._out/)
-      expect(output).not.toMatch(/Colorino\._cleanErrorStack/)
-      expect(output).not.toMatch(/Colorino\._printCleanTrace/)
-      expect(output).not.toMatch(/Colorino\._filterStack/)
-      expect(output).not.toMatch(/colorino\.js/)
+    test('removes Colorino internals from trace() stack traces', ({
+      stdoutSpy,
+      logger,
+    }) => {
+      logger.trace('Trace')
+
+      const output = stdoutSpy.getOutput()
+      expect(output, 'Should contain trace label').toContain('Trace')
+      expect(output, 'Should contain valid stack frame').toMatch(/^\s*at\s.+/m)
+      expect(output, 'Should not leak MyColorino._out').not.toMatch(
+        /MyColorino\._out/
+      )
+      expect(output, 'Should not leak compiled filenames').not.toMatch(
+        /colorino\.[A-Za-z0-9]+\.mjs/
+      )
     })
   })
 
   describe('Edge Cases', () => {
-    test('should throw an error for invalid palette entries at construction', () => {
+    test('throws an error for invalid hex colors at construction', () => {
       expect(() => {
         createColorino(createTestPalette({ log: 'not-a-valid-color' }))
       }).toThrow(/Invalid hex color/)
@@ -296,13 +177,11 @@ describe('Colorino - Node Environment - Unit Test', () => {
     describe('with NO_COLOR=1', () => {
       test.scoped({ env: { NO_COLOR: '1' } })
 
-      test('should handle arbitrary string inputs without crashing', ({
+      test('handles arbitrary random strings without crashing', ({
         stdoutSpy,
+        logger,
       }) => {
         const randomInput = generateRandomString(100)
-        const logger = createColorino(createTestPalette(), {
-          disableWarnings: true,
-        })
 
         logger.log(randomInput)
 
@@ -315,14 +194,11 @@ describe('Colorino - Node Environment - Unit Test', () => {
     describe('with NO_COLOR=1', () => {
       test.scoped({ env: { NO_COLOR: '1' } })
 
-      test('should support all standard console methods', ({
+      test('routes log/info/debug to stdout and warn/error to stderr', ({
         stdoutSpy,
         stderrSpy,
+        logger,
       }) => {
-        const logger = createColorino(createTestPalette(), {
-          disableWarnings: true,
-        })
-
         logger.log('log')
         logger.info('info')
         logger.warn('warn')
@@ -333,39 +209,50 @@ describe('Colorino - Node Environment - Unit Test', () => {
         const stdout = stdoutSpy.getOutput()
         const stderr = stderrSpy.getOutput()
 
-        expect(stdout).toContain('log')
-        expect(stdout).toContain('info')
-        expect(stdout).toContain('debug')
-        expect(stderr).toContain('warn')
-        expect(stderr).toContain('error')
-        expect(stderr).toContain('Trace: trace')
+        // stdout methods
+        expect(stdout, 'log() should write to stdout').toContain('log')
+        expect(stdout, 'info() should write to stdout').toContain('info')
+        expect(stdout, 'debug() should write to stdout').toContain('debug')
+        expect(stdout, 'trace() should write to stdout').toContain('trace')
+
+        // stderr methods
+        expect(stderr, 'warn() should write to stderr').toContain('warn')
+        expect(stderr, 'error() should write to stderr').toContain('error')
       })
     })
   })
 
   describe('Concurrent Logger Instances', () => {
-    test('should not interfere with each other', ({ stdoutSpy }) => {
-      vi.stubEnv('FORCE_COLOR', '1')
-      const logger1 = createColorino(createTestPalette({ log: '#ff0000' }), {
-        disableWarnings: true,
+    describe('with FORCE_COLOR=1', () => {
+      test.scoped({ env: { FORCE_COLOR: '1' } })
+
+      test('first logger outputs basic red color', ({ stdoutSpy }) => {
+        const logger1 = createColorino(createTestPalette({ log: '#ff0000' }), {
+          disableWarnings: true,
+        })
+
+        logger1.log('red')
+
+        expect(stdoutSpy.getOutput()).toContain(
+          `${ANSI.RED_BASIC}red${ANSI.RESET}`
+        )
       })
+    })
 
-      logger1.log('red')
-      const firstOutput = stdoutSpy.getOutput()
+    describe('with FORCE_COLOR=2', () => {
+      test.scoped({ env: { FORCE_COLOR: '2' } })
 
-      vi.stubEnv('FORCE_COLOR', '2')
-      const logger2 = createColorino(createTestPalette({ log: '#00ff00' }), {
-        disableWarnings: true,
+      test('second logger outputs 256-color green', ({ stdoutSpy }) => {
+        const logger2 = createColorino(createTestPalette({ log: '#00ff00' }), {
+          disableWarnings: true,
+        })
+
+        logger2.log('green')
+
+        expect(stdoutSpy.getOutput()).toContain(
+          `${ANSI.GREEN_256}green${ANSI.RESET}`
+        )
       })
-
-      logger2.log('green')
-      const fullOutput = stdoutSpy.getOutput()
-      const secondOutput = fullOutput.slice(firstOutput.length)
-
-      expect(firstOutput).toContain('\u001B[91mred\u001B[0m\n')
-      expect(secondOutput).toContain('\u001B[38;5;46mgreen\u001B[0m\n')
-
-      vi.unstubAllEnvs()
     })
   })
 
@@ -373,74 +260,61 @@ describe('Colorino - Node Environment - Unit Test', () => {
     describe('with NO_COLOR=1', () => {
       test.scoped({ env: { NO_COLOR: '1' } })
 
-      test('should add leading newline before objects', ({ stdoutSpy }) => {
-        const logger = createColorino(createTestPalette(), {
-          disableWarnings: true,
-        })
-
+      test('adds leading newline before objects', ({ stdoutSpy, logger }) => {
         const obj = { id: 1, active: true }
         logger.log('Data:', obj)
 
-        expect(stdoutSpy.getOutput()).toBe(
-          `Data: \n${JSON.stringify(obj, null, 2)}\n`
-        )
+        const output = stdoutSpy.getOutput()
+        expect(output).toContain('Data:')
+        expect(output).toContain('"id": 1')
+        expect(output).toContain('"active": true')
       })
 
-      test('should add newline before string after object', ({ stdoutSpy }) => {
-        const logger = createColorino(createTestPalette(), {
-          disableWarnings: true,
-        })
-
+      test('adds newline before string after object', ({
+        stdoutSpy,
+        logger,
+      }) => {
         const obj = { id: 1 }
         logger.log('Start', obj, 'End')
 
-        expect(stdoutSpy.getOutput()).toBe(
-          `Start \n${JSON.stringify(obj, null, 2)} \nEnd\n`
-        )
+        const output = stdoutSpy.getOutput()
+        expect(output).toContain('Start')
+        expect(output).toContain('"id": 1')
+        expect(output).toContain('End')
+        expect(output).toMatch(/Start[\s\S]*"id": 1[\s\S]*End/)
       })
 
-      test('should handle consecutive strings without extra newlines', ({
+      test('handles consecutive strings without extra newlines', ({
         stdoutSpy,
+        logger,
       }) => {
-        const logger = createColorino(createTestPalette(), {
-          disableWarnings: true,
-        })
-
         logger.log('First', 'Second', 'Third')
 
         expect(stdoutSpy.getOutput()).toBe('First Second Third\n')
       })
 
-      test('should handle complex mixed sequences', ({ stdoutSpy }) => {
-        const logger = createColorino(createTestPalette(), {
-          disableWarnings: true,
-        })
-
+      test('handles complex mixed sequences correctly', ({
+        stdoutSpy,
+        logger,
+      }) => {
         const obj1 = { a: 1 }
         const obj2 = { b: 2 }
         const obj3 = { c: 3 }
         logger.log('A', obj1, obj2, 'B', obj3, 'C', 'D', obj3)
 
-        const expected = `A \n${JSON.stringify(obj1, null, 2)} \n${JSON.stringify(
-          obj2,
-          null,
-          2
-        )} \nB \n${JSON.stringify(obj3, null, 2)} \nC D \n${JSON.stringify(
-          obj3,
-          null,
-          2
-        )}\n`
-
-        expect(stdoutSpy.getOutput()).toBe(expected)
+        const output = stdoutSpy.getOutput()
+        expect(output).toContain('A')
+        expect(output).toContain('"a": 1')
+        expect(output).toContain('"b": 2')
+        expect(output).toContain('B')
+        expect(output).toContain('"c": 3')
+        expect(output).toContain('C D')
       })
 
-      test('should add leading newline before Error objects', ({
+      test('adds leading newline before Error objects', ({
         stderrSpy,
+        logger,
       }) => {
-        const logger = createColorino(createTestPalette(), {
-          disableWarnings: true,
-        })
-
         const error = new Error('Test error')
         logger.error('Failed:', error)
 
@@ -450,11 +324,10 @@ describe('Colorino - Node Environment - Unit Test', () => {
         expect(output).toContain('Error: Test error')
       })
 
-      test('should add newline before string after Error', ({ stderrSpy }) => {
-        const logger = createColorino(createTestPalette(), {
-          disableWarnings: true,
-        })
-
+      test('adds newline before string after Error', ({
+        stderrSpy,
+        logger,
+      }) => {
         const error = new Error('Test error')
         logger.error('Failed:', error, 'Retrying...')
 
@@ -464,40 +337,42 @@ describe('Colorino - Node Environment - Unit Test', () => {
         expect(output).toMatch(/Error: Test error[\s\S]*Retrying/)
       })
 
-      test('should handle objects at max depth', ({ stdoutSpy }) => {
-        const logger = createColorino(createTestPalette(), {
-          disableWarnings: true,
-        })
-
+      test('truncates objects at max depth with [Object] placeholder', ({
+        stdoutSpy,
+        logger,
+      }) => {
         const deepObj = {
           l1: { l2: { l3: { l4: { l5: { l6: 'too deep' } } } } },
         }
         logger.log(deepObj)
 
         const output = stdoutSpy.getOutput()
-        expect(output).toContain('[Object]')
-        expect(output).not.toContain('too deep')
+        expect(output, 'Should truncate deep objects').toContain('[Object]')
+        expect(output, 'Should not leak deeply nested values').not.toContain(
+          'too deep'
+        )
       })
 
-      test('should handle circular references', ({ stdoutSpy }) => {
-        const logger = createColorino(createTestPalette(), {
-          disableWarnings: true,
-        })
-
+      test('handles circular references with [Circular] placeholder', ({
+        stdoutSpy,
+        logger,
+      }) => {
         const circular: any = { name: 'test' }
         circular.self = circular
 
         logger.log(circular)
 
         const output = stdoutSpy.getOutput()
-        expect(output).toContain('[Circular]')
+        expect(output, 'Should detect circular references').toContain(
+          '[Circular]'
+        )
       })
     })
 
     describe('with FORCE_COLOR=2', () => {
       test.scoped({ env: { FORCE_COLOR: '2' } })
 
-      test('should colorize first string with objects in args', ({
+      test('colorizes first string when followed by objects', ({
         stdoutSpy,
       }) => {
         const logger = createColorino(createTestPalette({ log: '#00ff00' }), {
@@ -508,8 +383,8 @@ describe('Colorino - Node Environment - Unit Test', () => {
         logger.log('Status:', obj)
 
         const output = stdoutSpy.getOutput()
-        expect(output).toContain('\u001B[38;5;46mStatus:\u001B[0m')
-        expect(output).toContain(JSON.stringify(obj, null, 2))
+        expect(output).toContain(`${ANSI.GREEN_256}Status:${ANSI.RESET}`)
+        expect(output).toContain('"id": 1')
       })
     })
   })

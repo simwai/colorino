@@ -1,72 +1,11 @@
-import { test as base, describe, expect, vi } from 'vitest'
+import { describe, expect, vi } from 'vitest'
 import { Result } from 'neverthrow'
-import { createTestPalette } from '../helpers/test-setup.js'
+import { createTestPalette } from '../helpers/palette.js'
 import { createColorino } from '../../node.js'
 import { generateRandomString } from '../helpers/random.js'
 import { ColorinoError } from '../../errors.js'
+import { test } from '../helpers/console-spy.js'
 
-interface FuzzTestFixtures {
-  stdoutSpy: {
-    getOutput: () => string
-  }
-  stderrSpy: {
-    getOutput: () => string
-  }
-  env: Record<string, string>
-}
-
-const test = base.extend<FuzzTestFixtures>({
-  // eslint-disable-next-line
-  stdoutSpy: async ({}, use) => {
-    const chunks: string[] = []
-
-    const spies = [
-      vi.spyOn(console, 'log').mockImplementation((...args) => {
-        chunks.push(args.map(String).join(' ') + '\n')
-      }),
-      vi.spyOn(console, 'info').mockImplementation((...args) => {
-        chunks.push(args.map(String).join(' ') + '\n')
-      }),
-      vi.spyOn(console, 'debug').mockImplementation((...args) => {
-        chunks.push(args.map(String).join(' ') + '\n')
-      }),
-      vi.spyOn(console, 'trace').mockImplementation((...args) => {
-        chunks.push(args.map(String).join(' ') + '\n')
-      }),
-    ]
-
-    await use({
-      getOutput: () => chunks.join(''),
-    })
-
-    // Restore all spies
-    spies.forEach(spy => spy.mockRestore())
-  },
-
-  // eslint-disable-next-line
-  stderrSpy: async ({}, use) => {
-    const chunks: string[] = []
-
-    const spies = [
-      vi.spyOn(console, 'warn').mockImplementation((...args) => {
-        chunks.push(args.map(String).join(' ') + '\n')
-      }),
-      vi.spyOn(console, 'error').mockImplementation((...args) => {
-        chunks.push(args.map(String).join(' ') + '\n')
-      }),
-    ]
-
-    await use({
-      getOutput: () => chunks.join(''),
-    })
-
-    spies.forEach(spy => spy.mockRestore())
-  },
-
-  env: [{}, { injected: true }],
-})
-
-// Setup/teardown hook that runs for each test to stub environment variables
 test.beforeEach(({ env }) => {
   for (const [key, value] of Object.entries(env)) {
     vi.stubEnv(key, value)

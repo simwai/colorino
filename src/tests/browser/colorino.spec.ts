@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { commands } from 'vitest/browser'
 import { createColorino } from '../../browser.js'
-import { createTestPalette } from '../helpers/test-setup.js'
+import { createTestPalette } from '../helpers/palette.js'
 import { ColorLevel } from '../../enums.js'
 
 describe('Colorino - Real Browser - Unit Test', () => {
@@ -100,6 +100,6 @@ describe('Colorino - Real Browser - Unit Test', () => {
     expect(mocks.warn).toHaveBeenCalled()
     expect(mocks.info).toHaveBeenCalled()
     expect(mocks.debug).toHaveBeenCalled()
-    expect(mocks.trace).toHaveBeenCalled()
+    expect(mocks.log).toHaveBeenCalled()
   })
 })

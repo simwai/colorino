@@ -13,7 +13,7 @@ import { themePalettes } from './theme.js'
 import { determineBaseTheme } from './determine-base-theme.js'
 
 export function createColorino(
-  palette: Partial<Palette> = {},
+  userPalette: Partial<Palette> = {},
   options: ColorinoOptions = {}
 ): Colorino {
   const validator = new InputValidator()
@@ -42,10 +42,11 @@ export function createColorino(
   const basePalette = themePalettes[baseThemeName]
 
   // The user's colors will override the selected base theme.
-  const finalPalette: Palette = { ...basePalette, ...palette }
+  const finalPalette: Palette = { ...basePalette, ...userPalette }
 
   return new MyColorino(
     finalPalette,
+    userPalette,
     validator,
     browserDetector, // Always use browser detector
     undefined, // Node detector is never available
@@ -55,4 +56,3 @@ export function createColorino(
 
 export type { Palette, ColorinoOptions, LogLevel, ThemeName, Colorino }
 export { themePalettes }
-export const colorino = createColorino()

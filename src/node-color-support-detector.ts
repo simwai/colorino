@@ -1,8 +1,7 @@
 import type { ColorSupportDetectorInterface } from './color-support-detector-interface.js'
 import { ColorLevel } from './enums.js'
 import type { TerminalTheme } from './types.js'
-import { OscThemeQuerier } from './osc-theme-querier.js'
-import type { ReadStream, WriteStream } from 'node:tty'
+import { getTerminalThemeSync } from './osc-theme-sync.js'
 
 export class NodeColorSupportDetector implements ColorSupportDetectorInterface {
   private readonly _envForceColor?: string
@@ -13,16 +12,19 @@ export class NodeColorSupportDetector implements ColorSupportDetectorInterface {
   private readonly _envCliColorForce?: string
   private readonly _envWtSession?: string
   private readonly _isTTY?: boolean
-  private readonly _theme: TerminalTheme
+  private _theme: TerminalTheme
 
   constructor(
     private readonly _process?: NodeJS.Process,
-    overrideTheme?: TerminalTheme
+    private readonly _overrideTheme?: TerminalTheme,
+    private readonly _disableOscProbe = false
   ) {
-    if (!this.isNodeEnv()) {
-      this._theme = 'unknown'
+    if (this._overrideTheme !== undefined) {
+      this._theme = this._overrideTheme
       return
     }
+
+    this._isTTY = !!_process!.stdout.isTTY
 
     const processEnv = _process!.env
     this._envForceColor = processEnv['FORCE_COLOR']
@@ -33,29 +35,20 @@ export class NodeColorSupportDetector implements ColorSupportDetectorInterface {
     this._envCliColorForce = processEnv['CLICOLOR_FORCE']
     this._envWtSession = processEnv['WT_SESSION']
 
-    this._isTTY = !!_process!.stdout.isTTY
-
-    if (overrideTheme !== undefined) {
-      this._theme = overrideTheme
-      return
-    }
-
-    if (!this._isTTY) {
+    if (!this._isTTY || this._disableOscProbe || !this.isNodeEnv) {
       this._theme = 'unknown'
       return
     }
 
-    const querier = new OscThemeQuerier(
-      _process!.stdin as ReadStream,
-      _process!.stdout as WriteStream
-    )
-
-    const result = querier.query()
-    this._theme = result.isOk() ? result.value : 'unknown'
+    this._theme = getTerminalThemeSync()
   }
 
   isNodeEnv(): boolean {
     return typeof this._process !== 'undefined'
+  }
+
+  onTheme(listener: (theme: TerminalTheme) => void): void {
+    listener(this._theme)
   }
 
   getTheme(): TerminalTheme {

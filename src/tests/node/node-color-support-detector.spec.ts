@@ -1,6 +1,8 @@
 import { test as base, describe, expect, vi } from 'vitest'
 import { NodeColorSupportDetector } from '../../node-color-support-detector.js'
 import { ColorLevel } from '../../enums.js'
+import type { TerminalTheme } from '../../types.js'
+import * as oscThemeSync from '../../osc-theme-sync.js'
 
 interface ColorDetectorFixtures {
   mockStdin: {
@@ -65,12 +67,75 @@ const test = base.extend<ColorDetectorFixtures>({
 })
 
 describe('NodeColorSupportDetector - Node Environment - Unit Test', () => {
-  describe('OSC querier cache', () => {
-    test('should return a cached theme after initialize()', ({ detector }) => {
-      const theme1 = detector.getTheme()
-      const theme2 = detector.getTheme()
+  describe('theme detection (sync OSC)', () => {
+    test('uses overrideTheme when provided', () => {
+      const mockProcess: any = {
+        env: {},
+        stdout: { isTTY: true, write: vi.fn() },
+        stdin: {
+          isTTY: true,
+          setRawMode: vi.fn(),
+          resume: vi.fn(),
+          pause: vi.fn(),
+          read: vi.fn(),
+          on: vi.fn(),
+          removeListener: vi.fn(),
+          isRaw: false,
+        },
+      }
 
-      expect(theme1).toBe(theme2)
+      const detector = new NodeColorSupportDetector(
+        mockProcess,
+        'dark' as TerminalTheme
+      )
+      expect(detector.getTheme()).toBe('dark')
+    })
+
+    test('returns unknown when not a TTY', () => {
+      const mockProcess: any = {
+        env: {},
+        stdout: { isTTY: false, write: vi.fn() },
+        stdin: {
+          isTTY: false,
+          setRawMode: vi.fn(),
+          resume: vi.fn(),
+          pause: vi.fn(),
+          read: vi.fn(),
+          on: vi.fn(),
+          removeListener: vi.fn(),
+          isRaw: false,
+        },
+      }
+
+      const detector = new NodeColorSupportDetector(mockProcess)
+      expect(detector.getTheme()).toBe('unknown')
+    })
+
+    test('calls getTerminalThemeSync when TTY and no override', () => {
+      const mockProcess: any = {
+        env: {},
+        stdout: { isTTY: true, write: vi.fn() },
+        stdin: {
+          isTTY: true,
+          setRawMode: vi.fn(),
+          resume: vi.fn(),
+          pause: vi.fn(),
+          read: vi.fn(),
+          on: vi.fn(),
+          removeListener: vi.fn(),
+          isRaw: false,
+        },
+      }
+
+      const spy = vi
+        .spyOn(oscThemeSync, 'getTerminalThemeSync')
+        .mockReturnValue('light')
+
+      const detector = new NodeColorSupportDetector(mockProcess)
+      expect(spy).toHaveBeenCalled()
+      expect(detector.getTheme()).toBe('light')
+
+      spy.mockRestore()
     })
   })
 

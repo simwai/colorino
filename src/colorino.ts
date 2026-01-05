@@ -8,27 +8,36 @@ import {
   isConsoleMethod,
   type ColorinoOptions,
   Colorino,
+  ThemeName,
+  ConsoleMethod,
 } from './types.js'
 import { InputValidator } from './input-validator.js'
+import { themePalettes } from './theme.js'
+import { determineBaseTheme } from './determine-base-theme.js'
 
 export class MyColorino implements Colorino {
   private _alreadyWarned = false
   private readonly _colorLevel: ColorLevel | 'UnknownEnv'
   private readonly isBrowser: boolean
 
+  private _palette: Palette
+
   constructor(
-    private readonly _palette: Palette,
+    initialPalette: Palette,
+    private readonly _userPalette: Partial<Palette>,
     private readonly _validator: InputValidator,
     private readonly _browserColorSupportDetector?: BrowserColorSupportDetector,
     private readonly _nodeColorSupportDetector?: NodeColorSupportDetector,
     private readonly _options: ColorinoOptions = {}
   ) {
+    this._palette = initialPalette
     this.isBrowser = !!this._browserColorSupportDetector
 
     this._colorLevel = this._detectColorSupport()
 
     const validatePaletteResult = this._validator.validatePalette(this._palette)
     if (validatePaletteResult.isErr()) throw validatePaletteResult.error
+
     if (
       this._colorLevel !== ColorLevel.NO_COLOR &&
       !this._options.disableWarnings &&
@@ -36,6 +45,20 @@ export class MyColorino implements Colorino {
     ) {
       this._maybeWarnUser()
     }
+
+    const themeOpt = this._options.theme ?? 'auto'
+
+    if (themeOpt === 'auto' && this._nodeColorSupportDetector) {
+      this._nodeColorSupportDetector.onTheme(resolvedTheme => {
+        this._appllyResolvedTheme(resolvedTheme)
+      })
+    }
+  }
+  private _appllyResolvedTheme(resolvedTheme: string) {
+    const themeOpt = this._options.theme ?? 'auto'
+    const baseThemeName: ThemeName = determineBaseTheme(themeOpt, resolvedTheme)
+    const basePalette = themePalettes[baseThemeName]
+    this._palette = { ...basePalette, ...this._userPalette }
   }
 
   log(...args: unknown[]): void {
@@ -77,11 +100,14 @@ export class MyColorino implements Colorino {
     if (this._alreadyWarned) return
     this._alreadyWarned = true
     console.warn(
-      '[Colorino] No ANSI color support detected in this terminal. See [https://github.com/chalk/supports-color#support-matrix](https://github.com/chalk/supports-color#support-matrix) to learn how to enable terminal color.'
+      'No ANSI color support detected in this terminal. See [https://github.com/chalk/supports-color#support-matrix](https://github.com/chalk/supports-color#support-matrix) to learn how to enable terminal color.'
     )
   }
 
-  private _formatValue(value: unknown, maxDepth = 5): string {
+  private _formatValue(
+    value: unknown,
+    maxDepth = this._options.maxDepth ?? 5
+  ): string {
     const seen = new WeakSet<object>()
 
     const sanitize = (val: unknown, currentDepth: number): unknown => {
@@ -142,7 +168,7 @@ export class MyColorino implements Colorino {
   }
 
   private _applyBrowserColors(
-    consoleMethod: 'log' | 'info' | 'warn' | 'error' | 'debug' | 'trace',
+    consoleMethod: ConsoleMethod,
     args: unknown[]
   ): unknown[] {
     const hex = this._palette[consoleMethod]
@@ -155,7 +181,7 @@ export class MyColorino implements Colorino {
   }
 
   private _applyNodeColors(
-    consoleMethod: 'log' | 'info' | 'warn' | 'error' | 'debug' | 'trace',
+    consoleMethod: ConsoleMethod,
     args: unknown[]
   ): unknown[] {
     const hex = this._palette[consoleMethod]
@@ -193,12 +219,9 @@ export class MyColorino implements Colorino {
     return coloredArgs
   }
 
-  private _output(
-    consoleMethod: 'log' | 'info' | 'warn' | 'error' | 'debug' | 'trace',
-    args: unknown[]
-  ): void {
+  private _output(consoleMethod: ConsoleMethod, args: unknown[]): void {
     if (consoleMethod === 'trace') {
-      this._printCleanTrace(args, consoleMethod)
+      this._printCleanTrace(args)
     } else {
       console[consoleMethod](...args)
     }
@@ -229,20 +252,7 @@ export class MyColorino implements Colorino {
   private _filterStack(stack: string): string {
     return stack
       .split('\n')
-      .filter(
-        line =>
-          !line.includes('colorino.js') &&
-          !line.includes('Colorino._out') &&
-          !line.includes('Colorino.error') &&
-          !line.includes('Colorino.warn') &&
-          !line.includes('Colorino.debug') &&
-          !line.includes('Colorino.info') &&
-          !line.includes('Colorino.log') &&
-          !line.includes('Colorino.trace') &&
-          !line.includes('Colorino._cleanErrorStack') &&
-          !line.includes('Colorino._printCleanTrace') &&
-          !line.includes('Colorino._filterStack')
-      )
+      .filter(line => !line.match(/.*colorino.*/gi))
       .join('\n')
   }
 
@@ -258,14 +268,14 @@ export class MyColorino implements Colorino {
     return cloned
   }
 
-  private _printCleanTrace(args: unknown[], method: 'trace'): void {
+  private _printCleanTrace(args: unknown[]): void {
     const error = new Error()
 
     if (error.stack) {
       const cleanStack = this._filterStack(error.stack)
-      console[method](...args, `\n${cleanStack}`)
+      console.log(...args, `\n${cleanStack}`)
     } else {
-      console[method](...args)
+      console.log(...args)
     }
   }
 }

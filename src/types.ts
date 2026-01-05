@@ -29,6 +29,8 @@ export type ThemeName =
 export interface ColorinoOptions {
   disableWarnings?: boolean
   theme?: TerminalTheme | ThemeName | 'auto'
+  disableOscProbe?: boolean
+  maxDepth?: number
 }
 
 export interface Colorino {

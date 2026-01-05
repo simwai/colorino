@@ -1,63 +1,45 @@
-import {
-  Colorino,
-  type ColorinoOptions,
-  type Palette,
-  type TerminalTheme,
-} from './types.js'
 import { MyColorino } from './colorino.js'
-import { NodeColorSupportDetector } from './node-color-support-detector.js'
-import { InputValidator } from './input-validator.js'
-import { themePalettes } from './theme.js'
 import { determineBaseTheme } from './determine-base-theme.js'
+import { InputValidator } from './input-validator.js'
+import { NodeColorSupportDetector } from './node-color-support-detector.js'
+import { themePalettes } from './theme.js'
+import { Palette, ColorinoOptions, Colorino, TerminalTheme } from './types.js'
 
 export function createColorino(
-  palette: Partial<Palette> = {},
+  userPalette: Partial<Palette> = {},
   options: ColorinoOptions = {}
 ): Colorino {
   const validator = new InputValidator()
 
-  // Determine the base theme name
   const themeOpt = options.theme ?? 'auto'
 
-  // Only allow terminal theme detection in 'auto' mode.
   let detectorThemeOverride: TerminalTheme | undefined
   if (themeOpt === 'dark' || themeOpt === 'light') {
     detectorThemeOverride = themeOpt
   } else if (themeOpt !== 'auto') {
-    detectorThemeOverride = 'unknown' // prevents OSC query
+    detectorThemeOverride = 'unknown'
   }
 
   const nodeDetector = new NodeColorSupportDetector(
     process,
-    detectorThemeOverride
+    detectorThemeOverride,
+    options.disableOscProbe ?? false
   )
-
   const detectedTerminalTheme =
-    themeOpt === 'auto' ? nodeDetector.getTheme() : 'unknown'
+    themeOpt === 'auto' && !options.disableOscProbe
+      ? nodeDetector.getTheme()
+      : 'unknown'
 
   const baseThemeName = determineBaseTheme(themeOpt, detectedTerminalTheme)
-
-  // Get the base palette from the registry
   const basePalette = themePalettes[baseThemeName]
-
-  // The user's colors will override the selected base theme.
-  const finalPalette: Palette = { ...basePalette, ...palette }
+  const finalPalette: Palette = { ...basePalette, ...userPalette }
 
   return new MyColorino(
     finalPalette,
+    userPalette,
     validator,
-    undefined, // Browser detector is never available
-    nodeDetector, // Always use node detector
+    undefined,
+    nodeDetector,
     options
   )
 }
-
-export type {
-  Palette,
-  ColorinoOptions,
-  LogLevel,
-  ThemeName,
-  Colorino,
-} from './types.js'
-export { themePalettes }
-export const colorino = createColorino()

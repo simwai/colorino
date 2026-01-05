@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { InputValidator } from '../../input-validator.js'
 import { ColorinoError } from '../../errors.js'
-import { createTestPalette } from '../helpers/test-setup.js'
+import { createTestPalette } from '../helpers/palette.js'
 import { generateRandomString } from '../helpers/random.js'
 
 describe('InputValidator - Node & Browser Environment - Unit Test', () => {
