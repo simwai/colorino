@@ -27,8 +27,11 @@ const finish = theme => {
 const onData = chunk => {
   buffer += chunk.toString('utf8')
 
-  if (!buffer.includes(']11;rgb:')) return
-  if (!buffer.includes('\x07') && !buffer.includes('\x1b\\')) return
+  if (
+    !buffer.includes(']11;rgb:') ||
+    (!buffer.includes('\x07') && !buffer.includes('\x1b\\'))
+  )
+    return
 
   const match = buffer.match(
     /rgb:([0-9a-f]{2,4})\/([0-9a-f]{2,4})\/([0-9a-f]{2,4})/i

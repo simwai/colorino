@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { InputValidator } from '../../input-validator.js'
-import { ColorinoError } from '../../errors.js'
+import { InputValidationError } from '../../errors.js'
 import { createTestPalette } from '../helpers/palette.js'
 import { generateRandomString } from '../helpers/random.js'
 
@@ -22,7 +22,7 @@ describe('InputValidator - Node & Browser Environment - Unit Test', () => {
       const result = validator.validateHex('#123')
       expect(result.isErr()).toBe(true)
       const err = result._unsafeUnwrapErr()
-      expect(err).toBeInstanceOf(ColorinoError)
+      expect(err).toBeInstanceOf(InputValidationError)
       expect(err.message).toBe("Invalid hex color: '#123'")
     })
 
@@ -50,7 +50,7 @@ describe('InputValidator - Node & Browser Environment - Unit Test', () => {
       const result = validator.validatePalette(palette)
       expect(result.isErr()).toBe(true)
       const err = result._unsafeUnwrapErr()
-      expect(err).toBeInstanceOf(ColorinoError)
+      expect(err).toBeInstanceOf(InputValidationError)
       expect(err.message).toBe("Invalid hex color: 'invalid-hex'")
     })
   })

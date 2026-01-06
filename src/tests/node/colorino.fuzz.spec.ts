@@ -3,7 +3,7 @@ import { Result } from 'neverthrow'
 import { createTestPalette } from '../helpers/palette.js'
 import { createColorino } from '../../node.js'
 import { generateRandomString } from '../helpers/random.js'
-import { ColorinoError } from '../../errors.js'
+import { InputValidationError } from '../../errors.js'
 import { test } from '../helpers/console-spy.js'
 
 test.beforeEach(({ env }) => {
@@ -180,7 +180,7 @@ describe('Colorino - Node Environment - Fuzz Test', () => {
 
       expect(result.isErr()).toBe(true)
       if (result.isErr()) {
-        expect(result.error).toBeInstanceOf(ColorinoError)
+        expect(result.error).toBeInstanceOf(InputValidationError)
       }
     })
 
