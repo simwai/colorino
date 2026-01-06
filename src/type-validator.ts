@@ -39,6 +39,7 @@ export class TypeValidator {
   }
 
   static isAnsiColoredString(value: unknown): value is string {
+    // oxlint-disable-next-line no-control-regex
     return TypeValidator.isString(value) && /\x1b\[[0-9;]*m/.test(value)
   }
 

@@ -12,10 +12,10 @@
     "editor.defaultFormatter": "oxc.oxc-vscode"
   },
   "[json]": {
-    "editor.defaultFormatter": "vscode.json-language-features",
+    "editor.defaultFormatter": "vscode.json-language-features"
   },
   "[jsonc]": {
-    "editor.defaultFormatter": "vscode.json-language-features",
+    "editor.defaultFormatter": "vscode.json-language-features"
   },
   "editor.codeActionsOnSave": {
     "source.fixAll.oxc": "always"
@@ -24,8 +24,6 @@
   "files.eol": "\n",
   "editor.tabSize": 2,
   "editor.insertSpaces": true,
-  "python.analysis.ignore": [
-    "**"
-  ],
-  "typescript.tsdk": "node_modules\\typescript\\lib",
+  "python.analysis.ignore": ["**"],
+  "typescript.tsdk": "node_modules\\typescript\\lib"
 }

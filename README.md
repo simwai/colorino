@@ -41,7 +41,7 @@ Colorino is different: it’s a "batteries-included" logging facade with beautif
 
 ## <a id="2"></a>Features
 
-- 🎨 **Smart Theming:** Automatically detects *dark/light* mode and applies a high‑contrast base palette by default (Dracula for dark, GitHub Light for light); opt into a coordinated theme preset when you want richer colors.
+- 🎨 **Smart Theming:** Automatically detects _dark/light_ mode and applies a high‑contrast base palette by default (Dracula for dark, GitHub Light for light); opt into a coordinated theme preset when you want richer colors.
 - 🤘 **Graceful Color Degradation**: Accepts rich colors (hex/RGB) and automatically down‑samples to the best ANSI‑16/ANSI‑256/Truecolor match for the current environment.​
 - 🤝 **Familiar API:** If you know `console.log`, you already know Colorino: all standard log levels are supported.
 - 🔀 **Environment-Aware:** Works in **Node.js** (ANSI color and truecolor) and all major **Browsers** (CSS styles).
@@ -66,10 +66,10 @@ You can use Colorino directly in the browser without any build step.
 <html>
   <head>
     <script type="module">
-      import { colorino } from 'https://unpkg.com/colorino/dist/browser.bundle.mjs';
+      import { colorino } from 'https://unpkg.com/colorino/dist/browser.bundle.mjs'
 
-      colorino.info('Hello from the browser!');
-      colorino.error('Something went wrong');
+      colorino.info('Hello from the browser!')
+      colorino.error('Something went wrong')
     </script>
   </head>
   <body></body>
@@ -119,9 +119,10 @@ Use the factory to create as many loggers as you want (each with its own palette
 import { createColorino } from 'colorino'
 
 const myLogger = createColorino(
-  { // Palette (partial)
+  {
+    // Palette (partial)
     error: '#ff007b',
-    info: '#3498db'
+    info: '#3498db',
   },
   { disableWarnings: true } // Options (see below)
 )
@@ -133,17 +134,17 @@ myLogger.info('Rebranded info!')
 
 `createColorino(palette?, options?)` accepts:
 
-| Option            | Type                                 | Default | Description                                                                 |
-|-------------------|--------------------------------------|---------|-----------------------------------------------------------------------------|
-| `disableWarnings` | `boolean`                           | `false` | Suppress warnings when color support can't be detected or is disabled.      |
-| `theme`           | `ThemeOption` (see below)           | `'auto'`| Control the active color theme or force a specific mode.                    |
-| `disableOscProbe` | `boolean`                           | `false` | Disable OSC 11 terminal theme probing (use only env heuristics for theme).  |
-| `maxDepth`        | `number`                            | `5`     | Maximum depth when pretty-printing objects in log output.                   |
+| Option            | Type                      | Default  | Description                                                                |
+| ----------------- | ------------------------- | -------- | -------------------------------------------------------------------------- |
+| `disableWarnings` | `boolean`                 | `false`  | Suppress warnings when color support can't be detected or is disabled.     |
+| `theme`           | `ThemeOption` (see below) | `'auto'` | Control the active color theme or force a specific mode.                   |
+| `disableOscProbe` | `boolean`                 | `false`  | Disable OSC 11 terminal theme probing (use only env heuristics for theme). |
+| `maxDepth`        | `number`                  | `5`      | Maximum depth when pretty-printing objects in log output.                  |
 
 **`theme` accepts three types of values:**
 
 1. **`'auto'`** (Default): Automatically detects your terminal or browser theme (dark/light) and applies the matching default preset.  
-When combined with `disableOscProbe: true`, only environment variables are used for theme detection (no OSC 11 probe).
+   When combined with `disableOscProbe: true`, only environment variables are used for theme detection (no OSC 11 probe).
 2. **`'dark' | 'light'`**: Forces the logger into a specific mode using the default preset for that mode.
 3. **`ThemeName`**: Forces a specific built-in palette (e.g., `'dracula'`).
 
@@ -151,12 +152,12 @@ When combined with `disableOscProbe: true`, only environment variables are used 
 
 Pass any of these names to the `theme` option to use a specific palette:
 
-| Theme Name           | Type            | Description                                      |
-|----------------------|-----------------|--------------------------------------------------|
-| `'dracula'`          | **Dark** (High Contrast) | Vibrant pinks, purples, and cyans.               |
-| `'catppuccin-mocha'` | **Dark** (Low Contrast)  | Soothing pastel colors.                          |
-| `'github-light'`     | **Light** (High Contrast)| Clean, sharp, high-contrast.                     |
-| `'catppuccin-latte'` | **Light** (Low Contrast) | Warm, cozy light mode with soft colors.          |
+| Theme Name           | Type                      | Description                             |
+| -------------------- | ------------------------- | --------------------------------------- |
+| `'dracula'`          | **Dark** (High Contrast)  | Vibrant pinks, purples, and cyans.      |
+| `'catppuccin-mocha'` | **Dark** (Low Contrast)   | Soothing pastel colors.                 |
+| `'github-light'`     | **Light** (High Contrast) | Clean, sharp, high-contrast.            |
+| `'catppuccin-latte'` | **Light** (Low Contrast)  | Warm, cozy light mode with soft colors. |
 
 In auto mode, Colorino uses dracula in dark environments and github-light in light environments.
 
@@ -167,14 +168,14 @@ Set only the colors you care about; everything else uses the detected base theme
 
 ```typescript
 // Only customize error and warn
-const myLogger = createColorino({ 
+const myLogger = createColorino({
   error: '#ff007b',
-  warn: '#ffa500'
+  warn: '#ffa500',
 })
 
 // Detected dark terminal (uses dracula as base):
 // - error: #ff007b (your custom red)
-// - warn: #ffa500 (your custom orange)  
+// - warn: #ffa500 (your custom orange)
 // - info: #8be9fd (dracula cyan)
 // - log: #f8f8f2 (dracula foreground)
 // - debug: #bd93f9 (dracula purple)
@@ -202,10 +203,7 @@ Overlay your own colors on top of a built-in theme.
 
 ```typescript
 // Use GitHub Light but with a custom error color
-const myLogger = createColorino(
-  { error: '#ff007b' }, 
-  { theme: 'github-light' }
-)
+const myLogger = createColorino({ error: '#ff007b' }, { theme: 'github-light' })
 ```
 
 **4. Force a specific mode (uses defaults):**
@@ -241,16 +239,16 @@ myLogger.info('Still styled by theme.') // Uses the default theme color
 
 Colorino auto-detects your environment and color support, but you can override behavior using these standard environment variables (compatible with Chalk):
 
-| Variable        | Effect                                                                                   | Example                              |
-|-----------------|------------------------------------------------------------------------------------------|--------------------------------------|
-| `NO_COLOR`      | Forces no color output                                                                   | `NO_COLOR=1 node app.js`            |
-| `FORCE_COLOR`   | Forces color level: `0`=off, `1`=ANSI‑16, `2`=ANSI‑256, `3`=Truecolor                    | `FORCE_COLOR=3 node app.js`         |
-| `CLICOLOR`      | `"0"` disables color                                                                     | `CLICOLOR=0 node app.js`            |
-| `CLICOLOR_FORCE`| Non‑`"0"` value enables color even if not a TTY                                          | `CLICOLOR_FORCE=1 node app.js`      |
-| `TERM`          | Terminal type; may influence color support                                               | `TERM=xterm-256color`               |
-| `COLORTERM`     | `'truecolor'` or `'24bit'` enables truecolor                                             | `COLORTERM=truecolor`               |
-| `WT_SESSION`    | Enables color detection for Windows Terminal                                             |                                      |
-| `CI`            | Many CI platforms default to no color                                                    | `CI=1 node app.js`                  |
+| Variable         | Effect                                                                | Example                        |
+| ---------------- | --------------------------------------------------------------------- | ------------------------------ |
+| `NO_COLOR`       | Forces no color output                                                | `NO_COLOR=1 node app.js`       |
+| `FORCE_COLOR`    | Forces color level: `0`=off, `1`=ANSI‑16, `2`=ANSI‑256, `3`=Truecolor | `FORCE_COLOR=3 node app.js`    |
+| `CLICOLOR`       | `"0"` disables color                                                  | `CLICOLOR=0 node app.js`       |
+| `CLICOLOR_FORCE` | Non‑`"0"` value enables color even if not a TTY                       | `CLICOLOR_FORCE=1 node app.js` |
+| `TERM`           | Terminal type; may influence color support                            | `TERM=xterm-256color`          |
+| `COLORTERM`      | `'truecolor'` or `'24bit'` enables truecolor                          | `COLORTERM=truecolor`          |
+| `WT_SESSION`     | Enables color detection for Windows Terminal                          |                                |
+| `CI`             | Many CI platforms default to no color                                 | `CI=1 node app.js`             |
 
 ### <a id="5-6"></a>Colorize Helper (Manual Overrides)
 
@@ -269,13 +267,13 @@ When color is disabled (for example via `NO_COLOR=1` or lack of support), `color
 
 ## <a id="6"></a>Colorino vs. Chalk
 
-| Feature                  | 🎨 **Colorino**            | 🖍️ **Chalk**    |
-|--------------------------|----------------------------|-----------------|
-| Out-of-box logs          | ✔ themed, all log levels   | ✘ string styling|
-| Zero-config              | ✔                          | ✘ manual, per-use|
-| Node + browser           | ✔                          | ✘ (Node only)   |
-| CSS console logs         | ✔                          | ✘               |
-| Extensible / Composable  | ✔ (via factory)            | ✘               |
+| Feature                 | 🎨 **Colorino**          | 🖍️ **Chalk**      |
+| ----------------------- | ------------------------ | ----------------- |
+| Out-of-box logs         | ✔ themed, all log levels | ✘ string styling  |
+| Zero-config             | ✔                        | ✘ manual, per-use |
+| Node + browser          | ✔                        | ✘ (Node only)     |
+| CSS console logs        | ✔                        | ✘                 |
+| Extensible / Composable | ✔ (via factory)          | ✘                 |
 
 ## <a id="7"></a>API Reference
 
@@ -310,7 +308,12 @@ Colorino is designed for composition: create a base logger via `createColorino()
 This example prefixes every `.info()` and `.error()` call with best‑effort caller context (file/line) derived from a synthetic `Error` stack.
 
 ```ts
-import { createColorino, type Colorino, type ColorinoOptions, type Palette } from 'colorino'
+import {
+  createColorino,
+  type Colorino,
+  type ColorinoOptions,
+  type Palette,
+} from 'colorino'
 
 function getCallerContext(): string {
   const err = new Error()
@@ -334,15 +337,16 @@ function getCallerContext(): string {
 
 export function createContextLogger(
   palette?: Partial<Palette>,
-  options?: ColorinoOptions,
+  options?: ColorinoOptions
 ): Colorino {
   const base = createColorino(palette, options)
 
   // Inherit all default methods from the base logger...
-  const logger = Object.create(base) as Colorino // Object.create uses `base` as the prototype. 
+  const logger = Object.create(base) as Colorino // Object.create uses `base` as the prototype.
 
   // ...and override only what you need.
-  Object.assign(logger, { // Object.assign copies these methods onto `logger`.
+  Object.assign(logger, {
+    // Object.assign copies these methods onto `logger`.
     info(...args: unknown[]) {
       base.info(`[${getCallerContext()}]`, ...args)
     },

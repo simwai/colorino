@@ -6,11 +6,7 @@
     "moduleResolution": "node16",
     "moduleDetection": "force",
     "target": "esnext",
-    "lib": [
-      "DOM",
-      "DOM.Iterable",
-      "ES2023"
-    ],
+    "lib": ["DOM", "DOM.Iterable", "ES2023"],
     "declaration": true,
     "newLine": "lf",
     "stripInternal": true,
@@ -32,15 +28,8 @@
   },
   "ts-node": {
     "swc": true,
-    "esm": true,
+    "esm": true
   },
-  "include": [
-    "src/**/*",
-    "build.config.ts",
-    "vitest-browser.d.ts"
-  ],
-  "exclude": [
-    "node_modules",
-    "dist"
-  ]
+  "include": ["src/**/*", "build.config.ts", "vitest-browser.d.ts"],
+  "exclude": ["node_modules", "dist"]
 }

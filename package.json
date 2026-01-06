@@ -2,24 +2,32 @@
   "name": "colorino",
   "version": "0.13.0",
   "description": "A super simple colorized logger that gets the most out of your terminal",
-  "type": "module",
-  "license": "MIT",
-  "author": "simwai",
   "keywords": [
+    "ansi",
     "color",
+    "console",
     "logger",
     "terminal",
-    "ansi",
-    "console"
+    "chalk",
+    "kuler"
   ],
   "homepage": "https://github.com/simwai/colorino",
+  "bugs": {
+    "url": "https://github.com/simwai/colorino/issues"
+  },
+  "license": "MIT",
+  "author": "simwai",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/simwai/colorino.git"
   },
-  "bugs": {
-    "url": "https://github.com/simwai/colorino/issues"
-  },
+  "files": [
+    "dist",
+    "LICENSE.md",
+    "package.json",
+    "README.md"
+  ],
+  "type": "module",
   "main": "./dist/node.cjs",
   "module": "./dist/browser.mjs",
   "types": "./dist/browser.d.ts",
@@ -35,12 +43,9 @@
       "require": "./dist/browser.cjs"
     }
   },
-  "files": [
-    "dist",
-    "README.md",
-    "package.json",
-    "LICENSE.md"
-  ],
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "bundle:browser": "node --loader ts-node/esm node_modules/rollup/dist/bin/rollup -c rollup.browser.config.ts",
     "build": "unbuild && npm run bundle:browser",
@@ -76,7 +81,7 @@
     "lint-staged": "^15.2.0",
     "md-toc-cli": "^3.1.1",
     "node-pty": "^1.1.0",
-    "oxfmt": "^0.9.0",
+    "oxfmt": "^0.23.0",
     "oxlint": "^0.2.0",
     "playwright": "^1.57.0",
     "rollup": "^4.54.0",
@@ -96,8 +101,5 @@
   "engines": {
     "node": ">=17.0.0",
     "npm": ">=8.0.0"
-  },
-  "publishConfig": {
-    "access": "public"
   }
 }

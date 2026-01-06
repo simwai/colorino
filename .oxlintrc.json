@@ -20,7 +20,8 @@
     "node_modules",
     "dist",
     "coverage",
-    "build",
-    "*.min.js"
+    "playwright-repot",
+    ".husky",
+    "test-results"
   ]
 }

@@ -108,6 +108,7 @@ export class MyColorino implements Colorino {
   }
 
   private _isAnsiColoredString(value: unknown): value is string {
+    // oxlint-disable-next-line no-control-regex
     return typeof value === 'string' && /\x1b\[[0-9;]*m/.test(value)
   }
 

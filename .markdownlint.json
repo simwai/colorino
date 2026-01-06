@@ -1,15 +1,14 @@
 {
   "table-column-style": false,
   "no-inline-html": false,
+  "single-trailing-newline": false,
   "code-block-style": {
     "style": "fenced"
   },
   "code-fence-style": {
     "style": "backtick"
   },
-  "emphasis-style": {
-    "style": "asterisk"
-  },
+  "emphasis-style": false,
   "extended-ascii": {
     "ascii-only": true
   },
