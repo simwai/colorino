@@ -31,28 +31,32 @@ export function createColorino(
 
   const detectedBrowserTheme = browserDetector.getTheme()
 
-  // Determine the base theme name
   const themeOpt = options.theme ?? 'auto'
   const baseThemeName: ThemeName = determineBaseTheme(
     themeOpt,
     detectedBrowserTheme
   )
 
-  // Get the base palette from the registry
   const basePalette = themePalettes[baseThemeName]
 
-  // The user's colors will override the selected base theme.
   const finalPalette: Palette = { ...basePalette, ...userPalette }
 
   return new MyColorino(
     finalPalette,
     userPalette,
     validator,
-    browserDetector, // Always use browser detector
-    undefined, // Node detector is never available
+    browserDetector,
+    undefined,
     options
   )
 }
 
-export type { Palette, ColorinoOptions, LogLevel, ThemeName, Colorino }
+export type {
+  Palette,
+  ColorinoOptions,
+  LogLevel,
+  ThemeName,
+  Colorino,
+} from './types.js'
 export { themePalettes }
+export const colorino = createColorino()

@@ -43,3 +43,12 @@ export function createColorino(
     options
   )
 }
+export type {
+  Palette,
+  ColorinoOptions,
+  LogLevel,
+  ThemeName,
+  Colorino,
+} from './types.js'
+export { themePalettes }
+export const colorino = createColorino()

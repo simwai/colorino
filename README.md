@@ -100,8 +100,6 @@ Just import the default instance and log away!
 ```typescript
 import { createColorino } from 'colorino'
 
-const logger = createlogger()
-
 // All log levels automatically themed
 logger.error('A critical error!')
 logger.warn('A warning message.')
