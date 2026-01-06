@@ -37,7 +37,7 @@ Colorino automatically adapts its palette to your terminal or browser DevTools t
 
 Plain `console.log` is colorless and inconsistent. Libraries like `chalk` let you style strings, but you have to decorate every message and manually manage color choices.
 
-Colorino is different: it’s a "batteries-included" logging facade with beautiful, theme-aware colors and a familiar API—no learning curve, no configuration. Instantly upgrade your logs everywhere.
+Colorino is different: it’s a "batteries-included" logging facade with beautiful, theme-aware colors and a familiar API. Instantly upgrade your logs everywhere.
 
 ## <a id="2"></a>Features
 
