@@ -1,6 +1,6 @@
-import { createColorino, type ColorinoOptions, type Palette } from 'colorino'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import type { Colorino } from '../../types.js'
+import type { Colorino, ColorinoOptions, Palette } from '../../types.js'
+import { createColorino } from '../../node.js'
 
 afterEach(() => {
   vi.restoreAllMocks()

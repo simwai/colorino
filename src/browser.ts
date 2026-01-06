@@ -1,7 +1,6 @@
 import {
   type ColorinoOptions,
   type Palette,
-  type LogLevel,
   type ThemeName,
   type TerminalTheme,
   Colorino,
