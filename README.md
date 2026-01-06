@@ -26,7 +26,7 @@ Colorino automatically adapts its palette to your terminal or browser DevTools t
   - [1. `colorino` (default instance)](#7-1)
   - [2. `createColorino(palette?, options?)` (factory)](#7-2)
 - [Extending Colorino](#8)
-  - [Use case: automatic file/context info](#8-1)
+  - [Use Case: Automatic File/Context Info](#8-1)
 - [Internals & Dependencies](#9)
   - [Why This Pattern?](#9-1)
 - [License](#10)
@@ -305,7 +305,7 @@ A factory function to create your own customized logger instances.
 
 Colorino is designed for composition: create a base logger via `createColorino()`, then extend it by inheriting from the base and overriding only the methods you need.
 
-### <a id="8-1"></a>Use case: automatic file/context info
+### <a id="8-1"></a>Use Case: Automatic File/Context Info
 
 This example prefixes every `.info()` and `.error()` call with best‑effort caller context (file/line) derived from a synthetic `Error` stack.
 
