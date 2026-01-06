@@ -98,15 +98,15 @@ CommonJS-style bundle:
 Just import the default instance and log away!
 
 ```typescript
-import { createColorino } from 'colorino'
+import { colorino } from 'colorino'
 
 // All log levels automatically themed
-logger.error('A critical error!')
-logger.warn('A warning message.')
-logger.info('Useful info logging.')
-logger.log('A plain log.')
-logger.debug('Debug with objects:', { x: 5, y: 9 })
-logger.trace('Tracing app start...')
+colorino.error('A critical error!')
+colorino.warn('A warning message.')
+colorino.info('Useful info logging.')
+colorino.log('A plain log.')
+colorino.debug('Debug with objects:', { x: 5, y: 9 })
+colorino.trace('Tracing app start...')
 ```
 
 ### <a id="5-2"></a>Creating a Custom Logger
