@@ -76,10 +76,11 @@ describe('Colorino - Real Browser - Unit Test', () => {
     const testObject = { browser: true, id: 123 }
 
     logger.log('Object data:', testObject)
+
     expect(mocks.log).toHaveBeenCalledWith(
-      '%cObject data:',
+      '%cObject data:%o',
       'color:#ffffff',
-      `\n${JSON.stringify(testObject, null, 2)}`
+      testObject
     )
   })
 
@@ -101,5 +102,57 @@ describe('Colorino - Real Browser - Unit Test', () => {
     expect(mocks.info).toHaveBeenCalled()
     expect(mocks.debug).toHaveBeenCalled()
     expect(mocks.log).toHaveBeenCalled()
+  })
+
+  it('should allow manual override with colorize in browser', () => {
+    const logger = createColorino(createTestPalette({ log: '#ffffff' }))
+
+    const override = logger.colorize('OVERRIDE', '#ff5733')
+
+    logger.log(override, 'normal')
+
+    expect(mocks.log).toHaveBeenCalledWith(
+      '%cOVERRIDE%cnormal',
+      'color:#ff5733',
+      'color:#ffffff'
+    )
+  })
+
+  it('should only apply browser override to a single call', () => {
+    const logger = createColorino(createTestPalette({ log: '#00ff00' }))
+
+    const override = logger.colorize('OVERRIDE', '#ff5733')
+
+    logger.log(override, 'first')
+
+    expect(mocks.log).toHaveBeenNthCalledWith(
+      1,
+      '%cOVERRIDE%cfirst',
+      'color:#ff5733',
+      'color:#00ff00'
+    )
+
+    logger.log('second')
+
+    expect(mocks.log).toHaveBeenNthCalledWith(2, '%csecond', 'color:#00ff00')
+  })
+
+  it('should support mixed manual overrides, plain strings, and objects in browser', () => {
+    const logger = createColorino(createTestPalette({ log: '#00ff00' }))
+    const first = logger.colorize('FIRST', '#ff0000')
+    const second = logger.colorize('SECOND', '#0000ff')
+    const meta = { id: 1 }
+
+    logger.log('pre', first, 'mid', meta, second, 'post')
+
+    expect(mocks.log).toHaveBeenCalledWith(
+      '%cpre%cFIRST%cmid%o%cSECOND%cpost',
+      'color:#00ff00',
+      'color:#ff0000',
+      'color:#00ff00',
+      'color:#0000ff',
+      'color:#00ff00',
+      meta
+    )
   })
 })

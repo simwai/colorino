@@ -38,4 +38,19 @@ export interface Colorino {
   error(...args: unknown[]): void
   debug(...args: unknown[]): void
   trace(...args: unknown[]): void
+  colorize(text: string, hex: string): void
+}
+
+export const ColorinoBrowserColorized = Symbol('colorino.browserColorized')
+export const ColorinoBrowserObject = Symbol('colorino.browserObject')
+
+export type BrowserColorizedArg = {
+  [ColorinoBrowserColorized]: true
+  text: string
+  hex: string
+}
+
+export type BrowserObjectArg = {
+  [ColorinoBrowserObject]: true
+  value: unknown
 }

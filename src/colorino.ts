@@ -10,10 +10,14 @@ import {
   Colorino,
   ThemeName,
   ConsoleMethod,
+  ColorinoBrowserColorized,
+  ColorinoBrowserObject,
+  BrowserColorizedArg,
 } from './types.js'
 import { InputValidator } from './input-validator.js'
 import { themePalettes } from './theme.js'
 import { determineBaseTheme } from './determine-base-theme.js'
+import { TypeValidator } from './type-validator.js'
 
 export class MyColorino implements Colorino {
   private _alreadyWarned = false
@@ -50,15 +54,9 @@ export class MyColorino implements Colorino {
 
     if (themeOpt === 'auto' && this._nodeColorSupportDetector) {
       this._nodeColorSupportDetector.onTheme(resolvedTheme => {
-        this._appllyResolvedTheme(resolvedTheme)
+        this._applyResolvedTheme(resolvedTheme)
       })
     }
-  }
-  private _appllyResolvedTheme(resolvedTheme: string) {
-    const themeOpt = this._options.theme ?? 'auto'
-    const baseThemeName: ThemeName = determineBaseTheme(themeOpt, resolvedTheme)
-    const basePalette = themePalettes[baseThemeName]
-    this._palette = { ...basePalette, ...this._userPalette }
   }
 
   log(...args: unknown[]): void {
@@ -83,6 +81,41 @@ export class MyColorino implements Colorino {
 
   debug(...args: unknown[]): void {
     this._out('debug', args)
+  }
+
+  colorize(text: string, hex: string): string | BrowserColorizedArg {
+    if (
+      this._colorLevel === ColorLevel.NO_COLOR ||
+      this._colorLevel === 'UnknownEnv'
+    ) {
+      return text
+    }
+
+    if (this.isBrowser) {
+      return {
+        [ColorinoBrowserColorized]: true,
+        text,
+        hex,
+      }
+    }
+
+    const ansiPrefix = this._toAnsiPrefix(hex)
+    if (!ansiPrefix) {
+      return text
+    }
+
+    return `${ansiPrefix}${text}\x1b[0m`
+  }
+
+  private _isAnsiColoredString(value: unknown): value is string {
+    return typeof value === 'string' && /\x1b\[[0-9;]*m/.test(value)
+  }
+
+  private _applyResolvedTheme(resolvedTheme: string) {
+    const themeOpt = this._options.theme ?? 'auto'
+    const baseThemeName: ThemeName = determineBaseTheme(themeOpt, resolvedTheme)
+    const basePalette = themePalettes[baseThemeName]
+    this._palette = { ...basePalette, ...this._userPalette }
   }
 
   private _detectColorSupport(): ColorLevel | 'UnknownEnv' {
@@ -111,7 +144,7 @@ export class MyColorino implements Colorino {
     const seen = new WeakSet<object>()
 
     const sanitize = (val: unknown, currentDepth: number): unknown => {
-      if (val === null || typeof val !== 'object') return val
+      if (val == null || typeof val !== 'object') return val
 
       if (seen.has(val)) return '[Circular]'
       seen.add(val)
@@ -135,31 +168,46 @@ export class MyColorino implements Colorino {
     return JSON.stringify(sanitize(value, 0), null, 2)
   }
 
+  private _normalizeString(value: unknown) {
+    if (value instanceof String) return value.valueOf()
+    return value
+  }
+
   private _processArgs(args: unknown[]): unknown[] {
     const processedArgs: unknown[] = []
     let previousWasObject = false
 
-    for (const arg of args) {
-      const isFormattableObject =
-        arg !== null &&
-        typeof arg === 'object' &&
-        typeof arg !== 'string' &&
-        !(arg instanceof Error)
+    for (const rawArg of args) {
+      const arg = this._normalizeString(rawArg)
 
-      const isError = arg instanceof Error
+      if (TypeValidator.isBrowserColorizedArg(arg)) {
+        processedArgs.push(arg)
+        previousWasObject = false
+        continue
+      }
 
-      if (isFormattableObject) {
-        processedArgs.push(`\n${this._formatValue(arg)}`)
+      if (TypeValidator.isFormattableObject(arg)) {
+        if (this.isBrowser) {
+          processedArgs.push({
+            [ColorinoBrowserObject]: true,
+            value: arg,
+          })
+        } else {
+          processedArgs.push(`\n${this._formatValue(arg)}`)
+        }
+
         previousWasObject = true
-      } else if (isError) {
+      } else if (TypeValidator.isError(arg)) {
         processedArgs.push('\n', this._cleanErrorStack(arg))
+
         previousWasObject = true
       } else {
-        if (typeof arg === 'string' && previousWasObject) {
+        if (TypeValidator.isString(arg) && previousWasObject) {
           processedArgs.push(`\n${arg}`)
         } else {
           processedArgs.push(arg)
         }
+
         previousWasObject = false
       }
     }
@@ -171,60 +219,108 @@ export class MyColorino implements Colorino {
     consoleMethod: ConsoleMethod,
     args: unknown[]
   ): unknown[] {
-    const hex = this._palette[consoleMethod]
+    const formatParts: string[] = []
+    const cssArgs: string[] = []
+    const otherArgs: unknown[] = []
 
-    if (typeof args[0] === 'string') {
-      return [`%c${args[0]}`, `color:${hex}`, ...args.slice(1)]
+    const paletteHex = this._palette[consoleMethod]
+
+    for (const rawArg of args) {
+      const arg = this._normalizeString(rawArg)
+
+      if (TypeValidator.isBrowserColorizedArg(arg)) {
+        // Manual override via colorize()
+        formatParts.push(`%c${arg.text}`)
+        cssArgs.push(`color:${arg.hex}`)
+        continue
+      }
+
+      if (TypeValidator.isBrowserObjectArg(arg)) {
+        // Pretty-printed object wrapper from _processArgs
+        formatParts.push('%o')
+        otherArgs.push(arg.value)
+        continue
+      }
+
+      if (TypeValidator.isString(arg)) {
+        // Plain string uses palette color
+        formatParts.push(`%c${arg}`)
+        cssArgs.push(`color:${paletteHex}`)
+        continue
+      }
+
+      // Fallback: non-string, non-wrapper → log as object
+      formatParts.push('%o')
+      otherArgs.push(arg)
     }
 
-    return args
+    // No strings at all → nothing to style, keep original args
+    if (formatParts.length === 0) {
+      return args
+    }
+
+    return [formatParts.join(''), ...cssArgs, ...otherArgs]
+  }
+
+  private _toAnsiPrefix(hex: string): string {
+    if (
+      this._colorLevel === ColorLevel.NO_COLOR ||
+      this._colorLevel === 'UnknownEnv'
+    ) {
+      return ''
+    }
+
+    switch (this._colorLevel) {
+      case ColorLevel.TRUECOLOR: {
+        const [r, g, b] = colorConverter.hex.toRgb(hex)
+        return `\x1b[38;2;${r};${g};${b}m`
+      }
+      case ColorLevel.ANSI256: {
+        const code = colorConverter.hex.toAnsi256(hex)
+        return `\x1b[38;5;${code}m`
+      }
+      case ColorLevel.ANSI:
+      default: {
+        const code = colorConverter.hex.toAnsi16(hex)
+        return `\x1b[${code}m`
+      }
+    }
   }
 
   private _applyNodeColors(
     consoleMethod: ConsoleMethod,
     args: unknown[]
   ): unknown[] {
-    const hex = this._palette[consoleMethod]
-    let ansiCode: string
-
-    switch (this._colorLevel) {
-      case ColorLevel.TRUECOLOR: {
-        const [r, g, b] = colorConverter.hex.toRgb(hex)
-        ansiCode = `\x1b[38;2;${r};${g};${b}m`
-        break
-      }
-      case ColorLevel.ANSI256: {
-        const code = colorConverter.hex.toAnsi256(hex)
-        ansiCode = `\x1b[38;5;${code}m`
-        break
-      }
-      case ColorLevel.ANSI:
-      default: {
-        const code = colorConverter.hex.toAnsi16(hex)
-        ansiCode = `\x1b[${code}m`
-        break
-      }
-    }
-
     const coloredArgs = [...args]
     const firstStringIndex = coloredArgs.findIndex(
       arg => typeof arg === 'string'
     )
 
-    if (firstStringIndex !== -1) {
-      coloredArgs[firstStringIndex] =
-        `${ansiCode}${coloredArgs[firstStringIndex]}\x1b[0m`
+    if (firstStringIndex === -1) {
+      return coloredArgs
     }
+
+    const first = coloredArgs[firstStringIndex]
+
+    if (this._isAnsiColoredString(first)) {
+      return coloredArgs
+    }
+
+    const hex = this._palette[consoleMethod]
+    const ansiPrefix = this._toAnsiPrefix(hex)
+
+    if (!ansiPrefix) {
+      return coloredArgs
+    }
+
+    coloredArgs[firstStringIndex] = `${ansiPrefix}${String(first)}\x1b[0m`
 
     return coloredArgs
   }
 
   private _output(consoleMethod: ConsoleMethod, args: unknown[]): void {
-    if (consoleMethod === 'trace') {
-      this._printCleanTrace(args)
-    } else {
-      console[consoleMethod](...args)
-    }
+    if (consoleMethod === 'trace') this._printCleanTrace(args)
+    else console[consoleMethod](...args)
   }
 
   private _out(level: LogLevel, args: unknown[]): void {

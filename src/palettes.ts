@@ -39,21 +39,3 @@ export const githubLightPalette: Palette = {
   debug: '#586069', // Gray
   trace: '#6a737d', // Gray-light
 }
-
-export const minimalDarkPalette = {
-  log: '#ffffff',
-  info: '#ffffff',
-  warn: '#ffffff',
-  error: '#ffffff',
-  debug: '#ffffff',
-  trace: '#ffffff',
-}
-
-export const minimalLightPalette = {
-  log: '#000000',
-  info: '#000000',
-  warn: '#000000',
-  error: '#000000',
-  debug: '#000000',
-  trace: '#000000',
-}

@@ -388,4 +388,116 @@ describe('Colorino - Node Environment - Unit Test', () => {
       })
     })
   })
+
+  describe('Colorize Helper', () => {
+    describe('with FORCE_COLOR=3', () => {
+      test.scoped({ env: { FORCE_COLOR: '3' } })
+
+      test('wraps text in 24-bit truecolor codes', ({ stdoutSpy }) => {
+        const logger = createColorino(createTestPalette({ log: '#ffffff' }), {
+          disableWarnings: true,
+        })
+
+        const colored = logger.colorize('OVERRIDE', '#ff5733')
+
+        logger.log(colored)
+
+        expect(stdoutSpy.getOutput()).toBe(
+          `${ANSI.ORANGE_TRUE}OVERRIDE${ANSI.RESET}\n`
+        )
+      })
+    })
+
+    describe('with FORCE_COLOR=2', () => {
+      test.scoped({ env: { FORCE_COLOR: '2' } })
+
+      test('wraps text in 256-color codes', ({ stdoutSpy }) => {
+        const logger = createColorino(createTestPalette({ log: '#ffffff' }), {
+          disableWarnings: true,
+        })
+
+        const colored = logger.colorize('OVERRIDE', '#00ff00')
+
+        logger.log(colored)
+
+        expect(stdoutSpy.getOutput()).toBe(
+          `${ANSI.GREEN_256}OVERRIDE${ANSI.RESET}\n`
+        )
+      })
+    })
+
+    describe('with FORCE_COLOR=1', () => {
+      test.scoped({ env: { FORCE_COLOR: '1' } })
+
+      test('wraps text in basic 16-color ANSI codes', ({ stdoutSpy }) => {
+        const logger = createColorino(createTestPalette({ log: '#ffffff' }), {
+          disableWarnings: true,
+        })
+
+        const colored = logger.colorize('OVERRIDE', '#00ff00')
+
+        logger.log(colored)
+
+        expect(stdoutSpy.getOutput()).toBe(
+          `${ANSI.GREEN_BASIC}OVERRIDE${ANSI.RESET}\n`
+        )
+      })
+    })
+
+    describe('with NO_COLOR=1', () => {
+      test.scoped({ env: { NO_COLOR: '1' } })
+
+      test('returns plain text without color codes', ({ stdoutSpy }) => {
+        const logger = createColorino(createTestPalette({ log: '#ffffff' }), {
+          disableWarnings: true,
+        })
+
+        const colored = logger.colorize('OVERRIDE', '#ff0000')
+
+        logger.log(colored)
+
+        expect(stdoutSpy.getOutput()).toBe('OVERRIDE\n')
+      })
+    })
+
+    describe('Manual overrides with colorize', () => {
+      describe('with FORCE_COLOR=2', () => {
+        test.scoped({ env: { FORCE_COLOR: '2' } })
+
+        test('allows mixing manual override (first arg) with themed text', ({
+          stdoutSpy,
+        }) => {
+          const logger = createColorino(createTestPalette({ log: '#ffffff' }), {
+            disableWarnings: true,
+          })
+
+          const override = logger.colorize('OVERRIDE', '#00ff00')
+
+          logger.log(override, 'normal')
+
+          const output = stdoutSpy.getOutput()
+
+          expect(output).toContain(`${ANSI.GREEN_256}OVERRIDE${ANSI.RESET}`)
+          expect(output).toMatch(/OVERRIDE[\s\S]*normal\n$/)
+        })
+
+        test('allows mixing manual override (second arg) with themed text', ({
+          stdoutSpy,
+        }) => {
+          const logger = createColorino(createTestPalette({ log: '#ffffff' }), {
+            disableWarnings: true,
+          })
+
+          const override = logger.colorize('OVERRIDE', '#00ff00')
+
+          logger.log('normal', override)
+
+          const output = stdoutSpy.getOutput()
+
+          expect(output).toContain(`${ANSI.GREEN_256}OVERRIDE${ANSI.RESET}`)
+          expect(output).toMatch(/.*normal.*OVERRIDE.*\n$/)
+        })
+      })
+    })
+  })
 })

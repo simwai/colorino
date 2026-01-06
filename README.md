@@ -20,6 +20,7 @@ Colorino automatically adapts its palette to your terminal or browser DevTools t
     - [Examples](#5-3-2)
   - [Customization](#5-4)
   - [Supported Environment Variables](#5-5)
+  - [Colorize Helper (Manual Overrides)](#5-6)
 - [Colorino vs. Chalk](#6)
 - [API Reference](#7)
   - [1. `colorino` (default instance)](#7-1)
@@ -220,11 +221,11 @@ const darkLogger = createColorino({}, { theme: 'dark' })
 
 ### <a id="5-4"></a>Customization
 
-Use your brand colors by passing a partial palette to the `createColorino` factory. Any log levels you don't specify will use the detected **minimal** defaults (`minimal-dark` / `minimal-light`) unless you explicitly select a theme preset.
+Use your brand colors by passing a partial palette to the `createColorino` factory. Any log levels you don't specify will use the detected default colors unless you explicitly select a theme preset.
 
 Colorino always targets the highest color fidelity supported by the environment. If your palette uses hex colors but only ANSI‑16 is available, Colorino computes the nearest ANSI color so your branding stays recognizable, even on limited terminals.
 
-If you pass an invalid color value (e.g. malformed hex) in a custom palette, Colorino throws an InputValidationError at creation time so broken palettes fail fast.
+If you pass an invalid color value (e.g. malformed hex) in a custom palette, Colorino throws an `InputValidationError` at creation time so broken palettes fail fast.
 
 ```typescript
 import { createColorino } from 'colorino'
@@ -250,6 +251,21 @@ Colorino auto-detects your environment and color support, but you can override b
 | `COLORTERM`     | `'truecolor'` or `'24bit'` enables truecolor                                             | `COLORTERM=truecolor`               |
 | `WT_SESSION`    | Enables color detection for Windows Terminal                                             |                                      |
 | `CI`            | Many CI platforms default to no color                                                    | `CI=1 node app.js`                  |
+
+### <a id="5-6"></a>Colorize Helper (Manual Overrides)
+
+Sometimes you want full control over a single piece of text without changing your global palette, e.g. when you use a mostly neutral theme but still want to highlight a keyword.
+
+Colorino exposes a small `colorize(text, hex)` helper on every logger instance:
+
+```ts
+import { colorino } from 'colorino'
+
+const important = colorino.colorize('IMPORTANT', '#ff5733')
+colorino.info(important, 'Something happened')
+```
+
+When color is disabled (for example via `NO_COLOR=1` or lack of support), `colorize` returns the plain input string, so your logs stay readable.
 
 ## <a id="6"></a>Colorino vs. Chalk
 
