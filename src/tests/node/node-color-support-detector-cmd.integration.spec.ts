@@ -1,53 +1,30 @@
-// windows-cmd-integration.spec.ts
 import { test as base, describe, expect } from 'vitest'
-import { spawn } from 'node:child_process'
-import { fileURLToPath } from 'node:url'
-import { dirname, join } from 'node:path'
+import {
+  getScriptPaths,
+  spawnProcess,
+  testTimeouts,
+  type SpawnResult,
+} from '../helpers/integration.js'
 
-const __dirname = dirname(fileURLToPath(import.meta.url))
+const scriptPaths = getScriptPaths(import.meta.url, {
+  testCmdColors: '../helpers/test-cmd-colors.ts',
+  testOscQuery: '../helpers/test-osc-query.ts',
+})
 
 interface CmdIntegrationFixtures {
-  scriptPaths: {
-    testCmdColors: string
-    testOscQuery: string
-  }
   runInCmd: (
     scriptPath: string,
     env?: Record<string, string>
-  ) => Promise<{
-    stdout: string
-    stderr: string
-    exitCode: number | null
-  }>
+  ) => Promise<SpawnResult>
 }
 
 const test = base.extend<CmdIntegrationFixtures>({
   // eslint-disable-next-line
-  scriptPaths: async ({}, use) => {
-    await use({
-      testCmdColors: join(__dirname, '../helpers/test-cmd-colors.ts'),
-      testOscQuery: join(__dirname, '../helpers/test-osc-query.ts'),
-    })
-  },
-
-  // eslint-disable-next-line
   runInCmd: async ({}, use) => {
     await use((scriptPath: string, env?: Record<string, string>) => {
-      return new Promise(resolve => {
-        const child = spawn('cmd.exe', ['/c', 'npx', 'tsx', scriptPath], {
-          env: { ...process.env, ...env },
-          stdio: ['inherit', 'pipe', 'pipe'],
-        })
-
-        let stdout = ''
-        let stderr = ''
-
-        child.stdout?.on('data', chunk => (stdout += chunk.toString()))
-        child.stderr?.on('data', chunk => (stderr += chunk.toString()))
-
-        child.on('close', exitCode => {
-          resolve({ stdout, stderr, exitCode })
-        })
+      return spawnProcess('cmd.exe', ['/c', 'npx', 'tsx', scriptPath], {
+        env,
+        stdio: ['inherit', 'pipe', 'pipe'],
       })
     })
   },
@@ -56,12 +33,11 @@ const test = base.extend<CmdIntegrationFixtures>({
 describe('NodeColorSupportDetector - Windows CMD - Integration Test', () => {
   test.skipIf(process.platform !== 'win32')(
     'should detect color support in cmd.exe',
-    async ({ runInCmd, scriptPaths }) => {
+    async ({ runInCmd }) => {
       const result = await runInCmd(scriptPaths.testCmdColors)
 
       expect(result.exitCode).toBe(0)
 
-      // Parse actual values
       const colorLevelMatch = result.stdout.match(/ColorLevel:\s*(\d+)/)
       const themeMatch = result.stdout.match(/Theme:\s*(\w+)/)
 
@@ -75,22 +51,21 @@ describe('NodeColorSupportDetector - Windows CMD - Integration Test', () => {
       const theme = themeMatch![1]!
       expect(['dark', 'light', 'unknown']).toContain(theme)
     },
-    10000
+    testTimeouts.cmd
   )
 
   test.skipIf(process.platform !== 'win32')(
     'should respect FORCE_COLOR=1 in cmd.exe',
-    async ({ runInCmd, scriptPaths }) => {
+    async ({ runInCmd }) => {
       const result = await runInCmd(scriptPaths.testCmdColors, {
         FORCE_COLOR: '1',
       })
 
       expect(result.exitCode).toBe(0)
-      // Strip ANSI codes: \x1b[...m
       // eslint-disable-next-line no-control-regex
       const cleanStdout = result.stdout.replace(/\x1b\[\d+m/g, '')
-      expect(cleanStdout).toContain('ColorLevel: 1') // ANSI
+      expect(cleanStdout).toContain('ColorLevel: 1')
     },
-    10000
+    testTimeouts.cmd
   )
 })

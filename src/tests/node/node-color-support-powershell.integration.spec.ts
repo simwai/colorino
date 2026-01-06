@@ -1,58 +1,35 @@
-// windows-powershell-integration.spec.ts
 import { test as base, describe, expect } from 'vitest'
-import { spawn } from 'node:child_process'
-import { fileURLToPath } from 'node:url'
-import { dirname, join } from 'node:path'
+import {
+  getScriptPaths,
+  spawnProcess,
+  testTimeouts,
+  type SpawnResult,
+} from '../helpers/integration.js'
 
-const __dirname = dirname(fileURLToPath(import.meta.url))
+const scriptPaths = getScriptPaths(import.meta.url, {
+  testCmdColors: '../helpers/test-cmd-colors.ts',
+  testOscQuery: '../helpers/test-osc-query.ts',
+})
 
 interface PowerShellIntegrationFixtures {
-  scriptPaths: {
-    testCmdColors: string
-    testOscQuery: string
-  }
   runInPowerShell: (
     scriptPath: string,
     env?: Record<string, string>
-  ) => Promise<{
-    stdout: string
-    stderr: string
-    exitCode: number | null
-  }>
+  ) => Promise<SpawnResult>
 }
 
 const test = base.extend<PowerShellIntegrationFixtures>({
   // eslint-disable-next-line
-  scriptPaths: async ({}, use) => {
-    await use({
-      testCmdColors: join(__dirname, '../helpers/test-cmd-colors.ts'),
-      testOscQuery: join(__dirname, '../helpers/test-osc-query.ts'),
-    })
-  },
-
-  // eslint-disable-next-line
   runInPowerShell: async ({}, use) => {
     await use((scriptPath: string, env?: Record<string, string>) => {
-      return new Promise(resolve => {
-        const child = spawn(
-          'powershell.exe',
-          ['-NoProfile', '-Command', 'npx', 'tsx', scriptPath],
-          {
-            env: { ...process.env, ...env },
-            stdio: ['inherit', 'pipe', 'pipe'],
-          }
-        )
-
-        let stdout = ''
-        let stderr = ''
-
-        child.stdout?.on('data', chunk => (stdout += chunk.toString()))
-        child.stderr?.on('data', chunk => (stderr += chunk.toString()))
-
-        child.on('close', exitCode => {
-          resolve({ stdout, stderr, exitCode })
-        })
-      })
+      return spawnProcess(
+        'powershell.exe',
+        ['-NoProfile', '-Command', 'npx', 'tsx', scriptPath],
+        {
+          env,
+          stdio: ['inherit', 'pipe', 'pipe'],
+        }
+      )
     })
   },
 })
@@ -60,7 +37,7 @@ const test = base.extend<PowerShellIntegrationFixtures>({
 describe('NodeColorSupportDetector - PowerShell - Integration Test', () => {
   test.skipIf(process.platform !== 'win32')(
     'should detect color support in PowerShell',
-    async ({ runInPowerShell, scriptPaths }) => {
+    async ({ runInPowerShell }) => {
       const result = await runInPowerShell(scriptPaths.testCmdColors)
 
       expect(result.exitCode).toBe(0)
@@ -69,17 +46,17 @@ describe('NodeColorSupportDetector - PowerShell - Integration Test', () => {
       expect(parseInt(match![1]!, 10)).toBeGreaterThanOrEqual(0)
       expect(result.stdout).toContain('Theme:')
     },
-    10000
+    testTimeouts.powerShell
   )
 
   test.skipIf(process.platform !== 'win32' || !process.env['WT_SESSION'])(
     'should detect OSC 11 theme in Windows Terminal',
-    async ({ runInPowerShell, scriptPaths }) => {
+    async ({ runInPowerShell }) => {
       const result = await runInPowerShell(scriptPaths.testOscQuery)
 
       expect(result.exitCode).toBe(0)
       expect(['dark', 'light']).toContain(result.stdout.trim())
     },
-    10000
+    testTimeouts.powerShell
   )
 })
