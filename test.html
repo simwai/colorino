@@ -1,5 +1,5 @@
 that works
-<!DOCTYPE html>
+<!doctype html>
 <html>
    
   <head>
@@ -7,21 +7,21 @@ that works
     <script src="./dist/cdn.min.js"></script>
        
     <script>
-      console.log(window);
+      console.log(window)
 
-      colorino.info("Hello from the UMD bundle!");
-      colorino.error("Something went wrong");
+      colorino.info('Hello from the UMD bundle!')
+      colorino.error('Something went wrong')
     </script>
 
     <script type="module" src="./dist/cdn.min.mjs"></script>
        
     <script type="module">
-      import { colorino } from "./dist/cdn.min.mjs";
+      import { colorino } from './dist/cdn.min.mjs'
 
-      console.log(window);
-      colorino.info("Hello from the UMD bundle!");
-      colorino.error("Something went wrong");
-      colorino.error("Something went wrong sheesh");
+      console.log(window)
+      colorino.info('Hello from the UMD bundle!')
+      colorino.error('Something went wrong')
+      colorino.error('Something went wrong sheesh')
     </script>
      
   </head>
