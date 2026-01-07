@@ -79,7 +79,7 @@ export default defineBuildConfig([
   // Generates: dist/cdn.js (Debug) & dist/cdn.min.js (Prod)
   {
     name: 'cdn-umd',
-    entries: ['src/browser'],
+    entries: ['src/browser-umd.ts'],
     declaration: false,
     rollup: {
       inlineDependencies: true,
@@ -87,18 +87,20 @@ export default defineBuildConfig([
     hooks: {
       'rollup:options'(_ctx, options) {
         options.external = id => id.startsWith('node:')
-        options.input = 'src/browser.ts'
+        options.input = 'src/browser-umd.ts'
         options.output = [
           {
             file: 'dist/cdn.js',
             format: 'umd',
             name: 'colorino',
+            exports: 'default',
             sourcemap: true,
           },
           {
             file: 'dist/cdn.min.js',
             format: 'umd',
             name: 'colorino',
+            exports: 'default',
             sourcemap: true,
             // @ts-ignore
             plugins: [terser(terserOptions)],

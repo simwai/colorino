@@ -32,8 +32,11 @@ export class ColorinoNode
     if (!prefix) return args
 
     return args.map(arg => {
-      if (!TypeValidator.isString(arg)) return arg
-      if (TypeValidator.isAnsiColoredString(arg)) return arg
+      if (
+        !TypeValidator.isString(arg) ||
+        TypeValidator.isAnsiColoredString(arg)
+      )
+        return arg
       return `${prefix}${String(arg)}\x1b[0m`
     })
   }
