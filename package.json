@@ -1,6 +1,6 @@
 {
   "name": "colorino",
-  "version": "0.13.1",
+  "version": "0.13.2",
   "description": "A super simple colorized logger that gets the most out of your terminal",
   "keywords": [
     "ansi",
