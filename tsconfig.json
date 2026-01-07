@@ -2,11 +2,15 @@
   "compilerOptions": {
     "rootDir": ".",
     "outDir": "dist",
-    "module": "node16",
-    "moduleResolution": "node16",
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
     "moduleDetection": "force",
-    "target": "esnext",
-    "lib": ["DOM", "DOM.Iterable", "ES2024"],
+    "target": "es2023",
+    "lib": [
+      "DOM",
+      "DOM.Iterable",
+      "ES2023"
+    ],
     "declaration": true,
     "newLine": "lf",
     "stripInternal": true,
@@ -24,12 +28,16 @@
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true,
     "isolatedModules": true,
+    "esModuleInterop": true,
     "incremental": true
   },
-  "ts-node": {
-    "swc": true,
-    "esm": true
-  },
-  "include": ["src/**/*", "build.config.ts", "vitest-browser.d.ts"],
-  "exclude": ["node_modules", "dist"]
+  "include": [
+    "src/**/*",
+    "build.config.ts",
+    "vitest-browser.d.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist"
+  ]
 }

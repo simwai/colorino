@@ -28,7 +28,7 @@
     "README.md"
   ],
   "type": "module",
-  "main": "./dist/node.cjs",
+  "main": "./dist/node.mjs",
   "module": "./dist/browser.mjs",
   "types": "./dist/browser.d.ts",
   "exports": {
@@ -37,18 +37,25 @@
       "import": "./dist/node.mjs",
       "require": "./dist/node.cjs"
     },
+    "script": "./dist/cdn.min.js",
     "browser": {
       "types": "./dist/browser.d.ts",
       "import": "./dist/browser.mjs",
-      "require": "./dist/browser.cjs"
+      "default": "./dist/browser.mjs"
+    },
+    "default": {
+      "types": "./dist/browser.d.ts",
+      "import": "./dist/browser.mjs",
+      "default": "./dist/browser.mjs"
     }
   },
+  "unpkg": "./dist/cdn.min.js",
+  "jsdelivr": "./dist/cdn.min.js",
   "publishConfig": {
     "access": "public"
   },
   "scripts": {
-    "bundle:browser": "node --loader ts-node/esm node_modules/rollup/dist/bin/rollup -c rollup.browser.config.ts",
-    "build": "unbuild && npm run bundle:browser",
+    "build": "unbuild",
     "format": "oxlint --fix && oxfmt",
     "test:all": "npm run test:node && npm run test:browser",
     "test:node": "vitest run --project=node",
@@ -72,7 +79,7 @@
     "@playwright/test": "^1.57.0",
     "@rollup/plugin-commonjs": "^29.0.0",
     "@rollup/plugin-node-resolve": "^16.0.3",
-    "@swc/core": "^1.15.8",
+    "@rollup/plugin-terser": "^0.4.4",
     "@types/node": "^24.9.2",
     "@vitest/browser-playwright": "^4.0.15",
     "@vitest/coverage-v8": "^4.0.15",
@@ -84,7 +91,6 @@
     "oxfmt": "^0.23.0",
     "oxlint": "^0.2.0",
     "playwright": "^1.57.0",
-    "rollup": "^4.54.0",
     "ts-node": "^10.9.2",
     "tsx": "^4.20.6",
     "typescript": "^5.9.3",

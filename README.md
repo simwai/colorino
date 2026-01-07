@@ -12,6 +12,8 @@ Colorino automatically adapts its palette to your terminal or browser DevTools t
 - [Features](#2)
 - [Installation](#3)
 - [Browser via CDN (unpkg)](#4)
+  - [ESM (Recommended)](#4-1)
+  - [UMD (Classic `<script>`)](#4-2)
 - [Usage](#5)
   - [Quick Start](#5-1)
   - [Creating a Custom Logger](#5-2)
@@ -59,14 +61,14 @@ npm install colorino
 
 You can use Colorino directly in the browser without any build step.
 
-**ESM (recommended):**
+### <a id="4-1"></a>ESM (Recommended)
 
 ```html
 <!DOCTYPE html>
 <html>
   <head>
     <script type="module">
-      import { colorino } from 'https://unpkg.com/colorino/dist/browser.bundle.mjs'
+      import { colorino } from 'https://unpkg.com/colorino/dist/cdn.min.mjs'
 
       colorino.info('Hello from the browser!')
       colorino.error('Something went wrong')
@@ -76,20 +78,35 @@ You can use Colorino directly in the browser without any build step.
 </html>
 ```
 
-CommonJS-style bundle:
+For debugging (non‑minified):
 
-```HTML
+```html
+<script type="module">
+  import { colorino } from 'https://unpkg.com/colorino/dist/cdn.mjs'
+</script>
+```
+
+### <a id="4-2"></a>UMD (Classic `<script>`)
+
+```html
 <!DOCTYPE html>
 <html>
   <head>
-    <script src="https://unpkg.com/colorino/dist/browser.bundle.cjs"></script>
+    <script src="https://unpkg.com/colorino/dist/cdn.min.js"></script>
     <script>
       // `colorino` is exposed as a global
-      colorino.info('Hello from the CJS bundle!');
+      colorino.info('Hello from the UMD bundle!')
+      colorino.error('Something went wrong')
     </script>
   </head>
   <body></body>
 </html>
+```
+
+For debugging (non‑minified):
+
+```html
+<script src="https://unpkg.com/colorino/dist/cdn.js"></script>
 ```
 
 ## <a id="5"></a>Usage
