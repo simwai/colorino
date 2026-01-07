@@ -20,25 +20,17 @@ export type ThemeName =
   | 'dracula'
   | 'github-light'
 
-export interface ColorinoOptions {
-  disableWarnings?: boolean
-  theme?: TerminalTheme | ThemeName | 'auto'
-  disableOscProbe?: boolean
-  maxDepth?: number
-}
-
-export interface Colorino {
-  log(...args: unknown[]): void
-  info(...args: unknown[]): void
-  warn(...args: unknown[]): void
-  error(...args: unknown[]): void
-  debug(...args: unknown[]): void
-  trace(...args: unknown[]): void
-  colorize(text: string, hex: string): void
-}
-
 export const ColorinoBrowserColorized = Symbol('colorino.browserColorized')
 export const ColorinoBrowserObject = Symbol('colorino.browserObject')
+export const ColorinoBrowserCss = Symbol('colorino.browserCss')
+
+export type CssConsoleStyle = string | Record<string, string>
+
+export interface BrowserCssArg {
+  [ColorinoBrowserCss]: true
+  text: string
+  css: string
+}
 
 export type BrowserColorizedArg = {
   [ColorinoBrowserColorized]: true

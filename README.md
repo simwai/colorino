@@ -23,6 +23,7 @@ Colorino automatically adapts its palette to your terminal or browser DevTools t
   - [Customization](#5-4)
   - [Supported Environment Variables](#5-5)
   - [Colorize Helper (Manual Overrides)](#5-6)
+  - [Browser‑only CSS Helper (`css()`)](#5-7)
 - [Colorino vs. Chalk](#6)
 - [API Reference](#7)
   - [1. `colorino` (default instance)](#7-1)
@@ -45,6 +46,7 @@ Colorino is different: it’s a "batteries-included" logging facade with beautif
 
 - 🎨 **Smart Theming:** Automatically detects _dark/light_ mode and applies a high‑contrast base palette by default (Dracula for dark, GitHub Light for light); opt into a coordinated theme preset when you want richer colors.
 - 🤘 **Graceful Color Degradation**: Accepts rich colors (hex/RGB) and automatically down‑samples to the best ANSI‑16/ANSI‑256/Truecolor match for the current environment.​
+- 🎯 **CSS styling in DevTools (browser only):** Use a dedicated helper to apply arbitrary CSS properties to specific console segments in Chrome, Firefox, and Safari DevTools, powered by the `%c` formatter.
 - 🤝 **Familiar API:** If you know `console.log`, you already know Colorino: all standard log levels are supported.
 - 🔀 **Environment-Aware:** Works in **Node.js** (ANSI color and truecolor) and all major **Browsers** (CSS styles).
 - ⚡️ **Fast, Lightweight:** Minimal dependencies, works great in modern frameworks and CLIs.
@@ -282,6 +284,25 @@ colorino.info(important, 'Something happened')
 
 When color is disabled (for example via `NO_COLOR=1` or lack of support), `colorize` returns the plain input string, so your logs stay readable.
 
+### <a id="5-7"></a>Browser‑only CSS Helper (`css()`)
+
+In the browser, Colorino also exposes a `css(text, style)` helper that lets you apply arbitrary CSS to a single segment in DevTools using the `%c` formatter.
+
+```ts
+import { colorino } from 'colorino'
+
+// Object form: keys are CSS properties, values are strings
+const badge = colorino.css('NEW', {
+  color: 'white',
+  'background-color': '#e91e63',
+  'font-weight': 'bold',
+  'border-radius': '4px',
+  padding: '2px 6px',
+})
+
+colorino.info('Release status:', badge, 'shipped')
+```
+
 ## <a id="6"></a>Colorino vs. Chalk
 
 | Feature                 | 🎨 **Colorino**          | 🖍️ **Chalk**      |
@@ -355,11 +376,11 @@ function getCallerContext(): string {
 export function createContextLogger(
   palette?: Partial<Palette>,
   options?: ColorinoOptions
-): Colorino {
+): ReturnType<typeof createColorino> {
   const base = createColorino(palette, options)
 
   // Inherit all default methods from the base logger...
-  const logger = Object.create(base) as Colorino // Object.create uses `base` as the prototype.
+  const logger = Object.create(base) as ReturnType<typeof createColorino> // Object.create uses `base` as the prototype.
 
   // ...and override only what you need.
   Object.assign(logger, {
@@ -384,7 +405,7 @@ logger.error('Failed to load user', { id: 456 })
 ## <a id="9"></a>Internals & Dependencies
 
 - Colorino’s runtime logic depends on a single bundled library, `neverthrow`, which is MIT‑licensed and used for type‑safe Result handling.
-- `neverthrow` is bundled into the published artifacts, so you do not need to install it separately; your application sees a single runtime dependency: Colorino itself.
+- `neverthrow` is bundled into the published artifacts, so you do not need to install it separately.
 
 ### <a id="9-1"></a>Why This Pattern?
 

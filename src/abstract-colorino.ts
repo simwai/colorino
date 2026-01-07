@@ -1,17 +1,16 @@
 import {
   type Palette,
   type LogLevel,
-  type ColorinoOptions,
-  Colorino,
   ConsoleMethod,
   ColorinoBrowserColorized,
   BrowserColorizedArg,
 } from './types.js'
+import { type ColorinoOptions } from './interfaces.js'
 import { InputValidator } from './input-validator.js'
 import { ColorLevel } from './enums.js'
 import { TypeValidator } from './type-validator.js'
 
-export abstract class AbstractColorino implements Colorino {
+export abstract class AbstractColorino {
   protected _alreadyWarned = false
   protected _colorLevel: ColorLevel | 'UnknownEnv'
   protected _palette: Palette
@@ -72,31 +71,37 @@ export abstract class AbstractColorino implements Colorino {
 
     return `${ansiPrefix}${text}\x1b[0m`
   }
+
   private _out(level: LogLevel, args: unknown[]): void {
     const consoleMethod = TypeValidator.isConsoleMethod(level) ? level : 'log'
-    const processedArgs = this.processArgs(args)
+    const processedArgs = this._processArgs(args)
 
     if (
       this._colorLevel === ColorLevel.NO_COLOR ||
       this._colorLevel === 'UnknownEnv'
     ) {
-      this.output(consoleMethod, processedArgs)
+      this._output(consoleMethod, processedArgs)
       return
     }
 
-    const coloredArgs = this.applyColors(consoleMethod, processedArgs)
-    this.output(consoleMethod, coloredArgs)
+    const coloredArgs = this._applyColors(consoleMethod, processedArgs)
+    this._output(consoleMethod, coloredArgs)
   }
-  protected abstract applyColors(
+  protected abstract _applyColors(
     consoleMethod: ConsoleMethod,
     args: unknown[]
   ): unknown[]
-  protected abstract output(consoleMethod: ConsoleMethod, args: unknown[]): void
-  protected abstract processArgs(args: unknown[]): unknown[]
+  protected abstract _output(
+    consoleMethod: ConsoleMethod,
+    args: unknown[]
+  ): void
+  protected abstract _processArgs(args: unknown[]): unknown[]
   protected abstract isBrowser(): boolean
+
   protected _toAnsiPrefix(_hex: string): string {
     return ''
   }
+
   protected _formatValue(
     value: unknown,
     maxDepth = this._options.maxDepth ?? 5

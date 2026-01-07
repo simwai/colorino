@@ -3,10 +3,14 @@ import { ColorLevel } from './enums.js'
 import { ConsoleMethod } from './types.js'
 import { TypeValidator } from './type-validator.js'
 import { colorConverter } from './color-converter.js'
-import { Palette, ColorinoOptions } from './types.js'
+import { Palette } from './types.js'
+import { ColorinoNodeInterface, ColorinoOptions } from './interfaces.js'
 import { InputValidator } from './input-validator.js'
 
-export class ColorinoNode extends AbstractColorino {
+export class ColorinoNode
+  extends AbstractColorino
+  implements ColorinoNodeInterface
+{
   constructor(
     initialPalette: Palette,
     userPalette: Partial<Palette>,
@@ -18,7 +22,7 @@ export class ColorinoNode extends AbstractColorino {
     this._maybeWarnUser()
   }
 
-  protected applyColors(
+  protected _applyColors(
     consoleMethod: ConsoleMethod,
     args: unknown[]
   ): unknown[] {
@@ -34,7 +38,7 @@ export class ColorinoNode extends AbstractColorino {
     })
   }
 
-  protected output(consoleMethod: ConsoleMethod, args: unknown[]): void {
+  protected _output(consoleMethod: ConsoleMethod, args: unknown[]): void {
     if (consoleMethod === 'trace') {
       this._printCleanTrace(args)
     } else {
@@ -42,29 +46,23 @@ export class ColorinoNode extends AbstractColorino {
     }
   }
 
-  protected processArgs(args: unknown[]): unknown[] {
+  protected _processArgs(args: unknown[]): unknown[] {
     const processedArgs: unknown[] = []
     let previousWasObject = false
 
     for (const arg of args) {
-      if (TypeValidator.isBrowserColorizedArg(arg)) {
-        processedArgs.push(arg)
-        previousWasObject = false
-        continue
-      }
-
       if (TypeValidator.isFormattableObject(arg)) {
         processedArgs.push(`\n${this._formatValue(arg)}`)
         previousWasObject = true
       } else if (TypeValidator.isError(arg)) {
         processedArgs.push('\n', this._cleanErrorStack(arg))
+
         previousWasObject = true
       } else {
-        if (TypeValidator.isString(arg) && previousWasObject) {
-          processedArgs.push(`\n${arg}`)
-        } else {
-          processedArgs.push(arg)
-        }
+        processedArgs.push(
+          TypeValidator.isString(arg) && previousWasObject ? `\n${arg}` : arg
+        )
+
         previousWasObject = false
       }
     }

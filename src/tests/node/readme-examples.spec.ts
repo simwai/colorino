@@ -1,10 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import type { Colorino, ColorinoOptions, Palette } from '../../types.js'
+import type { Palette } from '../../types.js'
+import type { ColorinoOptions } from '../../interfaces.js'
 import { createColorino } from '../../node.js'
-
-afterEach(() => {
-  vi.restoreAllMocks()
-})
 
 function getCallerContext(): string {
   const err = new Error()
@@ -26,15 +23,11 @@ function getCallerContext(): string {
   return `${file}:${line}`
 }
 
-/**
- * Variant A: compose (add new methods).
- * Example: add fatal() that delegates to error().
- */
-export type FatalLogger = Colorino & {
+type FatalLogger = ReturnType<typeof createColorino> & {
   fatal(...args: unknown[]): void
 }
 
-export function createFatalLogger(
+function createFatalLogger(
   palette?: Partial<Palette>,
   options?: ColorinoOptions
 ): FatalLogger {
@@ -50,41 +43,35 @@ export function createFatalLogger(
   return logger
 }
 
-/**
- * Variant B: override core methods (context computed per call).
- */
-export function createContextLogger(
+function createContextLogger(
   palette?: Partial<Palette>,
   options?: ColorinoOptions
-): Colorino {
+): ReturnType<typeof createColorino> {
   const base = createColorino(palette, options)
 
-  return {
-    ...base,
+  // Inherit all default methods from the base logger...
+  const logger = Object.create(base) as ReturnType<typeof createColorino> // Object.create uses `base` as the prototype.
 
-    log(...args) {
-      base.log(`[${getCallerContext()}]`, ...args)
-    },
-    info(...args) {
+  // ...and override only what you need.
+  Object.assign(logger, {
+    // Object.assign copies these methods onto `logger`.
+    info(...args: unknown[]) {
       base.info(`[${getCallerContext()}]`, ...args)
     },
-    warn(...args) {
-      base.warn(`[${getCallerContext()}]`, ...args)
-    },
-    error(...args) {
+    error(...args: unknown[]) {
       base.error(`[${getCallerContext()}]`, ...args)
     },
-    debug(...args) {
-      base.debug(`[${getCallerContext()}]`, ...args)
-    },
-    trace(...args) {
-      base.trace(`[${getCallerContext()}]`, ...args)
-    },
-  }
+  })
+
+  return logger
 }
 
+afterEach(() => {
+  vi.restoreAllMocks()
+})
+
 describe('README examples', () => {
-  it('Variant A: fatal() delegates to error()', () => {
+  it('fatal() delegates to error()', () => {
     const logger = createFatalLogger({}, { theme: 'dracula' })
     const errorSpy = vi.spyOn(logger, 'error')
 
@@ -93,7 +80,7 @@ describe('README examples', () => {
     expect(errorSpy).toHaveBeenCalledWith('Boom', { id: 999 })
   })
 
-  it('Variant B + C: calls logger + logger2 with expected args', () => {
+  it('calls logger + logger2 with expected args', () => {
     const logger = createContextLogger()
     const logger2 = createFatalLogger({}, { theme: 'dracula' })
 

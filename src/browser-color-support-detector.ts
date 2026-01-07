@@ -1,4 +1,4 @@
-import type { ColorSupportDetectorInterface } from './color-support-detector-interface.js'
+import type { ColorSupportDetectorInterface } from './interfaces.js'
 import { ColorLevel } from './enums.js'
 import type { TerminalTheme } from './types.js'
 

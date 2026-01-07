@@ -1,7 +1,9 @@
 import {
   BrowserColorizedArg,
+  BrowserCssArg,
   BrowserObjectArg,
   ColorinoBrowserColorized,
+  ColorinoBrowserCss,
   ColorinoBrowserObject,
   ConsoleMethod,
 } from './types.js'
@@ -37,6 +39,15 @@ export class TypeValidator {
 
   static isBrowserColorizedArg(value: unknown): value is BrowserColorizedArg {
     return TypeValidator.isObject(value) && ColorinoBrowserColorized in value
+  }
+
+  static isBrowserCssArg(value: unknown): value is BrowserCssArg {
+    return (
+      typeof value === 'object' &&
+      value !== null &&
+      ColorinoBrowserCss in value &&
+      (value as BrowserCssArg)[ColorinoBrowserCss] === true
+    )
   }
 
   static isBrowserObjectArg(value: unknown): value is BrowserObjectArg {
