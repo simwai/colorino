@@ -1,4 +1,4 @@
-import { MyColorino } from './colorino.js'
+import { ColorinoNode } from './colorino-node.js'
 import { determineBaseTheme } from './determine-base-theme.js'
 import { InputValidator } from './input-validator.js'
 import { NodeColorSupportDetector } from './node-color-support-detector.js'
@@ -34,15 +34,19 @@ export function createColorino(
   const basePalette = themePalettes[baseThemeName]
   const finalPalette: Palette = { ...basePalette, ...userPalette }
 
-  return new MyColorino(
+  const colorLevel = nodeDetector.isNodeEnv()
+    ? (nodeDetector.getColorLevel() ?? 'UnknownEnv')
+    : 'UnknownEnv'
+
+  return new ColorinoNode(
     finalPalette,
     userPalette,
     validator,
-    undefined,
-    nodeDetector,
+    colorLevel,
     options
   )
 }
+
 export type {
   Palette,
   ColorinoOptions,

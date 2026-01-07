@@ -4,12 +4,12 @@
   "description": "A super simple colorized logger that gets the most out of your terminal",
   "keywords": [
     "ansi",
+    "chalk",
     "color",
     "console",
+    "kuler",
     "logger",
-    "terminal",
-    "chalk",
-    "kuler"
+    "terminal"
   ],
   "homepage": "https://github.com/simwai/colorino",
   "bugs": {

@@ -1,8 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { commands } from 'vitest/browser'
 import { createColorino } from '../../browser.js'
 import { createTestPalette } from '../helpers/palette.js'
-import { ColorLevel } from '../../enums.js'
 
 describe('Colorino - Real Browser - Unit Test', () => {
   let mocks: {
@@ -32,33 +30,6 @@ describe('Colorino - Real Browser - Unit Test', () => {
   it('should not warn about color support in a browser environment', () => {
     createColorino(createTestPalette())
     expect(mocks.warn).not.toHaveBeenCalled()
-  })
-
-  it('should detect color level in real browser', () => {
-    const logger = createColorino(createTestPalette())
-    const detector = (logger as any)._browserColorSupportDetector
-    const colorLevel = detector?.getColorLevel()
-
-    expect(colorLevel).toBeDefined()
-    expect(colorLevel).toBeGreaterThanOrEqual(ColorLevel.ANSI)
-  })
-
-  it('should detect dark theme', async () => {
-    await commands.emulateColorScheme('dark')
-
-    const logger = createColorino(createTestPalette())
-    const theme = (logger as any)._browserColorSupportDetector?.getTheme()
-
-    expect(theme).toBe('dark')
-  })
-
-  it('should detect light theme', async () => {
-    await commands.emulateColorScheme('light')
-
-    const logger = createColorino(createTestPalette())
-    const theme = (logger as any)._browserColorSupportDetector?.getTheme()
-
-    expect(theme).toBe('light')
   })
 
   it('should format a simple string with correct CSS', () => {

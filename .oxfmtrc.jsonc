@@ -9,4 +9,5 @@
   "printWidth": 80,
   "endOfLine": "lf",
   "useTabs": false,
+  "insertFinalNewline": false,
 }

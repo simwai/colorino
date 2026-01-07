@@ -2,7 +2,9 @@ import type { ColorSupportDetectorInterface } from './color-support-detector-int
 import { ColorLevel } from './enums.js'
 import type { TerminalTheme } from './types.js'
 
-export class BrowserColorSupportDetector implements ColorSupportDetectorInterface {
+export class BrowserColorSupportDetector
+  implements ColorSupportDetectorInterface
+{
   constructor(
     private readonly _window:
       | {
@@ -19,16 +21,18 @@ export class BrowserColorSupportDetector implements ColorSupportDetectorInterfac
   }
 
   getColorLevel(): ColorLevel {
-    if (!this.isBrowserEnv()) {
-      return ColorLevel.NO_COLOR
+    const isTruecolor = window.matchMedia('(color-gamut: p3)').matches
+    if (isTruecolor) {
+      return ColorLevel.TRUECOLOR
     }
 
-    const userAgent = this._navigator!.userAgent.toLowerCase()
+    const isAnsi256 = window.matchMedia('(monochrome: 0)').matches
+    if (isAnsi256) {
+      return ColorLevel.ANSI256
+    }
 
-    if (userAgent.includes('chrome')) return ColorLevel.ANSI256
-    if (userAgent.includes('firefox')) return ColorLevel.ANSI256
-
-    return ColorLevel.ANSI256
+    // Default to basic ANSI
+    return ColorLevel.ANSI
   }
 
   getTheme(): TerminalTheme {
@@ -43,11 +47,15 @@ export class BrowserColorSupportDetector implements ColorSupportDetectorInterfac
       return 'unknown'
     }
 
-    if (this._window!.matchMedia('(prefers-color-scheme: dark)').matches) {
+    const isDarkTheme = this._window!.matchMedia(
+      '(prefers-color-scheme: dark)'
+    ).matches
+    if (isDarkTheme) {
       return 'dark'
     }
 
-    if (this._window!.matchMedia('(prefers-color-scheme: light)').matches) {
+    const isLightTheme = '(prefers-color-scheme: light)'
+    if (this._window!.matchMedia(isLightTheme).matches) {
       return 'light'
     }
 

@@ -209,13 +209,11 @@ describe('Colorino - Node Environment - Unit Test', () => {
         const stdout = stdoutSpy.getOutput()
         const stderr = stderrSpy.getOutput()
 
-        // stdout methods
         expect(stdout, 'log() should write to stdout').toContain('log')
         expect(stdout, 'info() should write to stdout').toContain('info')
         expect(stdout, 'debug() should write to stdout').toContain('debug')
         expect(stdout, 'trace() should write to stdout').toContain('trace')
 
-        // stderr methods
         expect(stderr, 'warn() should write to stderr').toContain('warn')
         expect(stderr, 'error() should write to stderr').toContain('error')
       })
