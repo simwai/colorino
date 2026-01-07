@@ -7,10 +7,6 @@ export type ConsoleMethod =
   | 'debug'
 export type LogLevel = ConsoleMethod & string
 
-export function isConsoleMethod(level: string): level is ConsoleMethod {
-  return ['log', 'info', 'warn', 'error', 'trace', 'debug'].includes(level)
-}
-
 export type RgbColor = [number, number, number]
 export type HslColor = [number, number, number]
 export type RgbaColor = [number, number, number, number]

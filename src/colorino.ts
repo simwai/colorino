@@ -5,7 +5,6 @@ import { ColorLevel } from './enums.js'
 import {
   type Palette,
   type LogLevel,
-  isConsoleMethod,
   type ColorinoOptions,
   Colorino,
   ThemeName,
@@ -325,7 +324,7 @@ export class MyColorino implements Colorino {
   }
 
   private _out(level: LogLevel, args: unknown[]): void {
-    const consoleMethod = isConsoleMethod(level) ? level : 'log'
+    const consoleMethod = TypeValidator.isConsoleMethod(level) ? level : 'log'
     const processedArgs = this._processArgs(args)
 
     if (

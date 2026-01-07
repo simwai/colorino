@@ -3,6 +3,7 @@ import {
   BrowserObjectArg,
   ColorinoBrowserColorized,
   ColorinoBrowserObject,
+  ConsoleMethod,
 } from './types.js'
 
 export class TypeValidator {
@@ -49,5 +50,9 @@ export class TypeValidator {
       !TypeValidator.isError(value) &&
       !TypeValidator.isBrowserColorizedArg(value)
     )
+  }
+
+  static isConsoleMethod(level: string): level is ConsoleMethod {
+    return ['log', 'info', 'warn', 'error', 'trace', 'debug'].includes(level)
   }
 }
