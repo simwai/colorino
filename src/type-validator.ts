@@ -11,12 +11,24 @@ export class TypeValidator {
     return value === null
   }
 
+  static isUndefined(value: unknown): value is undefined {
+    return value === undefined
+  }
+
+  static isNullOrUndefined(value: unknown): value is null | undefined {
+    return value == null
+  }
+
   static isObject(value: unknown): value is Record<string, unknown> {
     return typeof value === 'object' && value !== null
   }
 
-  static isString(value: unknown): value is string {
-    return typeof value === 'string'
+  static isString(value: unknown): value is string | string {
+    return typeof value === 'string' || value instanceof String
+  }
+
+  static isArray(value: unknown): value is unknown[] {
+    return Array.isArray(value)
   }
 
   static isError(value: unknown): value is Error {
@@ -24,31 +36,26 @@ export class TypeValidator {
   }
 
   static isBrowserColorizedArg(value: unknown): value is BrowserColorizedArg {
-    return (
-      typeof value === 'object' &&
-      value !== null &&
-      ColorinoBrowserColorized in value
-    )
+    return TypeValidator.isObject(value) && ColorinoBrowserColorized in value
   }
 
   static isBrowserObjectArg(value: unknown): value is BrowserObjectArg {
-    return (
-      typeof value === 'object' &&
-      value !== null &&
-      ColorinoBrowserObject in value
-    )
+    return TypeValidator.isObject(value) && ColorinoBrowserObject in value
   }
 
   static isAnsiColoredString(value: unknown): value is string {
     // oxlint-disable-next-line no-control-regex
-    return TypeValidator.isString(value) && /\x1b\[[0-9;]*m/.test(value)
+    return (
+      TypeValidator.isString(value) && /\x1b\[[0-9;]*m/.test(value.toString())
+    )
   }
 
   static isFormattableObject(value: unknown): value is Record<string, unknown> {
     return (
       TypeValidator.isObject(value) &&
       !TypeValidator.isError(value) &&
-      !TypeValidator.isBrowserColorizedArg(value)
+      !TypeValidator.isBrowserColorizedArg(value) &&
+      !TypeValidator.isString(value) // Treat String objects as strings, not general objects
     )
   }
 

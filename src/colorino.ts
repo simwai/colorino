@@ -106,11 +106,6 @@ export class MyColorino implements Colorino {
     return `${ansiPrefix}${text}\x1b[0m`
   }
 
-  private _isAnsiColoredString(value: unknown): value is string {
-    // oxlint-disable-next-line no-control-regex
-    return typeof value === 'string' && /\x1b\[[0-9;]*m/.test(value)
-  }
-
   private _applyResolvedTheme(resolvedTheme: string) {
     const themeOpt = this._options.theme ?? 'auto'
     const baseThemeName: ThemeName = determineBaseTheme(themeOpt, resolvedTheme)
@@ -143,43 +138,58 @@ export class MyColorino implements Colorino {
   ): string {
     const seen = new WeakSet<object>()
 
-    const sanitize = (val: unknown, currentDepth: number): unknown => {
-      if (val == null || typeof val !== 'object') return val
+    // Helper: Handle Arrays
+    const sanitizeArray = (
+      items: unknown[],
+      currentDepth: number
+    ): unknown[] => {
+      return items.map(item => sanitize(item, currentDepth))
+    }
 
+    // Helper: Handle Objects
+    const sanitizeObject = (
+      obj: Record<string, unknown>,
+      currentDepth: number
+    ): Record<string, unknown> => {
+      const result: Record<string, unknown> = {}
+      for (const key in obj) {
+        result[key] = sanitize(obj[key], currentDepth)
+      }
+      return result
+    }
+
+    // Main Dispatcher
+    const sanitize = (val: unknown, currentDepth: number): unknown => {
+      if (
+        TypeValidator.isNullOrUndefined(val) ||
+        !TypeValidator.isObject(val)
+      ) {
+        return val
+      }
+
+      // At this point val is definitely an object (and not null)
       if (seen.has(val)) return '[Circular]'
       seen.add(val)
 
       if (currentDepth >= maxDepth) return '[Object]'
 
-      if (Array.isArray(val)) {
-        return val.map(item => sanitize(item, currentDepth + 1))
+      const nextDepth = currentDepth + 1
+
+      if (TypeValidator.isArray(val)) {
+        return sanitizeArray(val, nextDepth)
       }
 
-      const result: Record<string, unknown> = {}
-      for (const key in val) {
-        result[key] = sanitize(
-          (val as Record<string, unknown>)[key],
-          currentDepth + 1
-        )
-      }
-      return result
+      return sanitizeObject(val as Record<string, unknown>, nextDepth)
     }
 
     return JSON.stringify(sanitize(value, 0), null, 2)
-  }
-
-  private _normalizeString(value: unknown) {
-    if (value instanceof String) return value.valueOf()
-    return value
   }
 
   private _processArgs(args: unknown[]): unknown[] {
     const processedArgs: unknown[] = []
     let previousWasObject = false
 
-    for (const rawArg of args) {
-      const arg = this._normalizeString(rawArg)
-
+    for (const arg of args) {
       if (TypeValidator.isBrowserColorizedArg(arg)) {
         processedArgs.push(arg)
         previousWasObject = false
@@ -225,9 +235,7 @@ export class MyColorino implements Colorino {
 
     const paletteHex = this._palette[consoleMethod]
 
-    for (const rawArg of args) {
-      const arg = this._normalizeString(rawArg)
-
+    for (const arg of args) {
       if (TypeValidator.isBrowserColorizedArg(arg)) {
         // Manual override via colorize()
         formatParts.push(`%c${arg.text}`)
@@ -243,7 +251,7 @@ export class MyColorino implements Colorino {
       }
 
       if (TypeValidator.isString(arg)) {
-        // Plain string uses palette color
+        // Plain string (or String object) uses palette color
         formatParts.push(`%c${arg}`)
         cssArgs.push(`color:${paletteHex}`)
         continue
@@ -291,31 +299,20 @@ export class MyColorino implements Colorino {
     consoleMethod: ConsoleMethod,
     args: unknown[]
   ): unknown[] {
-    const coloredArgs = [...args]
-    const firstStringIndex = coloredArgs.findIndex(
-      arg => typeof arg === 'string'
-    )
+    const paletteHex = this._palette[consoleMethod]
+    const paletteAnsiPrefix = this._toAnsiPrefix(paletteHex)
 
-    if (firstStringIndex === -1) {
-      return coloredArgs
-    }
+    if (!paletteAnsiPrefix) return args
 
-    const first = coloredArgs[firstStringIndex]
+    return args.map(arg => {
+      if (
+        !TypeValidator.isString(arg) ||
+        TypeValidator.isAnsiColoredString(arg)
+      )
+        return arg
 
-    if (this._isAnsiColoredString(first)) {
-      return coloredArgs
-    }
-
-    const hex = this._palette[consoleMethod]
-    const ansiPrefix = this._toAnsiPrefix(hex)
-
-    if (!ansiPrefix) {
-      return coloredArgs
-    }
-
-    coloredArgs[firstStringIndex] = `${ansiPrefix}${String(first)}\x1b[0m`
-
-    return coloredArgs
+      return `${paletteAnsiPrefix}${String(arg)}\x1b[0m`
+    })
   }
 
   private _output(consoleMethod: ConsoleMethod, args: unknown[]): void {

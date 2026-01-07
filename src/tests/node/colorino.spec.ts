@@ -372,7 +372,7 @@ describe('Colorino - Node Environment - Unit Test', () => {
     describe('with FORCE_COLOR=2', () => {
       test.scoped({ env: { FORCE_COLOR: '2' } })
 
-      test('colorizes first string when followed by objects', ({
+      test('colorizes string arguments when followed by objects', ({
         stdoutSpy,
       }) => {
         const logger = createColorino(createTestPalette({ log: '#00ff00' }), {
@@ -385,6 +385,24 @@ describe('Colorino - Node Environment - Unit Test', () => {
         const output = stdoutSpy.getOutput()
         expect(output).toContain(`${ANSI.GREEN_256}Status:${ANSI.RESET}`)
         expect(output).toContain('"id": 1')
+      })
+
+      test('colorizes all string arguments with the palette color', ({
+        stdoutSpy,
+      }) => {
+        const logger = createColorino(createTestPalette({ log: '#00ff00' }), {
+          disableWarnings: true,
+        })
+
+        logger.log('First', 'Second', 'Third')
+
+        const output = stdoutSpy.getOutput()
+
+        expect(output).toBe(
+          `${ANSI.GREEN_256}First${ANSI.RESET} ` +
+            `${ANSI.GREEN_256}Second${ANSI.RESET} ` +
+            `${ANSI.GREEN_256}Third${ANSI.RESET}\n`
+        )
       })
     })
   })
@@ -478,7 +496,7 @@ describe('Colorino - Node Environment - Unit Test', () => {
           const output = stdoutSpy.getOutput()
 
           expect(output).toContain(`${ANSI.GREEN_256}OVERRIDE${ANSI.RESET}`)
-          expect(output).toMatch(/OVERRIDE[\s\S]*normal\n$/)
+          expect(output).toMatch(/.*OVERRIDE.*normal.*\n$/)
         })
 
         test('allows mixing manual override (second arg) with themed text', ({
