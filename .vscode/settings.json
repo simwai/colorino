@@ -1,4 +1,6 @@
 {
+  "files.trimFinalNewlines": false,
+  "files.insertFinalNewline": true,
   "oxc.enable": true,
   "oxc.fmt.experimental": true,
   "editor.defaultFormatter": "oxc.oxc-vscode",

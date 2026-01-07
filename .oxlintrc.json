@@ -1,7 +1,8 @@
 {
   "env": {
     "node": true,
-    "es2024": true
+    "es2023": true,
+    "browser": true
   },
   "rules": {
     "suspicious/no-empty-interface": "warn",
