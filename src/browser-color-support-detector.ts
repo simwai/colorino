@@ -2,9 +2,7 @@ import type { ColorSupportDetectorInterface } from './color-support-detector-int
 import { ColorLevel } from './enums.js'
 import type { TerminalTheme } from './types.js'
 
-export class BrowserColorSupportDetector
-  implements ColorSupportDetectorInterface
-{
+export class BrowserColorSupportDetector implements ColorSupportDetectorInterface {
   constructor(
     private readonly _window:
       | {
