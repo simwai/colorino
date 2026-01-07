@@ -3,12 +3,13 @@ import { determineBaseTheme } from './determine-base-theme.js'
 import { InputValidator } from './input-validator.js'
 import { NodeColorSupportDetector } from './node-color-support-detector.js'
 import { themePalettes } from './theme.js'
-import { Palette, ColorinoOptions, Colorino, TerminalTheme } from './types.js'
+import { LogLevel, Palette, TerminalTheme, ThemeName } from './types.js'
+import { ColorinoOptions, ColorinoNodeInterface } from './interfaces.js'
 
 export function createColorino(
   userPalette: Partial<Palette> = {},
   options: ColorinoOptions = {}
-): Colorino {
+): ColorinoNodeInterface {
   const validator = new InputValidator()
 
   const themeOpt = options.theme ?? 'auto'
@@ -47,12 +48,7 @@ export function createColorino(
   )
 }
 
-export type {
-  Palette,
-  ColorinoOptions,
-  LogLevel,
-  ThemeName,
-  Colorino,
-} from './types.js'
+export type { Palette, LogLevel, ThemeName }
+export type { ColorinoOptions, ColorinoNodeInterface }
 export { themePalettes }
 export const colorino = createColorino()

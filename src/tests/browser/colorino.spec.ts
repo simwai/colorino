@@ -1,19 +1,24 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { describe, expect, vi, test as baseTest } from 'vitest'
 import { createColorino } from '../../browser.js'
 import { createTestPalette } from '../helpers/palette.js'
 
-describe('Colorino - Real Browser - Unit Test', () => {
-  let mocks: {
-    log: ReturnType<typeof vi.spyOn>
-    warn: ReturnType<typeof vi.spyOn>
-    error: ReturnType<typeof vi.spyOn>
-    info: ReturnType<typeof vi.spyOn>
-    debug: ReturnType<typeof vi.spyOn>
-    trace: ReturnType<typeof vi.spyOn>
-  }
+type ConsoleSpies = {
+  log: ReturnType<typeof vi.spyOn>
+  warn: ReturnType<typeof vi.spyOn>
+  error: ReturnType<typeof vi.spyOn>
+  info: ReturnType<typeof vi.spyOn>
+  debug: ReturnType<typeof vi.spyOn>
+  trace: ReturnType<typeof vi.spyOn>
+}
 
-  beforeEach(() => {
-    mocks = {
+interface BrowserColorinoFixtures {
+  mocks: ConsoleSpies
+}
+
+const test = baseTest.extend<BrowserColorinoFixtures>({
+  // eslint-disable-next-line
+  mocks: async ({}, use) => {
+    const mocks: ConsoleSpies = {
       log: vi.spyOn(console, 'log').mockImplementation(() => {}),
       warn: vi.spyOn(console, 'warn').mockImplementation(() => {}),
       error: vi.spyOn(console, 'error').mockImplementation(() => {}),
@@ -21,18 +26,20 @@ describe('Colorino - Real Browser - Unit Test', () => {
       debug: vi.spyOn(console, 'debug').mockImplementation(() => {}),
       trace: vi.spyOn(console, 'trace').mockImplementation(() => {}),
     }
-  })
 
-  afterEach(() => {
+    await use(mocks)
+
     vi.restoreAllMocks()
-  })
+  },
+})
 
-  it('should not warn about color support in a browser environment', () => {
+describe('Colorino - Real Browser - Unit Test', () => {
+  test('does not emit color support warnings in browsers', ({ mocks }) => {
     createColorino(createTestPalette())
     expect(mocks.warn).not.toHaveBeenCalled()
   })
 
-  it('should format a simple string with correct CSS', () => {
+  test('applies palette color to a single string', ({ mocks }) => {
     const logger = createColorino(createTestPalette({ log: '#00ff00' }))
     logger.log('Browser console test')
 
@@ -42,7 +49,7 @@ describe('Colorino - Real Browser - Unit Test', () => {
     )
   })
 
-  it('should handle multiple arguments and objects correctly', () => {
+  test('applies palette color and keeps objects expandable', ({ mocks }) => {
     const logger = createColorino(createTestPalette({ log: '#ffffff' }))
     const testObject = { browser: true, id: 123 }
 
@@ -55,7 +62,7 @@ describe('Colorino - Real Browser - Unit Test', () => {
     )
   })
 
-  it('should handle all standard log levels without throwing', () => {
+  test('supports all console levels without throwing', ({ mocks }) => {
     const logger = createColorino(createTestPalette())
 
     expect(() => {
@@ -75,7 +82,7 @@ describe('Colorino - Real Browser - Unit Test', () => {
     expect(mocks.log).toHaveBeenCalled()
   })
 
-  it('should allow manual override with colorize in browser', () => {
+  test('allows per-call color override via colorize()', ({ mocks }) => {
     const logger = createColorino(createTestPalette({ log: '#ffffff' }))
 
     const override = logger.colorize('OVERRIDE', '#ff5733')
@@ -89,7 +96,9 @@ describe('Colorino - Real Browser - Unit Test', () => {
     )
   })
 
-  it('should only apply browser override to a single call', () => {
+  test('does not persist manual colorize() overrides across calls', ({
+    mocks,
+  }) => {
     const logger = createColorino(createTestPalette({ log: '#00ff00' }))
 
     const override = logger.colorize('OVERRIDE', '#ff5733')
@@ -108,7 +117,9 @@ describe('Colorino - Real Browser - Unit Test', () => {
     expect(mocks.log).toHaveBeenNthCalledWith(2, '%csecond', 'color:#00ff00')
   })
 
-  it('should support mixed manual overrides, plain strings, and objects in browser', () => {
+  test('combines overrides, palette strings and objects in order', ({
+    mocks,
+  }) => {
     const logger = createColorino(createTestPalette({ log: '#00ff00' }))
     const first = logger.colorize('FIRST', '#ff0000')
     const second = logger.colorize('SECOND', '#0000ff')
@@ -121,9 +132,75 @@ describe('Colorino - Real Browser - Unit Test', () => {
       'color:#00ff00',
       'color:#ff0000',
       'color:#00ff00',
+      meta,
       'color:#0000ff',
-      'color:#00ff00',
+      'color:#00ff00'
+    )
+  })
+
+  test('styles trace() messages with palette color', ({ mocks }) => {
+    const logger = createColorino(createTestPalette({ trace: '#ff00ff' }))
+    const meta = { from: 'trace' }
+
+    logger.trace('Trace message', meta)
+
+    expect(mocks.trace).toHaveBeenCalledWith(
+      '%cTrace message%o',
+      'color:#ff00ff',
       meta
+    )
+  })
+
+  test('combines css(), colorize(), palette strings and objects in order', ({
+    mocks,
+  }) => {
+    const logger = createColorino(createTestPalette({ log: '#00ff00' }))
+
+    const cssStyled = logger.css('CSS', { color: 'orange' })
+    const override = logger.colorize('OVR', '#ff0000')
+    const meta = { id: 42 }
+
+    logger.log('pre', cssStyled, 'mid', meta, override, 'post')
+
+    expect(mocks.log).toHaveBeenCalledWith(
+      '%cpre%cCSS%cmid%o%cOVR%cpost',
+      'color:#00ff00',
+      'color:orange',
+      'color:#00ff00',
+      meta,
+      'color:#ff0000',
+      'color:#00ff00'
+    )
+  })
+
+  test('accepts raw CSS strings in css() helper', ({ mocks }) => {
+    const logger = createColorino(createTestPalette({ log: '#00ff00' }))
+
+    const styled = logger.css('Raw', 'color:blue; text-decoration:underline;')
+
+    logger.log(styled, 'plain')
+
+    expect(mocks.log).toHaveBeenCalledWith(
+      '%cRaw%cplain',
+      'color:blue; text-decoration:underline;',
+      'color:#00ff00'
+    )
+  })
+
+  test('builds CSS strings from css() object style', ({ mocks }) => {
+    const logger = createColorino(createTestPalette({ log: '#00ff00' }))
+
+    const styled = logger.css('Styled', {
+      color: 'red',
+      'background-color': 'black',
+      'font-weight': 'bold',
+    })
+
+    logger.log(styled)
+
+    expect(mocks.log).toHaveBeenCalledWith(
+      '%cStyled',
+      'color:red;background-color:black;font-weight:bold'
     )
   })
 })
