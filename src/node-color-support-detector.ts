@@ -13,14 +13,26 @@ export class NodeColorSupportDetector implements ColorSupportDetectorInterface {
   private readonly _envWtSession?: string
   private readonly _isTTY?: boolean
   private _theme: TerminalTheme
+  private _alreadyWarned: any
 
   constructor(
+    readonly _areWarningsDisabled: boolean,
     private readonly _process?: NodeJS.Process,
     private readonly _overrideTheme?: TerminalTheme,
     private readonly _disableOscProbe = false
   ) {
     if (this._overrideTheme !== undefined) {
       this._theme = this._overrideTheme
+      return
+    }
+
+    if (!this.isNodeEnv()) {
+      this._theme = 'unknown'
+      if (_areWarningsDisabled && !this._alreadyWarned)
+        this._alreadyWarned = true
+      console.warn(
+        "NodeColorSupportDetector() called in an env without process API. Don't do this."
+      )
       return
     }
 
@@ -35,12 +47,19 @@ export class NodeColorSupportDetector implements ColorSupportDetectorInterface {
     this._envCliColorForce = processEnv['CLICOLOR_FORCE']
     this._envWtSession = processEnv['WT_SESSION']
 
-    if (!this._isTTY || this._disableOscProbe || !this.isNodeEnv) {
+    if (!this._isTTY || this._disableOscProbe) {
       this._theme = 'unknown'
+
+      if (_areWarningsDisabled && !this._alreadyWarned)
+        this._alreadyWarned = true
+      console.warn(
+        'No theme detected, because of TTY env or disabled OSC probe.'
+      )
+
       return
     }
 
-    this._theme = getTerminalThemeSync()
+    this._theme = getTerminalThemeSync(_areWarningsDisabled)
   }
 
   isNodeEnv(): boolean {

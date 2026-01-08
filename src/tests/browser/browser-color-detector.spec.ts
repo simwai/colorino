@@ -11,7 +11,7 @@ interface BrowserColorDetectorFixtures {
 const test = baseTest.extend<BrowserColorDetectorFixtures>({
   // eslint-disable-next-line
   browserDetector: async ({}, use) => {
-    const detector = new BrowserColorSupportDetector(window, navigator)
+    const detector = new BrowserColorSupportDetector(true, window, navigator)
     await use(detector)
   },
   colorLevel: async ({ browserDetector }, use) => {

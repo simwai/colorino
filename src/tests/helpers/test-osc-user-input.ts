@@ -2,7 +2,7 @@ import readline from 'node:readline'
 import { getTerminalThemeSync } from '../../osc-theme-sync.js'
 
 function main() {
-  const theme = getTerminalThemeSync()
+  const theme = getTerminalThemeSync(true)
   console.log('After probe, theme:', theme)
 
   const rl = readline.createInterface({

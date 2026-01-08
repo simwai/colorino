@@ -19,7 +19,6 @@ export class ColorinoNode
     options: ColorinoOptions = {}
   ) {
     super(initialPalette, userPalette, validator, colorLevel, options)
-    this._maybeWarnUser()
   }
 
   protected _applyColors(
@@ -100,13 +99,5 @@ export class ColorinoNode
         return `\x1b[${code}m`
       }
     }
-  }
-
-  private _maybeWarnUser(): void {
-    if (this._alreadyWarned) return
-    this._alreadyWarned = true
-    console.warn(
-      'No ANSI color support detected in this terminal. See https://github.com/chalk/supports-color#support-matrix to learn how to enable terminal color.'
-    )
   }
 }

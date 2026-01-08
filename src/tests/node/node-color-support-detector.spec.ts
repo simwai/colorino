@@ -1,262 +1,189 @@
-import { test as base, describe, expect, vi } from 'vitest'
+import { describe, expect, vi } from 'vitest'
 import { NodeColorSupportDetector } from '../../node-color-support-detector.js'
 import { ColorLevel } from '../../enums.js'
 import type { TerminalTheme } from '../../types.js'
 import * as oscThemeSync from '../../osc-theme-sync.js'
+import { test as base } from '../helpers/console-spy.js'
 
 interface ColorDetectorFixtures {
-  mockStdin: {
-    isTTY: boolean
-    setRawMode: ReturnType<typeof vi.fn>
-    resume: ReturnType<typeof vi.fn>
-    pause: ReturnType<typeof vi.fn>
-    read: ReturnType<typeof vi.fn>
-    on: ReturnType<typeof vi.fn>
-    removeListener: ReturnType<typeof vi.fn>
-    isRaw: boolean
-  }
-  mockStdout: {
-    isTTY: boolean
-    write: ReturnType<typeof vi.fn>
-  }
-  env: NodeJS.ProcessEnv
-  mockProcess: {
-    env: NodeJS.ProcessEnv
-    stdout: ColorDetectorFixtures['mockStdout']
-    stdin: ColorDetectorFixtures['mockStdin']
-  }
+  mockStdin: Partial<NodeJS.ReadStream> & { isTTY: boolean; isRaw: boolean }
+  mockStdout: Partial<NodeJS.WriteStream> & { isTTY: boolean }
+  mockProcess: NodeJS.Process
   detector: NodeColorSupportDetector
 }
 
 const test = base.extend<ColorDetectorFixtures>({
-  // eslint-disable-next-line
   mockStdin: async ({}, use) => {
-    await use({
+    const stdin = {
       isTTY: true,
+      isRaw: false,
       setRawMode: vi.fn(),
       resume: vi.fn(),
       pause: vi.fn(),
-      read: vi.fn(() => null),
       on: vi.fn(),
       removeListener: vi.fn(),
-      isRaw: false,
-    })
+      read: vi.fn(() => null),
+    }
+    await use(stdin)
   },
-
-  // eslint-disable-next-line
   mockStdout: async ({}, use) => {
-    await use({
+    const stdout = {
       isTTY: true,
       write: vi.fn(),
-    })
+    }
+    await use(stdout)
   },
 
-  env: [{}, { injected: true }],
-
-  mockProcess: async ({ env, mockStdout, mockStdin }, use) => {
-    await use({
-      env,
+  mockProcess: async ({ mockStdout, mockStdin, env }, use) => {
+    const process = {
+      env: { ...env },
       stdout: mockStdout,
       stdin: mockStdin,
-    })
+    } as unknown as NodeJS.Process
+    await use(process)
   },
 
   detector: async ({ mockProcess }, use) => {
-    await use(new NodeColorSupportDetector(mockProcess as any))
+    await use(new NodeColorSupportDetector(true, mockProcess))
   },
 })
 
-describe('NodeColorSupportDetector - Node Environment - Unit Test', () => {
+describe('NodeColorSupportDetector', () => {
   describe('theme detection (sync OSC)', () => {
-    test('uses overrideTheme when provided', () => {
-      const mockProcess: any = {
-        env: {},
-        stdout: { isTTY: true, write: vi.fn() },
-        stdin: {
-          isTTY: true,
-          setRawMode: vi.fn(),
-          resume: vi.fn(),
-          pause: vi.fn(),
-          read: vi.fn(),
-          on: vi.fn(),
-          removeListener: vi.fn(),
-          isRaw: false,
-        },
-      }
-
+    test('uses overrideTheme when provided', ({ mockProcess }) => {
       const detector = new NodeColorSupportDetector(
+        true,
         mockProcess,
         'dark' as TerminalTheme
       )
       expect(detector.getTheme()).toBe('dark')
     })
 
-    test('returns unknown when not a TTY', () => {
-      const mockProcess: any = {
-        env: {},
-        stdout: { isTTY: false, write: vi.fn() },
-        stdin: {
-          isTTY: false,
-          setRawMode: vi.fn(),
-          resume: vi.fn(),
-          pause: vi.fn(),
-          read: vi.fn(),
-          on: vi.fn(),
-          removeListener: vi.fn(),
-          isRaw: false,
-        },
-      }
+    test('returns unknown when not a TTY', ({
+      mockProcess,
+      mockStdout,
+      mockStdin,
+    }) => {
+      mockStdout.isTTY = false
+      mockStdin.isTTY = false
 
-      const detector = new NodeColorSupportDetector(mockProcess)
+      const detector = new NodeColorSupportDetector(true, mockProcess)
       expect(detector.getTheme()).toBe('unknown')
     })
 
-    test('calls getTerminalThemeSync when TTY and no override', () => {
-      const mockProcess: any = {
-        env: {},
-        stdout: { isTTY: true, write: vi.fn() },
-        stdin: {
-          isTTY: true,
-          setRawMode: vi.fn(),
-          resume: vi.fn(),
-          pause: vi.fn(),
-          read: vi.fn(),
-          on: vi.fn(),
-          removeListener: vi.fn(),
-          isRaw: false,
-        },
-      }
-
+    test('calls getTerminalThemeSync when TTY and no override', ({
+      mockProcess,
+    }) => {
       const spy = vi
         .spyOn(oscThemeSync, 'getTerminalThemeSync')
         .mockReturnValue('light')
 
-      const detector = new NodeColorSupportDetector(mockProcess)
-      expect(spy).toHaveBeenCalled()
+      const detector = new NodeColorSupportDetector(true, mockProcess)
       expect(detector.getTheme()).toBe('light')
-
-      spy.mockRestore()
+      expect(spy).toHaveBeenCalledTimes(1)
     })
   })
 
   describe('NO_COLOR environment variable', () => {
-    describe('when NO_COLOR is set', () => {
-      test.scoped({ env: { NO_COLOR: 'true' } })
-
-      test('should return NO_COLOR', ({ detector }) => {
-        expect(detector.getColorLevel()).toBe(ColorLevel.NO_COLOR)
-      })
+    test('should return NO_COLOR when set', ({ mockProcess }) => {
+      mockProcess.env['NO_COLOR'] = 'true'
+      const detector = new NodeColorSupportDetector(true, mockProcess)
+      expect(detector.getColorLevel()).toBe(ColorLevel.NO_COLOR)
     })
 
-    describe('when it overrides other settings', () => {
-      test.scoped({ env: { NO_COLOR: 'true', TERM: 'xterm-256color' } })
-
-      test('should override TERM settings', ({ detector }) => {
-        expect(detector.getColorLevel()).toBe(ColorLevel.NO_COLOR)
-      })
+    test('should override TERM settings', ({ mockProcess }) => {
+      mockProcess.env['NO_COLOR'] = 'true'
+      mockProcess.env['TERM'] = 'xterm-256color'
+      const detector = new NodeColorSupportDetector(true, mockProcess)
+      expect(detector.getColorLevel()).toBe(ColorLevel.NO_COLOR)
     })
   })
 
   describe('FORCE_COLOR environment variable', () => {
-    describe('when FORCE_COLOR=3', () => {
-      test.scoped({ env: { FORCE_COLOR: '3' } })
-
-      test('should return TRUECOLOR', ({ detector }) => {
-        expect(detector.getColorLevel()).toBe(ColorLevel.TRUECOLOR)
-      })
+    test('should return TRUECOLOR when 3', ({ mockProcess }) => {
+      mockProcess.env['FORCE_COLOR'] = '3'
+      const detector = new NodeColorSupportDetector(true, mockProcess)
+      expect(detector.getColorLevel()).toBe(ColorLevel.TRUECOLOR)
     })
 
-    describe('when FORCE_COLOR=2', () => {
-      test.scoped({ env: { FORCE_COLOR: '2' } })
-
-      test('should return ANSI256', ({ detector }) => {
-        expect(detector.getColorLevel()).toBe(ColorLevel.ANSI256)
-      })
+    test('should return ANSI256 when 2', ({ mockProcess }) => {
+      mockProcess.env['FORCE_COLOR'] = '2'
+      const detector = new NodeColorSupportDetector(true, mockProcess)
+      expect(detector.getColorLevel()).toBe(ColorLevel.ANSI256)
     })
 
-    describe('when FORCE_COLOR=1', () => {
-      test.scoped({ env: { FORCE_COLOR: '1' } })
-
-      test('should return ANSI', ({ detector }) => {
-        expect(detector.getColorLevel()).toBe(ColorLevel.ANSI)
-      })
+    test('should return ANSI when 1', ({ mockProcess }) => {
+      mockProcess.env['FORCE_COLOR'] = '1'
+      const detector = new NodeColorSupportDetector(true, mockProcess)
+      expect(detector.getColorLevel()).toBe(ColorLevel.ANSI)
     })
 
-    describe('when FORCE_COLOR=0', () => {
-      test.scoped({ env: { FORCE_COLOR: '0' } })
-
-      test('should return NO_COLOR', ({ detector }) => {
-        expect(detector.getColorLevel()).toBe(ColorLevel.NO_COLOR)
-      })
+    test('should return NO_COLOR when 0', ({ mockProcess }) => {
+      mockProcess.env['FORCE_COLOR'] = '0'
+      const detector = new NodeColorSupportDetector(true, mockProcess)
+      expect(detector.getColorLevel()).toBe(ColorLevel.NO_COLOR)
     })
   })
 
   describe('TTY detection', () => {
-    describe('when not a TTY', () => {
-      test.scoped({ mockStdout: { isTTY: false, write: vi.fn() } })
-
-      test('should return NO_COLOR', ({ detector }) => {
-        expect(detector.getColorLevel()).toBe(ColorLevel.NO_COLOR)
-      })
+    test('should return NO_COLOR when not a TTY', ({
+      mockStdout,
+      mockProcess,
+    }) => {
+      mockStdout.isTTY = false
+      const detector = new NodeColorSupportDetector(true, mockProcess)
+      expect(detector.getColorLevel()).toBe(ColorLevel.NO_COLOR)
     })
 
-    describe('when not a TTY but CLICOLOR_FORCE is set', () => {
-      test.scoped({
-        env: { CLICOLOR_FORCE: '1' },
-        mockStdout: { isTTY: false, write: vi.fn() },
-      })
-
-      test('should detect color anyway', ({ detector }) => {
-        expect(detector.getColorLevel()).toBe(ColorLevel.ANSI)
-      })
+    test('should detect ANSI when not a TTY but CLICOLOR_FORCE is set', ({
+      mockStdout,
+      mockProcess,
+    }) => {
+      mockStdout.isTTY = false
+      mockProcess.env['CLICOLOR_FORCE'] = '1'
+      const detector = new NodeColorSupportDetector(true, mockProcess)
+      expect(detector.getColorLevel()).toBe(ColorLevel.ANSI)
     })
   })
 
   describe('TERM-based detection', () => {
-    describe('with 256-color terminal', () => {
-      test.scoped({ env: { TERM: 'xterm-256color' } })
-
-      test('should detect ANSI256', ({ detector }) => {
-        expect(detector.getColorLevel()).toBe(ColorLevel.ANSI256)
-      })
+    test('should detect ANSI256 with xterm-256color', ({ mockProcess }) => {
+      mockProcess.env['TERM'] = 'xterm-256color'
+      const detector = new NodeColorSupportDetector(true, mockProcess)
+      expect(detector.getColorLevel()).toBe(ColorLevel.ANSI256)
     })
 
-    describe('with basic ANSI terminal', () => {
-      test.scoped({ env: { TERM: 'xterm' } })
-
-      test('should detect ANSI', ({ detector }) => {
-        expect(detector.getColorLevel()).toBe(ColorLevel.ANSI)
-      })
+    test('should detect ANSI with xterm', ({ mockProcess }) => {
+      mockProcess.env['TERM'] = 'xterm'
+      const detector = new NodeColorSupportDetector(true, mockProcess)
+      expect(detector.getColorLevel()).toBe(ColorLevel.ANSI)
     })
 
-    describe('with dumb terminal', () => {
-      test.scoped({ env: { TERM: 'dumb' } })
-
-      test('should return NO_COLOR', ({ detector }) => {
-        expect(detector.getColorLevel()).toBe(ColorLevel.NO_COLOR)
-      })
+    test('should return NO_COLOR with dumb terminal', ({ mockProcess }) => {
+      mockProcess.env['TERM'] = 'dumb'
+      const detector = new NodeColorSupportDetector(true, mockProcess)
+      expect(detector.getColorLevel()).toBe(ColorLevel.NO_COLOR)
     })
   })
 
   describe('Edge Cases', () => {
-    describe('with malformed FORCE_COLOR', () => {
-      test.scoped({ env: { FORCE_COLOR: 'invalid' } })
-
-      test('should handle gracefully', ({ detector }) => {
-        const level = detector.getColorLevel()
-        expect(level).toBeGreaterThanOrEqual(ColorLevel.NO_COLOR)
-      })
+    test('defaults to NO_COLOR with malformed FORCE_COLOR', ({
+      mockProcess,
+    }) => {
+      mockProcess.env['FORCE_COLOR'] = 'invalid'
+      const detector = new NodeColorSupportDetector(true, mockProcess)
+      expect(detector.getColorLevel()).toBe(ColorLevel.ANSI)
     })
 
-    describe('with empty TERM', () => {
-      test.scoped({ env: { TERM: '' } })
-
-      test('should handle gracefully', ({ detector }) => {
-        expect(detector.getColorLevel()).toBeDefined()
-      })
+    test('handles empty TERM gracefully', ({ mockProcess }) => {
+      mockProcess.env['TERM'] = ''
+      const detector = new NodeColorSupportDetector(true, mockProcess)
+      expect(detector.getColorLevel()).toBeDefined()
     })
 
-    test('should handle missing env entirely', ({ detector }) => {
+    test('handles missing env entirely', ({ mockProcess }) => {
+      mockProcess.env = {} as NodeJS.ProcessEnv
+      const detector = new NodeColorSupportDetector(true, mockProcess)
       expect(detector.getColorLevel()).toBeDefined()
     })
   })
