@@ -4,13 +4,11 @@ import type { TerminalTheme } from './types.js'
 
 export class BrowserColorSupportDetector implements ColorSupportDetectorInterface {
   constructor(
-    private readonly _window:
-      | {
-          document: HTMLDocument
-          matchMedia(arg0: string): { matches: unknown }
-        }
-      | undefined,
-    private readonly _navigator: { userAgent: string } | undefined,
+    private readonly _window?: {
+      document: HTMLDocument
+      matchMedia(arg0: string): { matches: unknown }
+    },
+    private readonly _navigator?: { userAgent: string },
     private readonly _overrideTheme?: TerminalTheme
   ) {}
 
