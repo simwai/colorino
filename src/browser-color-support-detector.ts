@@ -19,18 +19,7 @@ export class BrowserColorSupportDetector implements ColorSupportDetectorInterfac
   }
 
   getColorLevel(): ColorLevel {
-    const isTruecolor = window.matchMedia('(color-gamut: p3)').matches
-    if (isTruecolor) {
-      return ColorLevel.TRUECOLOR
-    }
-
-    const isAnsi256 = window.matchMedia('(monochrome: 0)').matches
-    if (isAnsi256) {
-      return ColorLevel.ANSI256
-    }
-
-    // Default to basic ANSI
-    return ColorLevel.ANSI
+    return ColorLevel.TRUECOLOR
   }
 
   getTheme(): TerminalTheme {
@@ -38,10 +27,7 @@ export class BrowserColorSupportDetector implements ColorSupportDetectorInterfac
       return this._overrideTheme
     }
 
-    if (
-      !this.isBrowserEnv() ||
-      typeof this._window!.matchMedia !== 'function'
-    ) {
+    if (typeof this._window!.matchMedia !== 'function') {
       return 'unknown'
     }
 
