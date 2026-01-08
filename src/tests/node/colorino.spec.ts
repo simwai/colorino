@@ -498,4 +498,168 @@ describe('Colorino - Node Environment - Unit Test', () => {
       })
     })
   })
+
+  describe('Gradient Helper', () => {
+    describe('with FORCE_COLOR=3', () => {
+      test.scoped({ env: { FORCE_COLOR: '3' } })
+
+      test('applies truecolor gradient character-by-character', ({
+        stdoutSpy,
+      }) => {
+        const logger = createColorino(createTestPalette(), {})
+
+        const gradient = logger.gradient('RGB', '#ff0000', '#0000ff')
+        logger.log(gradient)
+
+        const output = stdoutSpy.getOutput()
+
+        // Should contain RGB escape codes for each character
+        expect(output).toContain('\x1b[38;2;')
+        expect(output).toContain('R')
+        expect(output).toContain('G')
+        expect(output).toContain('B')
+        expect(output).toContain('\x1b[0m') // Reset at end
+      })
+
+      test('handles single character', ({ stdoutSpy }) => {
+        const logger = createColorino(createTestPalette(), {})
+
+        const gradient = logger.gradient('X', '#ff0000', '#00ff00')
+        logger.log(gradient)
+
+        const output = stdoutSpy.getOutput()
+        expect(output).toContain('\x1b[38;2;255;0;0mX\x1b[0m')
+      })
+
+      test('handles Unicode characters correctly', ({ stdoutSpy }) => {
+        const logger = createColorino(createTestPalette(), {})
+
+        const gradient = logger.gradient('🎨🔥✨', '#ff0000', '#0000ff')
+        logger.log(gradient)
+
+        const output = stdoutSpy.getOutput()
+        expect(output).toContain('🎨')
+        expect(output).toContain('🔥')
+        expect(output).toContain('✨')
+      })
+    })
+
+    describe('with FORCE_COLOR=2', () => {
+      test.scoped({ env: { FORCE_COLOR: '2' } })
+
+      test('applies 256-color gradient character-by-character', ({
+        stdoutSpy,
+      }) => {
+        const logger = createColorino(createTestPalette(), {})
+
+        const gradient = logger.gradient('TEST', '#ff0000', '#0000ff')
+        logger.log(gradient)
+
+        const output = stdoutSpy.getOutput()
+
+        // Should contain 256-color escape codes
+        expect(output).toContain('\x1b[38;5;')
+        expect(output).toContain('T')
+        expect(output).toContain('E')
+        expect(output).toContain('S')
+        expect(output).toContain('\x1b[0m')
+      })
+    })
+
+    describe('with FORCE_COLOR=1', () => {
+      test.scoped({ env: { FORCE_COLOR: '1' } })
+
+      test('returns plain text and palette color applies via log()', ({
+        stdoutSpy,
+      }) => {
+        const logger = createColorino(createTestPalette({ log: '#ffffff' }), {})
+
+        const gradient = logger.gradient('TEST', '#ff0000', '#0000ff')
+        logger.log(gradient)
+
+        const output = stdoutSpy.getOutput()
+        // Gradient returns plain text in ANSI-16, log() applies palette color
+        expect(output).toContain('TEST')
+        expect(output).toContain('\x1b[') // Should have ANSI codes from palette
+        expect(output).toContain('\x1b[0m') // Should have reset
+      })
+    })
+
+    describe('with NO_COLOR=1', () => {
+      test.scoped({ env: { NO_COLOR: '1' } })
+
+      test('returns plain text without color codes', ({ stdoutSpy }) => {
+        const logger = createColorino(createTestPalette(), {})
+
+        const gradient = logger.gradient('GRADIENT', '#ff0000', '#0000ff')
+        logger.log(gradient)
+
+        const output = stdoutSpy.getOutput()
+        expect(output).toBe('GRADIENT\n')
+      })
+    })
+
+    describe('Gradient mixing with other content', () => {
+      describe('with FORCE_COLOR=3', () => {
+        test.scoped({ env: { FORCE_COLOR: '3' } })
+
+        test('combines gradient with plain text', ({ stdoutSpy }) => {
+          const logger = createColorino(
+            createTestPalette({ log: '#ffffff' }),
+            {}
+          )
+
+          const gradient = logger.gradient('GRAD', '#ff0000', '#0000ff')
+          logger.log('Prefix', gradient, 'Suffix')
+
+          const output = stdoutSpy.getOutput()
+          expect(output).toContain('Prefix')
+          expect(output).toContain('G') // Each char is separate
+          expect(output).toContain('R')
+          expect(output).toContain('A')
+          expect(output).toContain('D')
+          expect(output).toContain('Suffix')
+          expect(output).toContain('\x1b[38;2;') // Truecolor codes
+        })
+
+        test('combines multiple gradients', ({ stdoutSpy }) => {
+          const logger = createColorino(createTestPalette(), {})
+
+          const grad1 = logger.gradient('FIRST', '#ff0000', '#00ff00')
+          const grad2 = logger.gradient('SECOND', '#0000ff', '#ffff00')
+          logger.log(grad1, grad2)
+
+          const output = stdoutSpy.getOutput()
+          // Check for individual characters
+          expect(output).toContain('F')
+          expect(output).toContain('I')
+          expect(output).toContain('S')
+          expect(output).toContain('E')
+          expect(output).toContain('C')
+          expect(output).toContain('O')
+          expect(output).toContain('N')
+          expect(output).toContain('D')
+          expect(output).toContain('\x1b[38;2;') // Truecolor codes
+        })
+
+        test('combines gradient with colorize', ({ stdoutSpy }) => {
+          const logger = createColorino(createTestPalette(), {})
+
+          const gradient = logger.gradient('GRAD', '#ff0000', '#0000ff')
+          const colored = logger.colorize('SOLID', '#00ff00')
+          logger.log(gradient, colored)
+
+          const output = stdoutSpy.getOutput()
+          // Gradient chars
+          expect(output).toContain('G')
+          expect(output).toContain('R')
+          expect(output).toContain('A')
+          expect(output).toContain('D')
+          // Colorize creates contiguous string
+          expect(output).toContain('SOLID')
+          expect(output).toContain('\x1b[38;2;') // Truecolor
+        })
+      })
+    })
+  })
 })

@@ -20,6 +20,7 @@ interface Colorino {
   debug(...args: unknown[]): void
   trace(...args: unknown[]): void
   colorize(text: string, hex: string): void
+  gradient(text: string, startHex: string, endHex: string): void
 }
 
 export interface ColorinoBrowserInterface extends Colorino {

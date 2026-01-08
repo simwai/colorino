@@ -1,7 +1,7 @@
-import { defineBuildConfig } from 'unbuild'
-import terser from '@rollup/plugin-terser'
 import { copyFileSync, mkdirSync } from 'node:fs'
 import { join } from 'node:path'
+import { defineBuildConfig } from 'unbuild'
+import terser from '@rollup/plugin-terser'
 
 const terserOptions = {
   ecma: 2017,

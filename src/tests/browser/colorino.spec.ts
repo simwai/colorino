@@ -203,4 +203,67 @@ describe('Colorino - Real Browser - Unit Test', () => {
       'color:red;background-color:black;font-weight:bold'
     )
   })
+
+  test('applies CSS gradient with background-clip', ({ mocks }) => {
+    const logger = createColorino(createTestPalette())
+
+    const gradient = logger.gradient('GRADIENT', '#ff0000', '#0000ff')
+    logger.log(gradient)
+
+    const call = mocks.log.mock.calls[0]
+    expect(call[0]).toContain('%c')
+    expect(call[0]).toContain('GRADIENT')
+    expect(call[1]).toContain('background: linear-gradient')
+    expect(call[1]).toContain('#ff0000')
+    expect(call[1]).toContain('#0000ff')
+    expect(call[1]).toContain('background-clip: text')
+    expect(call[1]).toContain('-webkit-background-clip: text')
+  })
+
+  test('combines gradient with plain text', ({ mocks }) => {
+    const logger = createColorino(createTestPalette({ log: '#ffffff' }))
+
+    const gradient = logger.gradient('GRAD', '#ff0000', '#0000ff')
+    logger.log('Before', gradient, 'After')
+
+    const call = mocks.log.mock.calls[0]
+    expect(call[0]).toBe('%cBefore%cGRAD%cAfter')
+    expect(call[1]).toBe('color:#ffffff')
+    expect(call[2]).toContain('background: linear-gradient')
+    expect(call[3]).toBe('color:#ffffff')
+  })
+
+  test('combines gradient with colorize', ({ mocks }) => {
+    const logger = createColorino(createTestPalette({ log: '#ffffff' }))
+
+    const gradient = logger.gradient('GRAD', '#ff0000', '#0000ff')
+    const colored = logger.colorize('COLOR', '#00ff00')
+    logger.log(gradient, colored)
+
+    const call = mocks.log.mock.calls[0]
+    expect(call[0]).toContain('GRAD')
+    expect(call[0]).toContain('COLOR')
+  })
+
+  test('combines gradient with css', ({ mocks }) => {
+    const logger = createColorino(createTestPalette({ log: '#ffffff' }))
+
+    const gradient = logger.gradient('GRAD', '#ff0000', '#0000ff')
+    const cssStyled = logger.css('CSS', { color: 'orange' })
+    logger.log(gradient, cssStyled)
+
+    const call = mocks.log.mock.calls[0]
+    expect(call[0]).toContain('GRAD')
+    expect(call[0]).toContain('CSS')
+  })
+
+  // eslint-disable-next-line
+  test('returns plain text when NO_COLOR is simulated', ({}) => {
+    const logger = createColorino(createTestPalette())
+
+    const gradient = logger.gradient('TEST', '#ff0000', '#0000ff')
+
+    expect(gradient).toBeDefined()
+    expect(() => logger.log(gradient)).not.toThrow()
+  })
 })

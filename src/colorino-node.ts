@@ -21,6 +21,38 @@ export class ColorinoNode
     super(initialPalette, userPalette, validator, colorLevel, options)
   }
 
+  public gradient(text: string, startHex: string, endHex: string): string {
+    if (
+      this._colorLevel === ColorLevel.NO_COLOR ||
+      this._colorLevel === 'UnknownEnv' ||
+      this._colorLevel === ColorLevel.ANSI
+    ) {
+      return text
+    }
+
+    const characters = [...text]
+    const rgbColors = colorConverter.hex.gradient(
+      startHex,
+      endHex,
+      characters.length
+    )
+
+    return (
+      characters
+        .map((char, index) => {
+          const [r, g, b] = rgbColors[index] ?? [0, 0, 0]
+
+          if (this._colorLevel === ColorLevel.TRUECOLOR) {
+            return `\x1b[38;2;${r};${g};${b}m${char}`
+          }
+
+          const code = colorConverter.rgb.toAnsi256([r, g, b])
+          return `\x1b[38;5;${code}m${char}`
+        })
+        .join('') + '\x1b[0m'
+    )
+  }
+
   protected _applyColors(
     consoleMethod: ConsoleMethod,
     args: unknown[]

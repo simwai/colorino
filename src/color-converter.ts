@@ -106,15 +106,48 @@ function rgbToAnsi16(rgb: RgbColor): number {
   return ansi
 }
 
+function interpolateRgb(
+  startRgb: RgbColor,
+  endRgb: RgbColor,
+  steps: number
+): RgbColor[] {
+  if (steps === 1) return [startRgb]
+  if (steps === 2) return [startRgb, endRgb]
+
+  const colors: RgbColor[] = []
+
+  for (let i = 0; i < steps; i++) {
+    const ratio = i / (steps - 1)
+    const r = Math.round(startRgb[0] + (endRgb[0] - startRgb[0]) * ratio)
+    const g = Math.round(startRgb[1] + (endRgb[1] - startRgb[1]) * ratio)
+    const b = Math.round(startRgb[2] + (endRgb[2] - startRgb[2]) * ratio)
+    colors.push([r, g, b])
+  }
+
+  return colors
+}
+
+function hexGradient(
+  startHex: string,
+  endHex: string,
+  steps: number
+): RgbColor[] {
+  const startRgb = hexToRgb(startHex)
+  const endRgb = hexToRgb(endHex)
+  return interpolateRgb(startRgb, endRgb, steps)
+}
+
 export const colorConverter = {
   hex: {
     toRgb: hexToRgb,
     toAnsi16: (hex: string) => rgbToAnsi16(hexToRgb(hex)),
     toAnsi256: (hex: string) => rgbToAnsi256(hexToRgb(hex)),
+    gradient: hexGradient,
   },
   rgb: {
     toAnsi16: rgbToAnsi16,
     toAnsi256: rgbToAnsi256,
+    interpolate: interpolateRgb,
   },
   rgba: {
     toRgb: rgbaToRgb,

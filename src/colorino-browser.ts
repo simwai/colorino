@@ -26,6 +26,27 @@ export class ColorinoBrowser
     super(initialPalette, userPalette, validator, colorLevel, options)
   }
 
+  public gradient(
+    text: string,
+    startHex: string,
+    endHex: string
+  ): string | BrowserCssArg {
+    if (
+      this._colorLevel === ColorLevel.NO_COLOR ||
+      this._colorLevel === 'UnknownEnv'
+    ) {
+      return text
+    }
+
+    const css = `background: linear-gradient(to right, ${startHex}, ${endHex}); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;`
+
+    return {
+      [ColorinoBrowserCss]: true,
+      text,
+      css,
+    }
+  }
+
   public css(text: string, style: CssConsoleStyle): string | BrowserCssArg {
     if (
       this._colorLevel === ColorLevel.NO_COLOR ||

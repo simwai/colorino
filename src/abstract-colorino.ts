@@ -4,6 +4,7 @@ import {
   ConsoleMethod,
   ColorinoBrowserColorized,
   BrowserColorizedArg,
+  BrowserCssArg,
 } from './types.js'
 import { type ColorinoOptions } from './interfaces.js'
 import { InputValidator } from './input-validator.js'
@@ -65,28 +66,11 @@ export abstract class AbstractColorino {
     }
 
     const ansiPrefix = this._toAnsiPrefix(hex)
-    if (!ansiPrefix) {
-      return text
-    }
+    if (!ansiPrefix) return text
 
     return `${ansiPrefix}${text}\x1b[0m`
   }
 
-  private _out(level: LogLevel, args: unknown[]): void {
-    const consoleMethod = TypeValidator.isConsoleMethod(level) ? level : 'log'
-    const processedArgs = this._processArgs(args)
-
-    if (
-      this._colorLevel === ColorLevel.NO_COLOR ||
-      this._colorLevel === 'UnknownEnv'
-    ) {
-      this._output(consoleMethod, processedArgs)
-      return
-    }
-
-    const coloredArgs = this._applyColors(consoleMethod, processedArgs)
-    this._output(consoleMethod, coloredArgs)
-  }
   protected abstract _applyColors(
     consoleMethod: ConsoleMethod,
     args: unknown[]
@@ -97,6 +81,11 @@ export abstract class AbstractColorino {
   ): void
   protected abstract _processArgs(args: unknown[]): unknown[]
   protected abstract isBrowser(): boolean
+  protected abstract gradient(
+    text: string,
+    startHex: string,
+    endHex: string
+  ): string | BrowserCssArg
 
   protected _toAnsiPrefix(_hex: string): string {
     return ''
@@ -176,5 +165,21 @@ export abstract class AbstractColorino {
     } else {
       console.log(...args)
     }
+  }
+
+  private _out(level: LogLevel, args: unknown[]): void {
+    const consoleMethod = TypeValidator.isConsoleMethod(level) ? level : 'log'
+    const processedArgs = this._processArgs(args)
+
+    if (
+      this._colorLevel === ColorLevel.NO_COLOR ||
+      this._colorLevel === 'UnknownEnv'
+    ) {
+      this._output(consoleMethod, processedArgs)
+      return
+    }
+
+    const coloredArgs = this._applyColors(consoleMethod, processedArgs)
+    this._output(consoleMethod, coloredArgs)
   }
 }

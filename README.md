@@ -5,6 +5,7 @@
 Colorino automatically adapts its palette to your terminal or browser DevTools theme, and degrades colors gracefully so your logs stay readable and on‑brand even in limited environments
 
 ![Demo](https://github.com/simwai/colorino/blob/master/demo-ps.png?raw=true)
+![Demo 2](https://github.com/simwai/colorino/blob/master/demo-ps-2.png?raw=true)
 
 # <a id="0"></a><a id="0"></a>
 
@@ -265,7 +266,7 @@ Colorino auto-detects your environment and color support, but you can override b
 | `WT_SESSION`     | Enables color detection for Windows Terminal                          |                                |
 | `CI`             | Many CI platforms default to no color                                 | `CI=1 node app.js`             |
 
-### <a id="5-6"></a>Colorize Helper (Manual Overrides)
+### <a id="5-6"></a>Colorize Helper (Manual Overrides) (`colorize(text, hex)`)
 
 Sometimes you want full control over a single piece of text without changing your global palette, e.g. when you use a mostly neutral theme but still want to highlight a keyword.
 
@@ -280,7 +281,7 @@ colorino.info(important, 'Something happened')
 
 When color is disabled (for example via `NO_COLOR=1` or lack of support), `colorize` returns the plain input string, so your logs stay readable.
 
-### <a id="5-7"></a>Browser‑only CSS Helper (`css()`)
+### <a id="5-7"></a>Browser‑only CSS Helper (`css(text, style)`)
 
 In the browser, Colorino also exposes a `css(text, style)` helper that lets you apply arbitrary CSS to a single segment in DevTools using the `%c` formatter.
 
@@ -298,6 +299,19 @@ const badge = colorino.css('NEW', {
 
 colorino.info('Release status:', badge, 'shipped')
 ```
+
+### <a id="5-7"></a>Gradient Text (`gradient(text, startHex, endHex)`)
+
+Create smooth color transitions across text with the `gradient(text, startHex, endHex)` method, available on all logger instances. Like the css and colorize helper.
+
+```ts
+import { colorino } from 'colorino'
+
+const rainbow = colorino.gradient('Hello Gradient!', '#ff0000', '#0000ff')
+colorino.log(rainbow)
+```
+
+Requires ANSI-256 or Truecolor support (most modern terminals). Degrades gracefully to palette colors on older terminals.
 
 ## <a id="6"></a>Colorino vs. Chalk
 
