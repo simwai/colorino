@@ -21,9 +21,7 @@ describe('Colorino - Node Environment - Unit Test', () => {
       test.scoped({ env: { FORCE_COLOR: '2' } })
 
       test('outputs 256-color codes for green text', ({ stdoutSpy }) => {
-        const logger = createColorino(createTestPalette({ log: '#00ff00' }), {
-          disableWarnings: true,
-        })
+        const logger = createColorino(createTestPalette({ log: '#00ff00' }), {})
 
         logger.log('Hello, Colorino!')
 
@@ -37,9 +35,7 @@ describe('Colorino - Node Environment - Unit Test', () => {
       test.scoped({ env: { NO_COLOR: '1' } })
 
       test('outputs plain text without color codes', ({ stdoutSpy }) => {
-        const logger = createColorino(createTestPalette({ log: '#ff5733' }), {
-          disableWarnings: true,
-        })
+        const logger = createColorino(createTestPalette({ log: '#ff5733' }), {})
 
         logger.log('Hello, Colorino!')
 
@@ -53,9 +49,7 @@ describe('Colorino - Node Environment - Unit Test', () => {
       test.scoped({ env: { FORCE_COLOR: '3' } })
 
       test('uses 24-bit truecolor codes', ({ stdoutSpy }) => {
-        const logger = createColorino(createTestPalette({ log: '#ff5733' }), {
-          disableWarnings: true,
-        })
+        const logger = createColorino(createTestPalette({ log: '#ff5733' }), {})
 
         logger.log('test')
 
@@ -69,9 +63,7 @@ describe('Colorino - Node Environment - Unit Test', () => {
       test.scoped({ env: { FORCE_COLOR: '2' } })
 
       test('uses 256-color codes', ({ stdoutSpy }) => {
-        const logger = createColorino(createTestPalette({ log: '#00ff00' }), {
-          disableWarnings: true,
-        })
+        const logger = createColorino(createTestPalette({ log: '#00ff00' }), {})
 
         logger.log('test')
 
@@ -85,9 +77,7 @@ describe('Colorino - Node Environment - Unit Test', () => {
       test.scoped({ env: { FORCE_COLOR: '1' } })
 
       test('uses basic 16-color ANSI codes', ({ stdoutSpy }) => {
-        const logger = createColorino(createTestPalette({ log: '#00ff00' }), {
-          disableWarnings: true,
-        })
+        const logger = createColorino(createTestPalette({ log: '#00ff00' }), {})
 
         logger.log('test')
 
@@ -225,9 +215,10 @@ describe('Colorino - Node Environment - Unit Test', () => {
       test.scoped({ env: { FORCE_COLOR: '1' } })
 
       test('first logger outputs basic red color', ({ stdoutSpy }) => {
-        const logger1 = createColorino(createTestPalette({ log: '#ff0000' }), {
-          disableWarnings: true,
-        })
+        const logger1 = createColorino(
+          createTestPalette({ log: '#ff0000' }),
+          {}
+        )
 
         logger1.log('red')
 
@@ -241,9 +232,10 @@ describe('Colorino - Node Environment - Unit Test', () => {
       test.scoped({ env: { FORCE_COLOR: '2' } })
 
       test('second logger outputs 256-color green', ({ stdoutSpy }) => {
-        const logger2 = createColorino(createTestPalette({ log: '#00ff00' }), {
-          disableWarnings: true,
-        })
+        const logger2 = createColorino(
+          createTestPalette({ log: '#00ff00' }),
+          {}
+        )
 
         logger2.log('green')
 
@@ -373,9 +365,7 @@ describe('Colorino - Node Environment - Unit Test', () => {
       test('colorizes string arguments when followed by objects', ({
         stdoutSpy,
       }) => {
-        const logger = createColorino(createTestPalette({ log: '#00ff00' }), {
-          disableWarnings: true,
-        })
+        const logger = createColorino(createTestPalette({ log: '#00ff00' }), {})
 
         const obj = { id: 1 }
         logger.log('Status:', obj)
@@ -388,9 +378,7 @@ describe('Colorino - Node Environment - Unit Test', () => {
       test('colorizes all string arguments with the palette color', ({
         stdoutSpy,
       }) => {
-        const logger = createColorino(createTestPalette({ log: '#00ff00' }), {
-          disableWarnings: true,
-        })
+        const logger = createColorino(createTestPalette({ log: '#00ff00' }), {})
 
         logger.log('First', 'Second', 'Third')
 
@@ -410,9 +398,7 @@ describe('Colorino - Node Environment - Unit Test', () => {
       test.scoped({ env: { FORCE_COLOR: '3' } })
 
       test('wraps text in 24-bit truecolor codes', ({ stdoutSpy }) => {
-        const logger = createColorino(createTestPalette({ log: '#ffffff' }), {
-          disableWarnings: true,
-        })
+        const logger = createColorino(createTestPalette({ log: '#ffffff' }), {})
 
         const colored = logger.colorize('OVERRIDE', '#ff5733')
 
@@ -428,9 +414,7 @@ describe('Colorino - Node Environment - Unit Test', () => {
       test.scoped({ env: { FORCE_COLOR: '2' } })
 
       test('wraps text in 256-color codes', ({ stdoutSpy }) => {
-        const logger = createColorino(createTestPalette({ log: '#ffffff' }), {
-          disableWarnings: true,
-        })
+        const logger = createColorino(createTestPalette({ log: '#ffffff' }), {})
 
         const colored = logger.colorize('OVERRIDE', '#00ff00')
 
@@ -446,9 +430,7 @@ describe('Colorino - Node Environment - Unit Test', () => {
       test.scoped({ env: { FORCE_COLOR: '1' } })
 
       test('wraps text in basic 16-color ANSI codes', ({ stdoutSpy }) => {
-        const logger = createColorino(createTestPalette({ log: '#ffffff' }), {
-          disableWarnings: true,
-        })
+        const logger = createColorino(createTestPalette({ log: '#ffffff' }), {})
 
         const colored = logger.colorize('OVERRIDE', '#00ff00')
 
@@ -464,9 +446,7 @@ describe('Colorino - Node Environment - Unit Test', () => {
       test.scoped({ env: { NO_COLOR: '1' } })
 
       test('returns plain text without color codes', ({ stdoutSpy }) => {
-        const logger = createColorino(createTestPalette({ log: '#ffffff' }), {
-          disableWarnings: true,
-        })
+        const logger = createColorino(createTestPalette({ log: '#ffffff' }), {})
 
         const colored = logger.colorize('OVERRIDE', '#ff0000')
 
@@ -483,9 +463,10 @@ describe('Colorino - Node Environment - Unit Test', () => {
         test('allows mixing manual override (first arg) with themed text', ({
           stdoutSpy,
         }) => {
-          const logger = createColorino(createTestPalette({ log: '#ffffff' }), {
-            disableWarnings: true,
-          })
+          const logger = createColorino(
+            createTestPalette({ log: '#ffffff' }),
+            {}
+          )
 
           const override = logger.colorize('OVERRIDE', '#00ff00')
 
@@ -500,9 +481,10 @@ describe('Colorino - Node Environment - Unit Test', () => {
         test('allows mixing manual override (second arg) with themed text', ({
           stdoutSpy,
         }) => {
-          const logger = createColorino(createTestPalette({ log: '#ffffff' }), {
-            disableWarnings: true,
-          })
+          const logger = createColorino(
+            createTestPalette({ log: '#ffffff' }),
+            {}
+          )
 
           const override = logger.colorize('OVERRIDE', '#00ff00')
 

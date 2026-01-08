@@ -143,7 +143,6 @@ const myLogger = createColorino(
     error: '#ff007b',
     info: '#3498db',
   },
-  { disableWarnings: true } // Options (see below)
 )
 myLogger.error('Critical!')
 myLogger.info('Rebranded info!')
@@ -155,7 +154,6 @@ myLogger.info('Rebranded info!')
 
 | Option            | Type                      | Default  | Description                                                                |
 | ----------------- | ------------------------- | -------- | -------------------------------------------------------------------------- |
-| `disableWarnings` | `boolean`                 | `false`  | Suppress warnings when color support can't be detected or is disabled.     |
 | `theme`           | `ThemeOption` (see below) | `'auto'` | Control the active color theme or force a specific mode.                   |
 | `disableOscProbe` | `boolean`                 | `false`  | Disable OSC 11 terminal theme probing (use only env heuristics for theme). |
 | `maxDepth`        | `number`                  | `5`      | Maximum depth when pretty-printing objects in log output.                  |
@@ -334,7 +332,6 @@ A factory function to create your own customized logger instances.
 
 - `palette` (`Partial<Palette>`): An object to override default colors for specific log levels (e.g., `{ error: '#ff007b' }`).
 - `options` (`ColorinoOptions`): An object to control behavior:
-  - `disableWarnings: boolean` (default `false`): Suppress warnings on environments with no color support.
   - `theme: 'dark' | 'light'` (default `auto`): Force a specific theme instead of auto-detecting.
 
 ## <a id="8"></a>Extending Colorino

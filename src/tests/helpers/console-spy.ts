@@ -129,11 +129,7 @@ export const test = base.extend<ColorinoFixtures>({
 
   // eslint-disable-next-line
   logger: async ({}, use) => {
-    await use(
-      createColorino(createTestPalette(), {
-        disableWarnings: true,
-      })
-    )
+    await use(createColorino(createTestPalette(), {}))
   },
 
   env: [{}, { injected: true }],

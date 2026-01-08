@@ -18,7 +18,6 @@ export function createColorino(
   }
 
   const browserDetector = new BrowserColorSupportDetector(
-    !!options.disableWarnings,
     window,
     navigator,
     detectorThemeOverride

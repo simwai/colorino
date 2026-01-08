@@ -1,6 +1,6 @@
 import { NodeColorSupportDetector } from '../../node-color-support-detector.js'
 
-const detector = new NodeColorSupportDetector(true, process)
+const detector = new NodeColorSupportDetector(process)
 
 console.log('ColorLevel:', detector.getColorLevel())
 console.log('Theme:', detector.getTheme())

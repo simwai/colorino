@@ -44,7 +44,7 @@ const test = base.extend<ColorDetectorFixtures>({
   },
 
   detector: async ({ mockProcess }, use) => {
-    await use(new NodeColorSupportDetector(true, mockProcess))
+    await use(new NodeColorSupportDetector(mockProcess))
   },
 })
 
@@ -52,7 +52,6 @@ describe('NodeColorSupportDetector', () => {
   describe('theme detection (sync OSC)', () => {
     test('uses overrideTheme when provided', ({ mockProcess }) => {
       const detector = new NodeColorSupportDetector(
-        true,
         mockProcess,
         'dark' as TerminalTheme
       )
@@ -67,7 +66,7 @@ describe('NodeColorSupportDetector', () => {
       mockStdout.isTTY = false
       mockStdin.isTTY = false
 
-      const detector = new NodeColorSupportDetector(true, mockProcess)
+      const detector = new NodeColorSupportDetector(mockProcess)
       expect(detector.getTheme()).toBe('unknown')
     })
 
@@ -78,7 +77,7 @@ describe('NodeColorSupportDetector', () => {
         .spyOn(oscThemeSync, 'getTerminalThemeSync')
         .mockReturnValue('light')
 
-      const detector = new NodeColorSupportDetector(true, mockProcess)
+      const detector = new NodeColorSupportDetector(mockProcess)
       expect(detector.getTheme()).toBe('light')
       expect(spy).toHaveBeenCalledTimes(1)
     })
@@ -87,14 +86,14 @@ describe('NodeColorSupportDetector', () => {
   describe('NO_COLOR environment variable', () => {
     test('should return NO_COLOR when set', ({ mockProcess }) => {
       mockProcess.env['NO_COLOR'] = 'true'
-      const detector = new NodeColorSupportDetector(true, mockProcess)
+      const detector = new NodeColorSupportDetector(mockProcess)
       expect(detector.getColorLevel()).toBe(ColorLevel.NO_COLOR)
     })
 
     test('should override TERM settings', ({ mockProcess }) => {
       mockProcess.env['NO_COLOR'] = 'true'
       mockProcess.env['TERM'] = 'xterm-256color'
-      const detector = new NodeColorSupportDetector(true, mockProcess)
+      const detector = new NodeColorSupportDetector(mockProcess)
       expect(detector.getColorLevel()).toBe(ColorLevel.NO_COLOR)
     })
   })
@@ -102,25 +101,25 @@ describe('NodeColorSupportDetector', () => {
   describe('FORCE_COLOR environment variable', () => {
     test('should return TRUECOLOR when 3', ({ mockProcess }) => {
       mockProcess.env['FORCE_COLOR'] = '3'
-      const detector = new NodeColorSupportDetector(true, mockProcess)
+      const detector = new NodeColorSupportDetector(mockProcess)
       expect(detector.getColorLevel()).toBe(ColorLevel.TRUECOLOR)
     })
 
     test('should return ANSI256 when 2', ({ mockProcess }) => {
       mockProcess.env['FORCE_COLOR'] = '2'
-      const detector = new NodeColorSupportDetector(true, mockProcess)
+      const detector = new NodeColorSupportDetector(mockProcess)
       expect(detector.getColorLevel()).toBe(ColorLevel.ANSI256)
     })
 
     test('should return ANSI when 1', ({ mockProcess }) => {
       mockProcess.env['FORCE_COLOR'] = '1'
-      const detector = new NodeColorSupportDetector(true, mockProcess)
+      const detector = new NodeColorSupportDetector(mockProcess)
       expect(detector.getColorLevel()).toBe(ColorLevel.ANSI)
     })
 
     test('should return NO_COLOR when 0', ({ mockProcess }) => {
       mockProcess.env['FORCE_COLOR'] = '0'
-      const detector = new NodeColorSupportDetector(true, mockProcess)
+      const detector = new NodeColorSupportDetector(mockProcess)
       expect(detector.getColorLevel()).toBe(ColorLevel.NO_COLOR)
     })
   })
@@ -131,7 +130,7 @@ describe('NodeColorSupportDetector', () => {
       mockProcess,
     }) => {
       mockStdout.isTTY = false
-      const detector = new NodeColorSupportDetector(true, mockProcess)
+      const detector = new NodeColorSupportDetector(mockProcess)
       expect(detector.getColorLevel()).toBe(ColorLevel.NO_COLOR)
     })
 
@@ -141,7 +140,7 @@ describe('NodeColorSupportDetector', () => {
     }) => {
       mockStdout.isTTY = false
       mockProcess.env['CLICOLOR_FORCE'] = '1'
-      const detector = new NodeColorSupportDetector(true, mockProcess)
+      const detector = new NodeColorSupportDetector(mockProcess)
       expect(detector.getColorLevel()).toBe(ColorLevel.ANSI)
     })
   })
@@ -149,19 +148,19 @@ describe('NodeColorSupportDetector', () => {
   describe('TERM-based detection', () => {
     test('should detect ANSI256 with xterm-256color', ({ mockProcess }) => {
       mockProcess.env['TERM'] = 'xterm-256color'
-      const detector = new NodeColorSupportDetector(true, mockProcess)
+      const detector = new NodeColorSupportDetector(mockProcess)
       expect(detector.getColorLevel()).toBe(ColorLevel.ANSI256)
     })
 
     test('should detect ANSI with xterm', ({ mockProcess }) => {
       mockProcess.env['TERM'] = 'xterm'
-      const detector = new NodeColorSupportDetector(true, mockProcess)
+      const detector = new NodeColorSupportDetector(mockProcess)
       expect(detector.getColorLevel()).toBe(ColorLevel.ANSI)
     })
 
     test('should return NO_COLOR with dumb terminal', ({ mockProcess }) => {
       mockProcess.env['TERM'] = 'dumb'
-      const detector = new NodeColorSupportDetector(true, mockProcess)
+      const detector = new NodeColorSupportDetector(mockProcess)
       expect(detector.getColorLevel()).toBe(ColorLevel.NO_COLOR)
     })
   })
@@ -171,19 +170,19 @@ describe('NodeColorSupportDetector', () => {
       mockProcess,
     }) => {
       mockProcess.env['FORCE_COLOR'] = 'invalid'
-      const detector = new NodeColorSupportDetector(true, mockProcess)
+      const detector = new NodeColorSupportDetector(mockProcess)
       expect(detector.getColorLevel()).toBe(ColorLevel.ANSI)
     })
 
     test('handles empty TERM gracefully', ({ mockProcess }) => {
       mockProcess.env['TERM'] = ''
-      const detector = new NodeColorSupportDetector(true, mockProcess)
+      const detector = new NodeColorSupportDetector(mockProcess)
       expect(detector.getColorLevel()).toBeDefined()
     })
 
     test('handles missing env entirely', ({ mockProcess }) => {
       mockProcess.env = {} as NodeJS.ProcessEnv
-      const detector = new NodeColorSupportDetector(true, mockProcess)
+      const detector = new NodeColorSupportDetector(mockProcess)
       expect(detector.getColorLevel()).toBeDefined()
     })
   })

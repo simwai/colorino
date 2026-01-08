@@ -6,18 +6,7 @@ import type { TerminalTheme } from './types.js'
 // @ts-ignore
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
-let alreadyWarned = false
-export function getTerminalThemeSync(
-  areWarningsDisabled: boolean
-): TerminalTheme {
-  const maybeWarnUser = () => {
-    if (alreadyWarned || areWarningsDisabled) return
-    alreadyWarned = true
-    console.warn(
-      'Consider switching the console (Win: Terminal is best) or disabling oscProbe by adding disableOscProbe = true to the options passed into createColorino().'
-    )
-  }
-
+export function getTerminalThemeSync(): TerminalTheme {
   const scriptPath = join(__dirname, 'osc-child-probe.js')
 
   const result = spawnSync(process.execPath, [scriptPath], {
@@ -27,7 +16,6 @@ export function getTerminalThemeSync(
   })
 
   if (result.error || result.status !== 0) {
-    maybeWarnUser()
     return 'unknown'
   }
 
@@ -36,6 +24,5 @@ export function getTerminalThemeSync(
     return output
   }
 
-  maybeWarnUser()
   return 'unknown'
 }

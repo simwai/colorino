@@ -1,6 +1,6 @@
 import { NodeColorSupportDetector } from '../../node-color-support-detector.js'
 
-const detector = new NodeColorSupportDetector(true)
+const detector = new NodeColorSupportDetector()
 const theme = detector.getTheme()
 
 process.stdout.write(theme)

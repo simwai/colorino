@@ -22,7 +22,6 @@ export function createColorino(
   }
 
   const nodeDetector = new NodeColorSupportDetector(
-    !!options.disableWarnings,
     process,
     detectorThemeOverride,
     options.disableOscProbe ?? false

@@ -28,9 +28,7 @@ describe('Colorino - Node Environment - Fuzz Test', () => {
       test.scoped({ env: { NO_COLOR: '1' } })
 
       test('should handle 1000 random strings without crashing', () => {
-        const logger = createColorino(createTestPalette(), {
-          disableWarnings: true,
-        })
+        const logger = createColorino(createTestPalette(), {})
 
         const results = []
         for (let i = 0; i < 1000; i++) {
@@ -46,9 +44,7 @@ describe('Colorino - Node Environment - Fuzz Test', () => {
       })
 
       test('should handle strings with special characters', () => {
-        const logger = createColorino(createTestPalette(), {
-          disableWarnings: true,
-        })
+        const logger = createColorino(createTestPalette(), {})
 
         const specialChars = [
           '\n\r\t',
@@ -71,9 +67,7 @@ describe('Colorino - Node Environment - Fuzz Test', () => {
       })
 
       test('should handle extremely long strings', () => {
-        const logger = createColorino(createTestPalette(), {
-          disableWarnings: true,
-        })
+        const logger = createColorino(createTestPalette(), {})
 
         const sizes = [1000, 10000, 100000]
 
@@ -91,9 +85,7 @@ describe('Colorino - Node Environment - Fuzz Test', () => {
       test.scoped({ env: { NO_COLOR: '1' } })
 
       test('should handle circular references gracefully', () => {
-        const logger = createColorino(createTestPalette(), {
-          disableWarnings: true,
-        })
+        const logger = createColorino(createTestPalette(), {})
 
         const circular1: any = { name: 'root', self: null }
         circular1.self = circular1
@@ -109,9 +101,7 @@ describe('Colorino - Node Environment - Fuzz Test', () => {
       })
 
       test('should handle objects with unusual properties', () => {
-        const logger = createColorino(createTestPalette(), {
-          disableWarnings: true,
-        })
+        const logger = createColorino(createTestPalette(), {})
 
         const weirdObjects = [
           { [Symbol('key')]: 'value' },
@@ -133,9 +123,7 @@ describe('Colorino - Node Environment - Fuzz Test', () => {
       })
 
       test('should handle deeply nested objects', () => {
-        const logger = createColorino(createTestPalette(), {
-          disableWarnings: true,
-        })
+        const logger = createColorino(createTestPalette(), {})
 
         let deep: any = { value: 'bottom' }
         for (let i = 0; i < 100; i++) {
@@ -147,9 +135,7 @@ describe('Colorino - Node Environment - Fuzz Test', () => {
       })
 
       test('should handle large arrays with mixed types', () => {
-        const logger = createColorino(createTestPalette(), {
-          disableWarnings: true,
-        })
+        const logger = createColorino(createTestPalette(), {})
 
         const largeArray = Array.from({ length: 1000 }, (_, i) => {
           const types = [
@@ -194,9 +180,7 @@ describe('Colorino - Node Environment - Fuzz Test', () => {
             .toString(16)
             .padStart(6, '0')}`
 
-          const logger = createColorino(createTestPalette({ log: hex }), {
-            disableWarnings: true,
-          })
+          const logger = createColorino(createTestPalette({ log: hex }), {})
 
           const result = safeLog(logger, 'test')
           expect(result.isErr()).toBe(false)
@@ -226,9 +210,7 @@ describe('Colorino - Node Environment - Fuzz Test', () => {
           vi.stubEnv(key, value)
         }
 
-        const logger = createColorino(createTestPalette(), {
-          disableWarnings: true,
-        })
+        const logger = createColorino(createTestPalette(), {})
 
         const result = safeLog(logger, 'test')
         expect(result.isErr()).toBe(false)
@@ -243,9 +225,7 @@ describe('Colorino - Node Environment - Fuzz Test', () => {
       test.scoped({ env: { NO_COLOR: '1' } })
 
       test('should handle rapid sequential logs', () => {
-        const logger = createColorino(createTestPalette(), {
-          disableWarnings: true,
-        })
+        const logger = createColorino(createTestPalette(), {})
 
         const results = []
         for (let i = 0; i < 1000; i++) {
@@ -262,9 +242,7 @@ describe('Colorino - Node Environment - Fuzz Test', () => {
       test.scoped({ env: { FORCE_COLOR: '1' } })
 
       test('should handle interleaved log levels', () => {
-        const logger = createColorino(createTestPalette(), {
-          disableWarnings: true,
-        })
+        const logger = createColorino(createTestPalette(), {})
 
         const results = []
         for (let i = 0; i < 250; i++) {
