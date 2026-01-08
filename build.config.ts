@@ -1,21 +1,23 @@
 import { defineBuildConfig } from 'unbuild'
 import terser from '@rollup/plugin-terser'
+import { copyFileSync, mkdirSync } from 'node:fs'
+import { join } from 'node:path'
 
 const terserOptions = {
-  ecma: 2017, // fine for modern Node and browsers you target
-  module: false, // UMD is not an ES module
-  toplevel: false, // keep global names like `colorino` intact
+  ecma: 2017,
+  module: false,
+  toplevel: false,
   keep_classnames: false,
   keep_fnames: false,
   safari10: false,
   format: {
-    comments: false, // strip comments in CDN builds
+    comments: false,
   },
   compress: {
-    passes: 2, // small extra squeeze, still safe
+    passes: 2,
   },
-  mangle: true, // allowed because UMD wrapper handles exports
-  sourceMap: true, // let Rollup wire filename/url for you
+  mangle: true,
+  sourceMap: true,
 }
 
 export default defineBuildConfig([
@@ -29,6 +31,17 @@ export default defineBuildConfig([
     },
     declaration: true,
     failOnWarn: false,
+    hooks: {
+      'build:done'() {
+        // Copy osc-child-probe.js to dist
+        mkdirSync('dist', { recursive: true })
+        copyFileSync(
+          join('src', 'osc-child-probe.js'),
+          join('dist', 'osc-child-probe.js')
+        )
+        console.log('✓ Copied osc-child-probe.js to dist/')
+      },
+    },
   },
 
   // --- 2. Browser Library Build (Lean, Tree-shakeable) ---
@@ -44,13 +57,12 @@ export default defineBuildConfig([
   },
 
   // --- 3. CDN: ESM Builds (Fat, Bundled) ---
-  // Generates: dist/cdn.mjs (Debug) & dist/cdn.min.mjs (Prod)
   {
     name: 'cdn-esm',
     entries: ['src/browser'],
     declaration: false,
     rollup: {
-      inlineDependencies: true, // Bundle everything
+      inlineDependencies: true,
     },
     hooks: {
       'rollup:options'(_ctx, options) {
@@ -76,7 +88,6 @@ export default defineBuildConfig([
   },
 
   // --- 4. CDN: UMD Builds (Fat, Bundled) ---
-  // Generates: dist/cdn.js (Debug) & dist/cdn.min.js (Prod)
   {
     name: 'cdn-umd',
     entries: ['src/browser-umd.ts'],
