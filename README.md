@@ -137,13 +137,11 @@ Use the factory to create as many loggers as you want (each with its own palette
 ```typescript
 import { createColorino } from 'colorino'
 
-const myLogger = createColorino(
-  {
-    // Palette (partial)
-    error: '#ff007b',
-    info: '#3498db',
-  },
-)
+const myLogger = createColorino({
+  // Palette (partial)
+  error: '#ff007b',
+  info: '#3498db',
+})
 myLogger.error('Critical!')
 myLogger.info('Rebranded info!')
 ```
