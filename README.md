@@ -7,7 +7,7 @@
 
 [![TypeScript](https://img.shields.io/badge/TS-5.x-8B5CF6?logo=typescript&logoColor=white)](https://typescriptlang.org/)
 [![Node.js](https://img.shields.io/badge/Node-20.x-8B5CF6?logo=node.js&logoColor=white)](https://nodejs.org/)
-  
+
 [![Vitest](https://img.shields.io/badge/Test-Vitest-8B5CF6?logo=vitest&logoColor=white)](https://vitest.dev/)
 
 **The zero‑configuration, context‑aware `console` logger for Node.js and the browser—with smart theming and graceful color degradation.**
