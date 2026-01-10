@@ -1,5 +1,15 @@
 # <a id="0"></a>🎨 Colorino
 
+[![npm](https://img.shields.io/npm/v/colorino?color=8B5CF6&logo=npm&logoColor=white)](https://www.npmjs.com/package/colorino)
+[![License](https://img.shields.io/npm/l/colorino?color=8B5CF6)](https://github.com/simwai/colorino/blob/master/LICENSE.MD)
+[![npm downloads](https://img.shields.io/npm/dm/colorino?color=8B5CF6&logo=npm&logoColor=white)](https://www.npmjs.com/package/colorino)
+[![Minzipped](https://img.shields.io/bundlephobia/minzip/colorino?color=8B5CF6)](https://bundlephobia.com/result?p=colorino)
+
+[![TypeScript](https://img.shields.io/badge/TS-5.x-8B5CF6?logo=typescript&logoColor=white)](https://typescriptlang.org/)
+[![Node.js](https://img.shields.io/badge/Node-20.x-8B5CF6?logo=node.js&logoColor=white)](https://nodejs.org/)
+  
+[![Vitest](https://img.shields.io/badge/Test-Vitest-8B5CF6?logo=vitest&logoColor=white)](https://vitest.dev/)
+
 **The zero‑configuration, context‑aware `console` logger for Node.js and the browser—with smart theming and graceful color degradation.**
 
 Colorino automatically adapts its palette to your terminal or browser DevTools theme, and degrades colors gracefully so your logs stay readable and on‑brand even in limited environments
@@ -23,17 +33,17 @@ Colorino automatically adapts its palette to your terminal or browser DevTools t
     - [Examples](#5-3-2)
   - [Customization](#5-4)
   - [Supported Environment Variables](#5-5)
-  - [Colorize Helper (Manual Overrides)](#5-6)
-  - [Browser‑only CSS Helper (`css()`)](#5-7)
+  - [Colorize Helper (Manual Overrides) (`colorize(text, hex)`)](#5-6)
+  - [Browser‑only CSS Helper (`css(text, style)`)](#5-7)
+  - [Gradient Text (`gradient(text, startHex, endHex)`)](#5-8)
 - [Colorino vs. Chalk](#6)
 - [API Reference](#7)
   - [1. `colorino` (default instance)](#7-1)
   - [2. `createColorino(palette?, options?)` (factory)](#7-2)
 - [Extending Colorino](#8)
   - [Use Case: Automatic File/Context Info](#8-1)
-- [Internals & Dependencies](#9)
-  - [Why This Pattern?](#9-1)
-- [License](#10)
+  - [Why This Pattern?](#8-2)
+- [License](#9)
 
 <!-- Table of contents is made with https://github.com/eugene-khyst/md-toc-cli -->
 
@@ -300,7 +310,7 @@ const badge = colorino.css('NEW', {
 colorino.info('Release status:', badge, 'shipped')
 ```
 
-### <a id="5-7"></a>Gradient Text (`gradient(text, startHex, endHex)`)
+### <a id="5-8"></a>Gradient Text (`gradient(text, startHex, endHex)`)
 
 Create smooth color transitions across text with the `gradient(text, startHex, endHex)` method, available on all logger instances. Like the css and colorize helper.
 
@@ -311,7 +321,7 @@ const rainbow = colorino.gradient('Hello Gradient!', '#ff0000', '#0000ff')
 colorino.log(rainbow)
 ```
 
-Requires ANSI-256 or Truecolor support (most modern terminals). Degrades gracefully to palette colors on older terminals.
+Requires ANSI-256 or Truecolor support (most modern terminals).
 
 ## <a id="6"></a>Colorino vs. Chalk
 
@@ -411,12 +421,7 @@ logger.info('User created', { id: 123 })
 logger.error('Failed to load user', { id: 456 })
 ```
 
-## <a id="9"></a>Internals & Dependencies
-
-- Colorino’s runtime logic depends on a single bundled library, `neverthrow`, which is MIT‑licensed and used for type‑safe Result handling.
-- `neverthrow` is bundled into the published artifacts, so you do not need to install it separately.
-
-### <a id="9-1"></a>Why This Pattern?
+### <a id="8-2"></a>Why This Pattern?
 
 - **Composition > Inheritance**: No fragile base class problems
 - **Type Safe**: TypeScript infers the return type correctly
@@ -424,6 +429,6 @@ logger.error('Failed to load user', { id: 456 })
 - **Clean**: No messing with `super()` or constructor parameters
 - **Composable**: You can layer multiple extensions
 
-## <a id="10"></a>License
+## <a id="9"></a>License
 
 [MIT](LICENSE.md)
