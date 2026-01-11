@@ -12,47 +12,47 @@ import { ColorLevel } from './enums.js'
 import { TypeValidator } from './type-validator.js'
 
 export abstract class AbstractColorino {
-  protected _alreadyWarned = false
-  protected _colorLevel: ColorLevel | 'UnknownEnv'
-  protected _palette: Palette
+  protected alreadyWarned = false
+  protected colorLevel: ColorLevel | 'UnknownEnv'
+  protected palette: Palette
 
   protected constructor(
     initialPalette: Palette,
-    protected readonly _userPalette: Partial<Palette>,
-    protected readonly _validator: InputValidator,
+    protected readonly userPalette: Partial<Palette>,
+    protected readonly validator: InputValidator,
     colorLevel: ColorLevel | 'UnknownEnv',
-    protected readonly _options: ColorinoOptions = {}
+    protected readonly options: ColorinoOptions = {}
   ) {
-    this._palette = initialPalette
+    this.palette = initialPalette
 
-    const validatePaletteResult = this._validator.validatePalette(this._palette)
+    const validatePaletteResult = this.validator.validatePalette(this.palette)
     if (validatePaletteResult.isErr()) throw validatePaletteResult.error
 
-    this._colorLevel = colorLevel
+    this.colorLevel = colorLevel
   }
   log(...args: unknown[]): void {
-    this._out('log', args)
+    this.out('log', args)
   }
   info(...args: unknown[]): void {
-    this._out('info', args)
+    this.out('info', args)
   }
   warn(...args: unknown[]): void {
-    this._out('warn', args)
+    this.out('warn', args)
   }
   error(...args: unknown[]): void {
-    this._out('error', args)
+    this.out('error', args)
   }
   trace(...args: unknown[]): void {
-    this._out('trace', args)
+    this.out('trace', args)
   }
   debug(...args: unknown[]): void {
-    this._out('debug', args)
+    this.out('debug', args)
   }
 
   colorize(text: string, hex: string): string | BrowserColorizedArg {
     if (
-      this._colorLevel === ColorLevel.NO_COLOR ||
-      this._colorLevel === 'UnknownEnv'
+      this.colorLevel === ColorLevel.NO_COLOR ||
+      this.colorLevel === 'UnknownEnv'
     ) {
       return text
     }
@@ -65,21 +65,18 @@ export abstract class AbstractColorino {
       }
     }
 
-    const ansiPrefix = this._toAnsiPrefix(hex)
+    const ansiPrefix = this.toAnsiPrefix(hex)
     if (!ansiPrefix) return text
 
     return `${ansiPrefix}${text}\x1b[0m`
   }
 
-  protected abstract _applyColors(
+  protected abstract applyColors(
     consoleMethod: ConsoleMethod,
     args: unknown[]
   ): unknown[]
-  protected abstract _output(
-    consoleMethod: ConsoleMethod,
-    args: unknown[]
-  ): void
-  protected abstract _processArgs(args: unknown[]): unknown[]
+
+  protected abstract processArgs(args: unknown[]): unknown[]
   protected abstract isBrowser(): boolean
   protected abstract gradient(
     text: string,
@@ -87,13 +84,13 @@ export abstract class AbstractColorino {
     endHex: string
   ): string | BrowserCssArg
 
-  protected _toAnsiPrefix(_hex: string): string {
+  protected toAnsiPrefix(_hex: string): string {
     return ''
   }
 
-  protected _formatValue(
+  protected formatValue(
     value: unknown,
-    maxDepth = this._options.maxDepth ?? 5
+    maxDepth = this.options.maxDepth ?? 5
   ): string {
     const seen = new WeakSet<object>()
 
@@ -137,17 +134,27 @@ export abstract class AbstractColorino {
     return JSON.stringify(sanitize(value, 0), null, 2)
   }
 
-  protected _filterStack(stack: string): string {
+  protected filterStack(inputStack: string | Error | undefined): string {
+    const stack = TypeValidator.isError(inputStack)
+      ? inputStack.stack
+      : TypeValidator.isStackLikeString(inputStack)
+        ? inputStack
+        : ''
+    if (!stack) return ''
+
     return stack
       .split('\n')
-      .filter(line => !line.match(/.*colorino.*/gi))
+      .filter(line => {
+        const lower = line.toLowerCase()
+        return !lower.includes('colorino')
+      })
       .join('\n')
   }
 
-  protected _cleanErrorStack(error: Error): Error {
+  protected cleanErrorStack(error: Error): Error {
     if (!error.stack) return error
 
-    const cleanStack = this._filterStack(error.stack)
+    const cleanStack = this.filterStack(error.stack)
 
     const cloned = Object.create(Object.getPrototypeOf(error)) as Error
     Object.assign(cloned, error)
@@ -156,30 +163,19 @@ export abstract class AbstractColorino {
     return cloned
   }
 
-  protected _printCleanTrace(args: unknown[]): void {
-    const error = new Error()
-
-    if (error.stack) {
-      const cleanStack = this._filterStack(error.stack)
-      console.log(...args, `\n${cleanStack}`)
-    } else {
-      console.log(...args)
-    }
-  }
-
-  private _out(level: LogLevel, args: unknown[]): void {
+  protected out(level: LogLevel, args: unknown[]): void {
     const consoleMethod = TypeValidator.isConsoleMethod(level) ? level : 'log'
-    const processedArgs = this._processArgs(args)
+    const processedArgs = this.processArgs(args)
 
     if (
-      this._colorLevel === ColorLevel.NO_COLOR ||
-      this._colorLevel === 'UnknownEnv'
+      this.colorLevel === ColorLevel.NO_COLOR ||
+      this.colorLevel === 'UnknownEnv'
     ) {
-      this._output(consoleMethod, processedArgs)
+      console[consoleMethod](...processedArgs)
       return
     }
 
-    const coloredArgs = this._applyColors(consoleMethod, processedArgs)
-    this._output(consoleMethod, coloredArgs)
+    const coloredArgs = this.applyColors(consoleMethod, processedArgs)
+    console[consoleMethod](...coloredArgs)
   }
 }

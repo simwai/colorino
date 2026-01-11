@@ -8,7 +8,6 @@ import {
 
 export interface ColorinoOptions {
   theme?: TerminalTheme | ThemeName | 'auto'
-  disableOscProbe?: boolean
   maxDepth?: number
 }
 

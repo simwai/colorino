@@ -16,8 +16,7 @@ export class NodeColorSupportDetector implements ColorSupportDetectorInterface {
 
   constructor(
     private readonly _process?: NodeJS.Process,
-    private readonly _overrideTheme?: TerminalTheme,
-    private readonly _disableOscProbe = false
+    private readonly _overrideTheme?: TerminalTheme
   ) {
     if (this._overrideTheme !== undefined) {
       this._theme = this._overrideTheme
@@ -40,12 +39,13 @@ export class NodeColorSupportDetector implements ColorSupportDetectorInterface {
     this._envCliColorForce = processEnv['CLICOLOR_FORCE']
     this._envWtSession = processEnv['WT_SESSION']
 
-    if (!this._isTTY || this._disableOscProbe) {
+    if (!this._isTTY) {
       this._theme = 'unknown'
       return
     }
 
-    this._theme = getTerminalThemeSync()
+    this._theme =
+      this._envWtSession !== undefined ? getTerminalThemeSync() : 'unknown'
   }
 
   isNodeEnv(): boolean {

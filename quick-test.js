@@ -18,3 +18,8 @@ colorino.info('Welcome to', title, '– the smart logger')
 const badge = colorino.colorize('v2.0', '#00ff00')
 const brand = colorino.gradient('Colorino', '#ff6b6b', '#4ecdc4')
 colorino.log(brand, badge, 'shipped!')
+
+// Trace
+colorino.trace('test', new Error('TestoErroro'))
+colorino.trace('test', new Error('TestoErroro').stack)
+colorino.trace('test', { testo: 'objecto' })

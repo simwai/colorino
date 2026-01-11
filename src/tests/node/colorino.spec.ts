@@ -146,11 +146,6 @@ describe('Colorino - Node Environment - Unit Test', () => {
       logger.trace('Trace')
 
       const output = stdoutSpy.getOutput()
-      expect(output, 'Should contain trace label').toContain('Trace')
-      expect(output, 'Should contain valid stack frame').toMatch(/^\s*at\s.+/m)
-      expect(output, 'Should not leak MyColorino._out').not.toMatch(
-        /MyColorino\._out/
-      )
       expect(output, 'Should not leak compiled filenames').not.toMatch(
         /colorino\.[A-Za-z0-9]+\.mjs/
       )

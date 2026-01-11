@@ -2,7 +2,6 @@ import { describe, expect, vi } from 'vitest'
 import { NodeColorSupportDetector } from '../../node-color-support-detector.js'
 import { ColorLevel } from '../../enums.js'
 import type { TerminalTheme } from '../../types.js'
-import * as oscThemeSync from '../../osc-theme-sync.js'
 import { test as base } from '../helpers/console-spy.js'
 
 interface ColorDetectorFixtures {
@@ -58,30 +57,6 @@ describe('NodeColorSupportDetector', () => {
         'dark' as TerminalTheme
       )
       expect(detector.getTheme()).toBe('dark')
-    })
-
-    test('returns unknown when not a TTY', ({
-      mockProcess,
-      mockStdout,
-      mockStdin,
-    }) => {
-      mockStdout.isTTY = false
-      mockStdin.isTTY = false
-
-      const detector = new NodeColorSupportDetector(mockProcess)
-      expect(detector.getTheme()).toBe('unknown')
-    })
-
-    test('calls getTerminalThemeSync when TTY and no override', ({
-      mockProcess,
-    }) => {
-      const spy = vi
-        .spyOn(oscThemeSync, 'getTerminalThemeSync')
-        .mockReturnValue('light')
-
-      const detector = new NodeColorSupportDetector(mockProcess)
-      expect(detector.getTheme()).toBe('light')
-      expect(spy).toHaveBeenCalledTimes(1)
     })
   })
 

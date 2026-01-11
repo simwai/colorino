@@ -8,7 +8,7 @@ type ConsoleSpies = {
   error: ReturnType<typeof vi.spyOn>
   info: ReturnType<typeof vi.spyOn>
   debug: ReturnType<typeof vi.spyOn>
-  trace: ReturnType<typeof vi.spyOn>
+  trace?: ReturnType<typeof vi.spyOn>
 }
 
 interface BrowserColorinoFixtures {
@@ -18,7 +18,7 @@ interface BrowserColorinoFixtures {
 const test = baseTest.extend<BrowserColorinoFixtures>({
   // eslint-disable-next-line
   mocks: async ({}, use) => {
-    const mocks: ConsoleSpies = {
+    const spies: ConsoleSpies = {
       log: vi.spyOn(console, 'log').mockImplementation(() => {}),
       warn: vi.spyOn(console, 'warn').mockImplementation(() => {}),
       error: vi.spyOn(console, 'error').mockImplementation(() => {}),
@@ -27,7 +27,7 @@ const test = baseTest.extend<BrowserColorinoFixtures>({
       trace: vi.spyOn(console, 'trace').mockImplementation(() => {}),
     }
 
-    await use(mocks)
+    await use(spies)
 
     vi.restoreAllMocks()
   },

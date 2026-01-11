@@ -32,8 +32,8 @@ export class ColorinoBrowser
     endHex: string
   ): string | BrowserCssArg {
     if (
-      this._colorLevel === ColorLevel.NO_COLOR ||
-      this._colorLevel === 'UnknownEnv'
+      this.colorLevel === ColorLevel.NO_COLOR ||
+      this.colorLevel === 'UnknownEnv'
     ) {
       return text
     }
@@ -49,8 +49,8 @@ export class ColorinoBrowser
 
   public css(text: string, style: CssConsoleStyle): string | BrowserCssArg {
     if (
-      this._colorLevel === ColorLevel.NO_COLOR ||
-      this._colorLevel === 'UnknownEnv'
+      this.colorLevel === ColorLevel.NO_COLOR ||
+      this.colorLevel === 'UnknownEnv'
     ) {
       return text
     }
@@ -83,14 +83,14 @@ export class ColorinoBrowser
     return parts.join(';')
   }
 
-  protected _applyColors(
+  protected applyColors(
     consoleMethod: ConsoleMethod,
     args: unknown[]
   ): unknown[] {
     const formatParts: string[] = []
     const formatArgs: unknown[] = []
 
-    const paletteHex = this._palette[consoleMethod]
+    const paletteHex = this.palette[consoleMethod]
 
     for (const arg of args) {
       if (TypeValidator.isBrowserColorizedArg(arg)) {
@@ -127,11 +127,7 @@ export class ColorinoBrowser
     return [formatParts.join(''), ...formatArgs]
   }
 
-  protected _output(consoleMethod: ConsoleMethod, args: unknown[]): void {
-    console[consoleMethod](...args)
-  }
-
-  protected _processArgs(args: unknown[]): unknown[] {
+  protected processArgs(args: unknown[]): unknown[] {
     const processedArgs: unknown[] = []
     let previousWasObject = false
 
@@ -141,7 +137,6 @@ export class ColorinoBrowser
         TypeValidator.isBrowserCssArg(arg)
       ) {
         processedArgs.push(arg)
-
         previousWasObject = false
         continue
       }
@@ -151,19 +146,26 @@ export class ColorinoBrowser
           [ColorinoBrowserObject]: true,
           value: arg,
         })
-
         previousWasObject = true
-      } else if (TypeValidator.isError(arg)) {
-        processedArgs.push('\n', this._cleanErrorStack(arg))
-
-        previousWasObject = true
-      } else {
-        processedArgs.push(
-          TypeValidator.isString(arg) && previousWasObject ? `\n${arg}` : arg
-        )
-
-        previousWasObject = false
+        continue
       }
+
+      if (TypeValidator.isError(arg)) {
+        processedArgs.push('\n', this.cleanErrorStack(arg))
+        previousWasObject = true
+        continue
+      }
+
+      if (TypeValidator.isStackLikeString(arg)) {
+        processedArgs.push('\n', arg)
+        previousWasObject = true
+        continue
+      }
+
+      processedArgs.push(
+        TypeValidator.isString(arg) && previousWasObject ? `\n${arg}` : arg
+      )
+      previousWasObject = false
     }
 
     return processedArgs

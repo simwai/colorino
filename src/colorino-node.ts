@@ -6,7 +6,6 @@ import { colorConverter } from './color-converter.js'
 import { Palette } from './types.js'
 import { ColorinoNodeInterface, ColorinoOptions } from './interfaces.js'
 import { InputValidator } from './input-validator.js'
-
 export class ColorinoNode
   extends AbstractColorino
   implements ColorinoNodeInterface
@@ -21,11 +20,33 @@ export class ColorinoNode
     super(initialPalette, userPalette, validator, colorLevel, options)
   }
 
+  public override trace(...args: unknown[]): void {
+    const hasErrorOrStack = args.some(
+      arg => arg instanceof Error || TypeValidator.isStackLikeString(arg)
+    )
+    const stack = !hasErrorOrStack ? this._buildCallerStack() : undefined
+    const coloredArgs = args.map(arg => {
+      if (
+        TypeValidator.isString(arg) &&
+        !TypeValidator.isAnsiColoredString(arg) &&
+        !TypeValidator.isStackLikeString(arg)
+      ) {
+        const prefix = this.toAnsiPrefix(this.palette.trace)
+        return prefix ? `${prefix}${arg}\x1b[0m` : arg
+      }
+      return arg
+    })
+
+    const finalArgs: unknown[] = stack ? [...coloredArgs, stack] : coloredArgs
+
+    this.out('log', finalArgs)
+  }
+
   public gradient(text: string, startHex: string, endHex: string): string {
     if (
-      this._colorLevel === ColorLevel.NO_COLOR ||
-      this._colorLevel === 'UnknownEnv' ||
-      this._colorLevel === ColorLevel.ANSI
+      this.colorLevel === ColorLevel.NO_COLOR ||
+      this.colorLevel === 'UnknownEnv' ||
+      this.colorLevel === ColorLevel.ANSI
     ) {
       return text
     }
@@ -42,7 +63,7 @@ export class ColorinoNode
         .map((char, index) => {
           const [r, g, b] = rgbColors[index] ?? [0, 0, 0]
 
-          if (this._colorLevel === ColorLevel.TRUECOLOR) {
+          if (this.colorLevel === ColorLevel.TRUECOLOR) {
             return `\x1b[38;2;${r};${g};${b}m${char}`
           }
 
@@ -53,52 +74,54 @@ export class ColorinoNode
     )
   }
 
-  protected _applyColors(
+  protected applyColors(
     consoleMethod: ConsoleMethod,
     args: unknown[]
   ): unknown[] {
-    const paletteHex = this._palette[consoleMethod]
-    const prefix = this._toAnsiPrefix(paletteHex)
+    const paletteHex = this.palette[consoleMethod]
+    const prefix = this.toAnsiPrefix(paletteHex)
 
     if (!prefix) return args
 
     return args.map(arg => {
-      if (
+      if (TypeValidator.isError(arg)) {
+        return this._formatErrorWithAnsiPrefix(arg, prefix)
+      } else if (
         !TypeValidator.isString(arg) ||
+        TypeValidator.isStackLikeString(arg) ||
         TypeValidator.isAnsiColoredString(arg)
-      )
+      ) {
         return arg
+      }
+
       return `${prefix}${String(arg)}\x1b[0m`
     })
   }
 
-  protected _output(consoleMethod: ConsoleMethod, args: unknown[]): void {
-    if (consoleMethod === 'trace') {
-      this._printCleanTrace(args)
-    } else {
-      console[consoleMethod](...args)
-    }
-  }
-
-  protected _processArgs(args: unknown[]): unknown[] {
+  protected processArgs(args: unknown[]): unknown[] {
     const processedArgs: unknown[] = []
     let previousWasObject = false
 
     for (const arg of args) {
       if (TypeValidator.isFormattableObject(arg)) {
-        processedArgs.push(`\n${this._formatValue(arg)}`)
+        processedArgs.push(`\n${this.formatValue(arg)}`)
         previousWasObject = true
-      } else if (TypeValidator.isError(arg)) {
-        processedArgs.push('\n', this._cleanErrorStack(arg))
-
-        previousWasObject = true
-      } else {
-        processedArgs.push(
-          TypeValidator.isString(arg) && previousWasObject ? `\n${arg}` : arg
-        )
-
-        previousWasObject = false
+        continue
       }
+
+      if (TypeValidator.isError(arg) || TypeValidator.isStackLikeString(arg)) {
+        processedArgs.push(`\n${this.filterStack(arg)}`)
+        previousWasObject = true
+        continue
+      }
+
+      if (TypeValidator.isString(arg) && previousWasObject) {
+        processedArgs.push(`\n${arg}`)
+      } else {
+        processedArgs.push(arg)
+      }
+
+      previousWasObject = TypeValidator.isFormattableObject(arg)
     }
 
     return processedArgs
@@ -108,15 +131,15 @@ export class ColorinoNode
     return false
   }
 
-  protected override _toAnsiPrefix(hex: string): string {
+  protected override toAnsiPrefix(hex: string): string {
     if (
-      this._colorLevel === ColorLevel.NO_COLOR ||
-      this._colorLevel === 'UnknownEnv'
+      this.colorLevel === ColorLevel.NO_COLOR ||
+      this.colorLevel === 'UnknownEnv'
     ) {
       return ''
     }
 
-    switch (this._colorLevel) {
+    switch (this.colorLevel) {
       case ColorLevel.TRUECOLOR: {
         const [r, g, b] = colorConverter.hex.toRgb(hex)
         return `\x1b[38;2;${r};${g};${b}m`
@@ -131,5 +154,28 @@ export class ColorinoNode
         return `\x1b[${code}m`
       }
     }
+  }
+
+  private _buildCallerStack(): string | undefined {
+    const error = new Error('Trace')
+
+    if (!error.stack) return undefined
+    const lines = error.stack.split('\n')
+    const stackFrames = lines.slice(1)
+
+    const filtered = stackFrames.filter(line => {
+      const lower = line.toLowerCase()
+      return !lower.includes('colorino')
+    })
+
+    return filtered.join('\n')
+  }
+
+  private _formatErrorWithAnsiPrefix(error: Error, ansiPrefix: string): string {
+    const errorHeader = `${error.name}: ${error.message}`
+    const stackFrames = error.stack
+      ? this.filterStack(error.stack).split('\n').slice(1).join('\n')
+      : ''
+    return `${ansiPrefix}${errorHeader}${stackFrames ? `\n${stackFrames}` : ''}\x1b[0m`
   }
 }

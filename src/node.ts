@@ -23,13 +23,10 @@ export function createColorino(
 
   const nodeDetector = new NodeColorSupportDetector(
     process,
-    detectorThemeOverride,
-    options.disableOscProbe ?? false
+    detectorThemeOverride
   )
   const detectedTerminalTheme =
-    themeOpt === 'auto' && !options.disableOscProbe
-      ? nodeDetector.getTheme()
-      : 'unknown'
+    themeOpt === 'auto' ? nodeDetector.getTheme() : 'unknown'
 
   const baseThemeName = determineBaseTheme(themeOpt, detectedTerminalTheme)
   const basePalette = themePalettes[baseThemeName]

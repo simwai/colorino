@@ -160,13 +160,11 @@ myLogger.info('Rebranded info!')
 | Option            | Type                      | Default  | Description                                                                |
 | ----------------- | ------------------------- | -------- | -------------------------------------------------------------------------- |
 | `theme`           | `ThemeOption` (see below) | `'auto'` | Control the active color theme or force a specific mode.                   |
-| `disableOscProbe` | `boolean`                 | `false`  | Disable OSC 11 terminal theme probing (use only env heuristics for theme). |
 | `maxDepth`        | `number`                  | `5`      | Maximum depth when pretty-printing objects in log output.                  |
 
 **`theme` accepts three types of values:**
 
-1. **`'auto'`** (Default): Automatically detects your terminal or browser theme (dark/light) and applies the matching default preset.  
-   When combined with `disableOscProbe: true`, only environment variables are used for theme detection (no OSC 11 probe).
+1. **`'auto'`** (Default): Automatically detects your terminal or browser theme (dark/light) and applies the matching default preset. (Pls use Terminal on Windows if you wanna use this.)
 2. **`'dark' | 'light'`**: Forces the logger into a specific mode using the default preset for that mode.
 3. **`ThemeName`**: Forces a specific built-in palette (e.g., `'dracula'`).
 

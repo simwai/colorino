@@ -66,8 +66,36 @@ export class TypeValidator {
       TypeValidator.isObject(value) &&
       !TypeValidator.isError(value) &&
       !TypeValidator.isBrowserColorizedArg(value) &&
-      !TypeValidator.isString(value) // Treat String objects as strings, not general objects
+      !TypeValidator.isString(value)
     )
+  }
+
+  static isStackLikeString(value: unknown): value is string {
+    if (!TypeValidator.isString(value)) return false
+
+    const text = value.toString()
+    if (!text.includes('\n')) return false
+
+    const lines = text.split('\n').map(line => line.trim())
+    let stackFrameLines = 0
+
+    for (const line of lines) {
+      if (!line) continue
+
+      // Typical Node / browser stack lines start with "at "
+      if (line.startsWith('at ')) {
+        stackFrameLines++
+      } else if (line.match(/:\d+:\d+\)?$/)) {
+        // Fallback: "file.js:10:5" style
+        stackFrameLines++
+      }
+
+      if (stackFrameLines >= 2) {
+        return true
+      }
+    }
+
+    return false
   }
 
   static isConsoleMethod(level: string): level is ConsoleMethod {
