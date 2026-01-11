@@ -157,10 +157,10 @@ myLogger.info('Rebranded info!')
 
 `createColorino(palette?, options?)` accepts:
 
-| Option            | Type                      | Default  | Description                                                                |
-| ----------------- | ------------------------- | -------- | -------------------------------------------------------------------------- |
-| `theme`           | `ThemeOption` (see below) | `'auto'` | Control the active color theme or force a specific mode.                   |
-| `maxDepth`        | `number`                  | `5`      | Maximum depth when pretty-printing objects in log output.                  |
+| Option     | Type                      | Default  | Description                                               |
+| ---------- | ------------------------- | -------- | --------------------------------------------------------- |
+| `theme`    | `ThemeOption` (see below) | `'auto'` | Control the active color theme or force a specific mode.  |
+| `maxDepth` | `number`                  | `5`      | Maximum depth when pretty-printing objects in log output. |
 
 **`theme` accepts three types of values:**
 
