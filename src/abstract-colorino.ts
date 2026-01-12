@@ -188,4 +188,15 @@ export abstract class AbstractColorino {
 
     return error
   }
+
+  protected buildCallerStack(): string | undefined {
+    const error = new Error('Trace')
+
+    if (!error.stack) return undefined
+
+    const lines = error.stack.split('\n')
+    const stackFrames = lines.slice(1).join('\n')
+
+    return this.filterStack(stackFrames)
+  }
 }

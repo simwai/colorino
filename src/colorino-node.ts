@@ -63,7 +63,7 @@ export class ColorinoNode
 
     const argsToProcess =
       consoleMethod === 'trace' && !hasErrorOrStack
-        ? [...args, this._buildCallerStack()]
+        ? [...args, this.buildCallerStack()]
         : args
 
     const paletteHex = this.palette[consoleMethod]
@@ -190,16 +190,5 @@ export class ColorinoNode
         return `\x1b[${code}m`
       }
     }
-  }
-
-  private _buildCallerStack(): string | undefined {
-    const error = new Error('Trace')
-
-    if (!error.stack) return undefined
-
-    const lines = error.stack.split('\n')
-    const stackFrames = lines.slice(1).join('\n')
-
-    return this.filterStack(stackFrames)
   }
 }

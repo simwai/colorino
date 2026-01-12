@@ -74,7 +74,7 @@ export class ColorinoBrowser
     const argsToProcess =
       consoleMethod === 'trace' && !hasErrorOrStack
         ? (() => {
-            const stack = this._buildCallerStack()
+            const stack = this.buildCallerStack()
             return stack ? [...args, stack] : args
           })()
         : args
@@ -194,16 +194,5 @@ export class ColorinoBrowser
     }
 
     return parts.join(';')
-  }
-
-  private _buildCallerStack(): string | undefined {
-    const error = new Error('Trace')
-    if (!error.stack) return undefined
-
-    const lines = error.stack.split('\n')
-    const stackFrames = lines.slice(1).join('\n')
-    const filtered = this.filterStack(stackFrames)
-
-    return filtered || undefined
   }
 }
