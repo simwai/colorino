@@ -116,7 +116,26 @@ export class ColorinoNode
           continue
         }
 
-        formattedArgs.push(`\n${filtered}`)
+        const lines = filtered.split('\n')
+        const firstLine = lines[0] || ''
+        const isErrorHeader =
+          firstLine.includes('Error') && firstLine.includes(':')
+
+        if (isErrorHeader) {
+          const coloredHeader = ansiPrefix
+            ? `${ansiPrefix}${firstLine}\x1b[0m`
+            : firstLine
+          const stackFrames = lines.slice(1).join('\n')
+
+          if (stackFrames) {
+            formattedArgs.push(`\n${coloredHeader}\n${stackFrames}`)
+          } else {
+            formattedArgs.push(`\n${coloredHeader}`)
+          }
+        } else {
+          formattedArgs.push(`\n${filtered}`)
+        }
+
         previousWasObject = true
         continue
       }
