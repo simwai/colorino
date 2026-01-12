@@ -1,6 +1,5 @@
 import {
   type Palette,
-  type LogLevel,
   ConsoleMethod,
   ColorinoBrowserColorized,
   BrowserColorizedArg,
@@ -12,7 +11,6 @@ import { ColorLevel } from './enums.js'
 import { TypeValidator } from './type-validator.js'
 
 export abstract class AbstractColorino {
-  protected alreadyWarned = false
   protected colorLevel: ColorLevel | 'UnknownEnv'
   protected palette: Palette
 
@@ -30,23 +28,35 @@ export abstract class AbstractColorino {
 
     this.colorLevel = colorLevel
   }
+
   log(...args: unknown[]): void {
-    this.out('log', args)
+    const formatted = this.formatArgs('log', args)
+    console.log(...formatted)
   }
+
   info(...args: unknown[]): void {
-    this.out('info', args)
+    const formatted = this.formatArgs('info', args)
+    console.info(...formatted)
   }
+
   warn(...args: unknown[]): void {
-    this.out('warn', args)
+    const formatted = this.formatArgs('warn', args)
+    console.warn(...formatted)
   }
+
   error(...args: unknown[]): void {
-    this.out('error', args)
+    const formatted = this.formatArgs('error', args)
+    console.error(...formatted)
   }
+
   trace(...args: unknown[]): void {
-    this.out('trace', args)
+    const formatted = this.formatArgs('trace', args)
+    console.log(...formatted)
   }
+
   debug(...args: unknown[]): void {
-    this.out('debug', args)
+    const formatted = this.formatArgs('debug', args)
+    console.debug(...formatted)
   }
 
   colorize(text: string, hex: string): string | BrowserColorizedArg {
@@ -71,13 +81,13 @@ export abstract class AbstractColorino {
     return `${ansiPrefix}${text}\x1b[0m`
   }
 
-  protected abstract applyColors(
+  protected abstract formatArgs(
     consoleMethod: ConsoleMethod,
     args: unknown[]
   ): unknown[]
 
-  protected abstract processArgs(args: unknown[]): unknown[]
   protected abstract isBrowser(): boolean
+
   protected abstract gradient(
     text: string,
     startHex: string,
@@ -174,27 +184,8 @@ export abstract class AbstractColorino {
     if (!error.stack) return error
 
     const cleanStack = this.filterStack(error.stack)
+    error.stack = cleanStack
 
-    const cloned = Object.create(Object.getPrototypeOf(error)) as Error
-    Object.assign(cloned, error)
-    cloned.stack = cleanStack
-
-    return cloned
-  }
-
-  protected out(level: LogLevel, args: unknown[]): void {
-    const consoleMethod = TypeValidator.isConsoleMethod(level) ? level : 'log'
-    const processedArgs = this.processArgs(args)
-
-    if (
-      this.colorLevel === ColorLevel.NO_COLOR ||
-      this.colorLevel === 'UnknownEnv'
-    ) {
-      console[consoleMethod](...processedArgs)
-      return
-    }
-
-    const coloredArgs = this.applyColors(consoleMethod, processedArgs)
-    console[consoleMethod](...coloredArgs)
+    return error
   }
 }

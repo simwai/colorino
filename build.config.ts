@@ -56,11 +56,12 @@ export default defineBuildConfig([
     failOnWarn: false,
   },
 
-  // --- 3. CDN: ESM Builds (Fat, Bundled) ---
+  // --- 3a. CDN: ESM Regular ---
   {
     name: 'cdn-esm',
     entries: ['src/browser'],
     declaration: false,
+    sourcemap: true,
     rollup: {
       inlineDependencies: true,
     },
@@ -74,6 +75,26 @@ export default defineBuildConfig([
             format: 'esm',
             sourcemap: true,
           },
+        ]
+      },
+    },
+    failOnWarn: false,
+  },
+
+  // --- 3b. CDN: ESM Minified ---
+  {
+    name: 'cdn-esm-min',
+    entries: ['src/browser'],
+    declaration: false,
+    sourcemap: false,
+    rollup: {
+      inlineDependencies: true,
+    },
+    hooks: {
+      'rollup:options'(_ctx, options) {
+        options.external = id => id.startsWith('node:')
+        options.input = 'src/browser.ts'
+        options.output = [
           {
             file: 'dist/cdn.min.mjs',
             format: 'esm',
@@ -87,11 +108,12 @@ export default defineBuildConfig([
     failOnWarn: false,
   },
 
-  // --- 4. CDN: UMD Builds (Fat, Bundled) ---
+  // --- 4a. CDN: UMD Regular ---
   {
     name: 'cdn-umd',
     entries: ['src/browser-umd.ts'],
     declaration: false,
+    sourcemap: true,
     rollup: {
       inlineDependencies: true,
     },
@@ -107,12 +129,32 @@ export default defineBuildConfig([
             exports: 'default',
             sourcemap: true,
           },
+        ]
+      },
+    },
+    failOnWarn: false,
+  },
+
+  // --- 4b. CDN: UMD Minified ---
+  {
+    name: 'cdn-umd-min',
+    entries: ['src/browser-umd.ts'],
+    declaration: false,
+    sourcemap: false,
+    rollup: {
+      inlineDependencies: true,
+    },
+    hooks: {
+      'rollup:options'(_ctx, options) {
+        options.external = id => id.startsWith('node:')
+        options.input = 'src/browser-umd.ts'
+        options.output = [
           {
             file: 'dist/cdn.min.js',
             format: 'umd',
             name: 'colorino',
             exports: 'default',
-            sourcemap: true,
+            sourcemap: false,
             // @ts-ignore
             plugins: [terser(terserOptions)],
           },

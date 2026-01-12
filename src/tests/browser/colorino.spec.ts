@@ -8,7 +8,7 @@ type ConsoleSpies = {
   error: ReturnType<typeof vi.spyOn>
   info: ReturnType<typeof vi.spyOn>
   debug: ReturnType<typeof vi.spyOn>
-  trace?: ReturnType<typeof vi.spyOn>
+  trace: ReturnType<typeof vi.spyOn>
 }
 
 interface BrowserColorinoFixtures {
@@ -16,7 +16,6 @@ interface BrowserColorinoFixtures {
 }
 
 const test = baseTest.extend<BrowserColorinoFixtures>({
-  // eslint-disable-next-line
   mocks: async ({}, use) => {
     const spies: ConsoleSpies = {
       log: vi.spyOn(console, 'log').mockImplementation(() => {}),
@@ -56,7 +55,7 @@ describe('Colorino - Real Browser - Unit Test', () => {
     logger.log('Object data:', testObject)
 
     expect(mocks.log).toHaveBeenCalledWith(
-      '%cObject data:%o',
+      '%cObject data: \n%o',
       'color:#ffffff',
       testObject
     )
@@ -90,7 +89,7 @@ describe('Colorino - Real Browser - Unit Test', () => {
     logger.log(override, 'normal')
 
     expect(mocks.log).toHaveBeenCalledWith(
-      '%cOVERRIDE%cnormal',
+      '%cOVERRIDE %cnormal',
       'color:#ff5733',
       'color:#ffffff'
     )
@@ -107,7 +106,7 @@ describe('Colorino - Real Browser - Unit Test', () => {
 
     expect(mocks.log).toHaveBeenNthCalledWith(
       1,
-      '%cOVERRIDE%cfirst',
+      '%cOVERRIDE %cfirst',
       'color:#ff5733',
       'color:#00ff00'
     )
@@ -128,7 +127,7 @@ describe('Colorino - Real Browser - Unit Test', () => {
     logger.log('pre', first, 'mid', meta, second, 'post')
 
     expect(mocks.log).toHaveBeenCalledWith(
-      '%cpre%cFIRST%cmid%o%cSECOND%cpost',
+      '%cpre %cFIRST %cmid \n%o %cSECOND %cpost',
       'color:#00ff00',
       'color:#ff0000',
       'color:#00ff00',
@@ -144,11 +143,12 @@ describe('Colorino - Real Browser - Unit Test', () => {
 
     logger.trace('Trace message', meta)
 
-    expect(mocks.trace).toHaveBeenCalledWith(
-      '%cTrace message%o',
-      'color:#ff00ff',
-      meta
-    )
+    const call = mocks.log.mock.calls[0]
+    expect(call[0]).toBe('%cTrace message \n%o \n%s')
+    expect(call[1]).toBe('color:#ff00ff')
+    expect(call[2]).toEqual(meta)
+    expect(call[3]).toBeTypeOf('string')
+    expect(call[3]).toContain('at ')
   })
 
   test('combines css(), colorize(), palette strings and objects in order', ({
@@ -163,7 +163,7 @@ describe('Colorino - Real Browser - Unit Test', () => {
     logger.log('pre', cssStyled, 'mid', meta, override, 'post')
 
     expect(mocks.log).toHaveBeenCalledWith(
-      '%cpre%cCSS%cmid%o%cOVR%cpost',
+      '%cpre %cCSS %cmid \n%o %cOVR %cpost',
       'color:#00ff00',
       'color:orange',
       'color:#00ff00',
@@ -181,7 +181,7 @@ describe('Colorino - Real Browser - Unit Test', () => {
     logger.log(styled, 'plain')
 
     expect(mocks.log).toHaveBeenCalledWith(
-      '%cRaw%cplain',
+      '%cRaw %cplain',
       'color:blue; text-decoration:underline;',
       'color:#00ff00'
     )
@@ -227,7 +227,7 @@ describe('Colorino - Real Browser - Unit Test', () => {
     logger.log('Before', gradient, 'After')
 
     const call = mocks.log.mock.calls[0]
-    expect(call[0]).toBe('%cBefore%cGRAD%cAfter')
+    expect(call[0]).toBe('%cBefore %cGRAD %cAfter')
     expect(call[1]).toBe('color:#ffffff')
     expect(call[2]).toContain('background: linear-gradient')
     expect(call[3]).toBe('color:#ffffff')
@@ -256,8 +256,6 @@ describe('Colorino - Real Browser - Unit Test', () => {
     expect(call[0]).toContain('GRAD')
     expect(call[0]).toContain('CSS')
   })
-
-  // eslint-disable-next-line
   test('returns plain text when NO_COLOR is simulated', ({}) => {
     const logger = createColorino(createTestPalette())
 

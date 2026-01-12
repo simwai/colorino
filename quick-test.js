@@ -2,13 +2,15 @@ import { createColorino } from './dist/node.mjs'
 
 const colorino = createColorino()
 
-console.log('\n--- ANSI Gradient Test ---')
-console.log(colorino.gradient('Hello Gradient World!', '#ff0000', '#0000ff'))
+console.log('\n--- Gradient Tests ---')
 console.log(colorino.gradient('█'.repeat(50), '#00ff00', '#ff00ff'))
 console.log(colorino.gradient('COLORINO', '#ffd700', '#ff1493'))
 
-// Standalone
+// Standalone gradient
 colorino.log(colorino.gradient('Hello!', '#ff0000', '#0000ff'))
+
+// Gradient with additional text
+colorino.log(colorino.gradient('Hello!', '#ff0000', '#0000ff'), 'second string')
 
 // Mixed with other text
 const title = colorino.gradient('COLORINO', '#ffd700', '#ff1493')
@@ -19,7 +21,12 @@ const badge = colorino.colorize('v2.0', '#00ff00')
 const brand = colorino.gradient('Colorino', '#ff6b6b', '#4ecdc4')
 colorino.log(brand, badge, 'shipped!')
 
-// Trace
+console.log('\n--- Trace Tests: Default (hide colorino, show node) ---')
+colorino.trace('test', new Error('TestoErroro'))
+colorino.trace('test', new Error('TestoErroro').stack)
+colorino.trace('test', { testo: 'objecto' })
+
+console.log('\n--- Trace Tests: Hide both ---')
 const colorino2 = createColorino(
   {},
   {
@@ -32,6 +39,7 @@ colorino2.trace('test', new Error('TestoErroro'))
 colorino2.trace('test', new Error('TestoErroro').stack)
 colorino2.trace('test', { testo: 'objecto' })
 
+console.log('\n--- Trace Tests: Hide node, show colorino ---')
 const colorino3 = createColorino(
   {},
   {
@@ -44,6 +52,7 @@ colorino3.trace('test', new Error('TestoErroro'))
 colorino3.trace('test', new Error('TestoErroro').stack)
 colorino3.trace('test', { testo: 'objecto' })
 
+console.log('\n--- Trace Tests: Show both ---')
 const colorino4 = createColorino(
   {},
   {

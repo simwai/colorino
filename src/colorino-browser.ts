@@ -2,7 +2,6 @@ import { AbstractColorino } from './abstract-colorino.js'
 import { ColorLevel } from './enums.js'
 import {
   ConsoleMethod,
-  ColorinoBrowserObject,
   Palette,
   BrowserCssArg,
   CssConsoleStyle,
@@ -55,7 +54,7 @@ export class ColorinoBrowser
       return text
     }
 
-    const css = this._normalizeCssStyle(style)
+    const css = this.normalizeCssStyle(style)
 
     return {
       [ColorinoBrowserCss]: true,
@@ -64,7 +63,121 @@ export class ColorinoBrowser
     }
   }
 
-  protected _normalizeCssStyle(style: CssConsoleStyle): string {
+  protected formatArgs(
+    consoleMethod: ConsoleMethod,
+    args: unknown[]
+  ): unknown[] {
+    const hasErrorOrStack = args.some(
+      arg => TypeValidator.isError(arg) || TypeValidator.isStackLikeString(arg)
+    )
+
+    const argsToProcess =
+      consoleMethod === 'trace' && !hasErrorOrStack
+        ? (() => {
+            const stack = this._buildCallerStack()
+            return stack ? [...args, stack] : args
+          })()
+        : args
+
+    const paletteHex = this.palette[consoleMethod]
+    const formatParts: string[] = []
+    const formatArgs: unknown[] = []
+    let previousWasObject = false
+
+    for (const arg of argsToProcess) {
+      if (TypeValidator.isBrowserColorizedArg(arg)) {
+        formatParts.push(`%c${arg.text}`)
+        formatArgs.push(`color:${arg.hex}`)
+        previousWasObject = false
+        continue
+      }
+
+      if (TypeValidator.isBrowserCssArg(arg)) {
+        formatParts.push(`%c${arg.text}`)
+        formatArgs.push(arg.css)
+        previousWasObject = false
+        continue
+      }
+
+      if (TypeValidator.isFormattableObject(arg)) {
+        if (previousWasObject) {
+          formatParts.push('%o')
+        } else {
+          formatParts.push('\n%o')
+        }
+
+        formatArgs.push(arg)
+        previousWasObject = true
+        continue
+      }
+
+      if (TypeValidator.isError(arg)) {
+        const cleaned = this.cleanErrorStack(arg)
+
+        if (
+          !cleaned.name.trim() ||
+          !cleaned.message.trim() ||
+          !cleaned.stack?.trim()
+        ) {
+          continue
+        }
+
+        const errorHeader = `${cleaned.name}: ${cleaned.message}`
+        const stackFrames = cleaned.stack.split('\n').slice(1).join('\n')
+
+        if (!previousWasObject) {
+          formatParts.push('\n%c%s')
+        } else {
+          formatParts.push('%c%s')
+        }
+
+        if (stackFrames) {
+          formatParts.push('\n%s')
+          formatArgs.push(`color:${paletteHex}`, errorHeader, stackFrames)
+        } else {
+          formatArgs.push(`color:${paletteHex}`, errorHeader)
+        }
+
+        previousWasObject = true
+        continue
+      }
+
+      if (TypeValidator.isStackLikeString(arg)) {
+        const filtered = this.filterStack(arg)
+
+        if (!filtered.trim()) {
+          continue
+        }
+
+        formatParts.push('\n%s')
+        formatArgs.push(filtered)
+        previousWasObject = true
+        continue
+      }
+
+      if (TypeValidator.isString(arg)) {
+        const spacedText = previousWasObject ? `\n${arg}` : arg
+        formatParts.push(`%c${spacedText}`)
+        formatArgs.push(`color:${paletteHex}`)
+        previousWasObject = false
+        continue
+      }
+
+      formatParts.push('%o')
+      formatArgs.push(arg)
+      previousWasObject = false
+    }
+
+    if (formatParts.length === 0) return argsToProcess
+
+    return [formatParts.join(' '), ...formatArgs]
+  }
+
+  protected isBrowser(): boolean {
+    return true
+  }
+
+  protected normalizeCssStyle(style: CssConsoleStyle): string {
     if (TypeValidator.isString(style)) return style
 
     const parts: string[] = []
@@ -83,95 +196,14 @@ export class ColorinoBrowser
     return parts.join(';')
   }
 
-  protected applyColors(
-    consoleMethod: ConsoleMethod,
-    args: unknown[]
-  ): unknown[] {
-    const formatParts: string[] = []
-    const formatArgs: unknown[] = []
+  private _buildCallerStack(): string | undefined {
+    const error = new Error('Trace')
+    if (!error.stack) return undefined
 
-    const paletteHex = this.palette[consoleMethod]
+    const lines = error.stack.split('\n')
+    const stackFrames = lines.slice(1).join('\n')
+    const filtered = this.filterStack(stackFrames)
 
-    for (const arg of args) {
-      if (TypeValidator.isBrowserColorizedArg(arg)) {
-        formatParts.push(`%c${arg.text}`)
-        formatArgs.push(`color:${arg.hex}`)
-        continue
-      }
-
-      if (TypeValidator.isBrowserCssArg(arg)) {
-        formatParts.push(`%c${arg.text}`)
-        formatArgs.push(arg.css)
-        continue
-      }
-
-      if (TypeValidator.isBrowserObjectArg(arg)) {
-        formatParts.push('%o')
-        formatArgs.push(arg.value)
-        continue
-      }
-
-      if (TypeValidator.isString(arg)) {
-        formatParts.push(`%c${arg}`)
-        formatArgs.push(`color:${paletteHex}`)
-        continue
-      }
-
-      // Fallback: non-string, non-wrapper → log as object
-      formatParts.push('%o')
-      formatArgs.push(arg)
-    }
-
-    if (formatParts.length === 0) return args
-
-    return [formatParts.join(''), ...formatArgs]
-  }
-
-  protected processArgs(args: unknown[]): unknown[] {
-    const processedArgs: unknown[] = []
-    let previousWasObject = false
-
-    for (const arg of args) {
-      if (
-        TypeValidator.isBrowserColorizedArg(arg) ||
-        TypeValidator.isBrowserCssArg(arg)
-      ) {
-        processedArgs.push(arg)
-        previousWasObject = false
-        continue
-      }
-
-      if (TypeValidator.isFormattableObject(arg)) {
-        processedArgs.push({
-          [ColorinoBrowserObject]: true,
-          value: arg,
-        })
-        previousWasObject = true
-        continue
-      }
-
-      if (TypeValidator.isError(arg)) {
-        processedArgs.push('\n', this.cleanErrorStack(arg))
-        previousWasObject = true
-        continue
-      }
-
-      if (TypeValidator.isStackLikeString(arg)) {
-        processedArgs.push('\n', arg)
-        previousWasObject = true
-        continue
-      }
-
-      processedArgs.push(
-        TypeValidator.isString(arg) && previousWasObject ? `\n${arg}` : arg
-      )
-      previousWasObject = false
-    }
-
-    return processedArgs
-  }
-
-  protected isBrowser(): boolean {
-    return true
+    return filtered || undefined
   }
 }

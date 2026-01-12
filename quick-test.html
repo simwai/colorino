@@ -1,27 +1,83 @@
-that works
-<!doctype html>
+<!DOCTYPE html>
 <html>
    
   <head>
-       
     <script src="./dist/cdn.min.js"></script>
        
     <script>
-      console.log(window)
-
-      colorino.info('Hello from the UMD bundle!')
-      colorino.error('Something went wrong')
+      colorino.info("Hello from the UMD bundle!");
+      colorino.error("Something went wrong");
     </script>
 
     <script type="module" src="./dist/cdn.min.mjs"></script>
        
     <script type="module">
-      import { colorino } from './dist/cdn.min.mjs'
+      import { createColorino } from "./dist/cdn.mjs";
 
-      console.log(window)
-      colorino.info('Hello from the UMD bundle!')
-      colorino.error('Something went wrong')
-      colorino.error('Something went wrong sheesh')
+      const colorino = createColorino();
+
+      // Standalone gradient
+      colorino.log(colorino.gradient("Hello!", "#ff0000", "#0000ff"));
+
+      // Gradient with additional text
+      colorino.log(
+        colorino.gradient("Hello!", "#ff0000", "#0000ff"),
+        "second string"
+      );
+
+      // Mixed with other text
+      const title = colorino.gradient("COLORINO", "#ffd700", "#ff1493");
+      colorino.info("Welcome to", title, "– the smart logger");
+
+      // Combine multiple effects
+      const badge = colorino.colorize("v2.0", "#00ff00");
+      const brand = colorino.gradient("Colorino", "#ff6b6b", "#4ecdc4");
+      colorino.log(brand, badge, "shipped!");
+
+      console.log("\n--- Trace Tests: Default (hide colorino, show node) ---");
+      colorino.trace("test");
+      colorino.trace("test", new Error("TestoErroro"));
+      colorino.trace("test", new Error("TestoErroro").stack);
+      colorino.trace("test", { testo: "objecto" });
+
+      console.log("\n--- Trace Tests: Hide both ---");
+      const colorino2 = createColorino(
+        {},
+        {
+          areNodeFramesVisible: false,
+          areColorinoFramesVisible: false,
+        }
+      );
+
+      colorino2.trace("test", new Error("TestoErroro"));
+      colorino2.trace("test", new Error("TestoErroro").stack);
+      colorino2.trace("test", { testo: "objecto" });
+
+      console.log("\n--- Trace Tests: Hide node, show colorino ---");
+      const colorino3 = createColorino(
+        {},
+        {
+          areNodeFramesVisible: false,
+          areColorinoFramesVisible: true,
+        }
+      );
+
+      colorino3.trace("test", new Error("TestoErroro"));
+      colorino3.trace("test", new Error("TestoErroro").stack);
+      colorino3.trace("test", { testo: "objecto" });
+
+      console.log("\n--- Trace Tests: Show both ---");
+      const colorino4 = createColorino(
+        {},
+        {
+          areNodeFramesVisible: true,
+          areColorinoFramesVisible: true,
+        }
+      );
+
+      colorino4.trace("test", new Error("TestoErroro"));
+      colorino4.trace("test", new Error("TestoErroro").stack);
+      colorino4.trace("test", { testo: "objecto" });
     </script>
      
   </head>

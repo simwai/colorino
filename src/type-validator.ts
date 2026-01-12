@@ -78,19 +78,23 @@ export class TypeValidator {
 
     const lines = text.split('\n').map(line => line.trim())
     let stackFrameLines = 0
+    let hasErrorHeader = false
 
     for (const line of lines) {
       if (!line) continue
 
-      // Typical Node / browser stack lines start with "at "
+      if (!hasErrorHeader && line.includes('Error')) {
+        hasErrorHeader = true
+        continue
+      }
+
       if (line.startsWith('at ')) {
         stackFrameLines++
       } else if (line.match(/:\d+:\d+\)?$/)) {
-        // Fallback: "file.js:10:5" style
         stackFrameLines++
       }
 
-      if (stackFrameLines >= 2) {
+      if (stackFrameLines >= 1) {
         return true
       }
     }
