@@ -20,6 +20,38 @@ const brand = colorino.gradient('Colorino', '#ff6b6b', '#4ecdc4')
 colorino.log(brand, badge, 'shipped!')
 
 // Trace
-colorino.trace('test', new Error('TestoErroro'))
-colorino.trace('test', new Error('TestoErroro').stack)
-colorino.trace('test', { testo: 'objecto' })
+const colorino2 = createColorino(
+  {},
+  {
+    areNodeFramesVisible: false,
+    areColorinoFramesVisible: false,
+  }
+)
+
+colorino2.trace('test', new Error('TestoErroro'))
+colorino2.trace('test', new Error('TestoErroro').stack)
+colorino2.trace('test', { testo: 'objecto' })
+
+const colorino3 = createColorino(
+  {},
+  {
+    areNodeFramesVisible: false,
+    areColorinoFramesVisible: true,
+  }
+)
+
+colorino3.trace('test', new Error('TestoErroro'))
+colorino3.trace('test', new Error('TestoErroro').stack)
+colorino3.trace('test', { testo: 'objecto' })
+
+const colorino4 = createColorino(
+  {},
+  {
+    areNodeFramesVisible: true,
+    areColorinoFramesVisible: true,
+  }
+)
+
+colorino4.trace('test', new Error('TestoErroro'))
+colorino4.trace('test', new Error('TestoErroro').stack)
+colorino4.trace('test', { testo: 'objecto' })

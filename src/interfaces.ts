@@ -9,6 +9,8 @@ import {
 export interface ColorinoOptions {
   theme?: TerminalTheme | ThemeName | 'auto'
   maxDepth?: number
+  areNodeFramesVisible?: boolean // Default: true
+  areColorinoFramesVisible?: boolean // Default: false
 }
 
 interface Colorino {

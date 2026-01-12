@@ -157,10 +157,12 @@ myLogger.info('Rebranded info!')
 
 `createColorino(palette?, options?)` accepts:
 
-| Option     | Type                      | Default  | Description                                               |
-| ---------- | ------------------------- | -------- | --------------------------------------------------------- |
-| `theme`    | `ThemeOption` (see below) | `'auto'` | Control the active color theme or force a specific mode.  |
-| `maxDepth` | `number`                  | `5`      | Maximum depth when pretty-printing objects in log output. |
+| Option                       | Type                      | Default | Description                                                                     |
+| ---------------------------- | ------------------------- | ------- | ------------------------------------------------------------------------------- |
+| `theme`                      | `ThemeOption` (see below) | `'auto'` | Control the active color theme or force a specific mode.                        |
+| `maxDepth`                   | `number`                  | `5`      | Maximum depth when pretty-printing objects in log output.                       |
+| `areNodeFramesVisible`       | `boolean`                 | `true`   | Show Node.js internal frames (e.g., `node:internal/...`) in stack traces.       |
+| `areColorinoFramesVisible`   | `boolean`                 | `false`  | Show Colorino internal frames in stack traces (useful for debugging Colorino).  |
 
 **`theme` accepts three types of values:**
 
@@ -259,16 +261,16 @@ myLogger.info('Still styled by theme.') // Uses the default theme color
 
 Colorino auto-detects your environment and color support, but you can override behavior using these standard environment variables (compatible with Chalk):
 
-| Variable         | Effect                                                                | Example                        |
-| ---------------- | --------------------------------------------------------------------- | ------------------------------ |
-| `NO_COLOR`       | Forces no color output                                                | `NO_COLOR=1 node app.js`       |
-| `FORCE_COLOR`    | Forces color level: `0`=off, `1`=ANSI‑16, `2`=ANSI‑256, `3`=Truecolor | `FORCE_COLOR=3 node app.js`    |
-| `CLICOLOR`       | `"0"` disables color                                                  | `CLICOLOR=0 node app.js`       |
-| `CLICOLOR_FORCE` | Non‑`"0"` value enables color even if not a TTY                       | `CLICOLOR_FORCE=1 node app.js` |
-| `TERM`           | Terminal type; may influence color support                            | `TERM=xterm-256color`          |
-| `COLORTERM`      | `'truecolor'` or `'24bit'` enables truecolor                          | `COLORTERM=truecolor`          |
-| `WT_SESSION`     | Enables color detection for Windows Terminal                          |                                |
-| `CI`             | Many CI platforms default to no color                                 | `CI=1 node app.js`             |
+| Variable         | What It Does                                                                                  | Example                        |
+|------------------|-----------------------------------------------------------------------------------------------|--------------------------------|
+| `NO_COLOR`       | Removes all colors from output (any value works)                                              | `NO_COLOR=1 node app.js`       |
+| `FORCE_COLOR`    | Override color detection: `0`=none, `1`=basic (16 colors), `2`=extended (256), `3`=full RGB  | `FORCE_COLOR=3 node app.js`    |
+| `CLICOLOR`       | Set to `0` to disable colors                                                                  | `CLICOLOR=0 node app.js`       |
+| `CLICOLOR_FORCE` | Set to `1` to force colors even when output is piped/redirected                               | `CLICOLOR_FORCE=1 node app.js` |
+| `TERM`           | Your terminal type (e.g., `xterm-256color` enables 256 colors) — auto-set by your terminal    | `TERM=xterm-256color`          |
+| `COLORTERM`      | Set to `truecolor` or `24bit` to enable full RGB colors — auto-set by modern terminals        | `COLORTERM=truecolor`          |
+| `WT_SESSION`     | Auto-set by Windows Terminal to enable advanced colors (don't set manually)                   | (automatic)                    |
+| `CI`             | Auto-set by GitHub Actions, GitLab CI, etc. to disable colors in build logs                   | `CI=true`                      |
 
 ### <a id="5-6"></a>Colorize Helper (Manual Overrides) (`colorize(text, hex)`)
 
@@ -366,6 +368,8 @@ import {
   type Palette,
 } from 'colorino'
 
+type ColorinoType =  ReturnType<typeof createColorino>
+
 function getCallerContext(): string {
   const err = new Error()
   if (!err.stack) return 'unknown'
@@ -389,11 +393,11 @@ function getCallerContext(): string {
 export function createContextLogger(
   palette?: Partial<Palette>,
   options?: ColorinoOptions
-): ReturnType<typeof createColorino> {
+): ColorinoType {
   const base = createColorino(palette, options)
 
   // Inherit all default methods from the base logger...
-  const logger = Object.create(base) as ReturnType<typeof createColorino> // Object.create uses `base` as the prototype.
+  const logger = Object.create(base) as ColorinoType // Object.create uses `base` as the prototype.
 
   // ...and override only what you need.
   Object.assign(logger, {

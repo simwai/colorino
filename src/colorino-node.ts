@@ -22,9 +22,9 @@ export class ColorinoNode
 
   public override trace(...args: unknown[]): void {
     const hasErrorOrStack = args.some(
-      arg => arg instanceof Error || TypeValidator.isStackLikeString(arg)
+      arg => TypeValidator.isError(arg) || TypeValidator.isStackLikeString(arg)
     )
-    const stack = !hasErrorOrStack ? this._buildCallerStack() : undefined
+    const stack = hasErrorOrStack ? undefined : this._buildCallerStack()
     const coloredArgs = args.map(arg => {
       if (
         TypeValidator.isString(arg) &&
@@ -160,15 +160,11 @@ export class ColorinoNode
     const error = new Error('Trace')
 
     if (!error.stack) return undefined
+
     const lines = error.stack.split('\n')
-    const stackFrames = lines.slice(1)
+    const stackFrames = lines.slice(1).join('\n')
 
-    const filtered = stackFrames.filter(line => {
-      const lower = line.toLowerCase()
-      return !lower.includes('colorino')
-    })
-
-    return filtered.join('\n')
+    return this.filterStack(stackFrames)
   }
 
   private _formatErrorWithAnsiPrefix(error: Error, ansiPrefix: string): string {

@@ -135,6 +135,10 @@ export abstract class AbstractColorino {
   }
 
   protected filterStack(inputStack: string | Error | undefined): string {
+    const areNodeFramesShown = this.options.areNodeFramesVisible ?? true
+    const areColorinoFramesShown =
+      this.options.areColorinoFramesVisible ?? false
+
     const stack = TypeValidator.isError(inputStack)
       ? inputStack.stack
       : TypeValidator.isStackLikeString(inputStack)
@@ -142,13 +146,28 @@ export abstract class AbstractColorino {
         : ''
     if (!stack) return ''
 
-    return stack
-      .split('\n')
-      .filter(line => {
-        const lower = line.toLowerCase()
-        return !lower.includes('colorino')
-      })
-      .join('\n')
+    const lines = stack.split('\n')
+    const firstLine = lines[0] || ''
+
+    const isErrorHeader = !firstLine.trim().startsWith('at ')
+    const startIndex = isErrorHeader ? 1 : 0
+
+    const filtered = lines.slice(startIndex).filter(line => {
+      const lower = line.toLowerCase()
+
+      if (
+        (!areColorinoFramesShown && lower.includes('colorino')) ||
+        (!areNodeFramesShown && lower.includes('node:'))
+      ) {
+        return false
+      }
+
+      return true
+    })
+
+    return isErrorHeader
+      ? [firstLine, ...filtered].join('\n')
+      : filtered.join('\n')
   }
 
   protected cleanErrorStack(error: Error): Error {
