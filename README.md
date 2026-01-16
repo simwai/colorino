@@ -157,12 +157,12 @@ myLogger.info('Rebranded info!')
 
 `createColorino(palette?, options?)` accepts:
 
-| Option                     | Type                      | Default  | Description                                                                                       |
-| -------------------------- | ------------------------- | -------- | ------------------------------------------------------------------------------------------------- |
-| `theme`                    | `ThemeOption` (see below) | `'auto'` | Control the active color theme or force a specific mode.                                          |
-| `maxDepth`                 | `number`                  | `5`      | Maximum depth when pretty-printing objects in log output.                                         |
-| `areNodeFramesVisible`     | `boolean`                 | `true`   | Show Node.js internal frames (e.g., `node:internal/...`) in stack traces.                         |
-| `areColorinoFramesVisible` | `boolean`                 | `false`  | Show Colorino internal frames in stack traces (useful for debugging Colorino).                    |
+| Option                     | Type                      | Default  | Description                                                                                                                                  |
+| -------------------------- | ------------------------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `theme`                    | `ThemeOption` (see below) | `'auto'` | Control the active color theme or force a specific mode.                                                                                     |
+| `maxDepth`                 | `number`                  | `5`      | Maximum depth when pretty-printing objects in log output.                                                                                    |
+| `areNodeFramesVisible`     | `boolean`                 | `true`   | Show Node.js internal frames (e.g., `node:internal/...`) in stack traces.                                                                    |
+| `areColorinoFramesVisible` | `boolean`                 | `false`  | Show Colorino internal frames in stack traces (useful for debugging Colorino).                                                               |
 | `isOsc11Enabled`           | `boolean`                 | `true`   | Enables auto light/dark theme detection, but can eventually lead to crashes/unwanted behaviour. Then, just set this env variable to `false`. |
 
 **`theme` accepts three types of values:**
