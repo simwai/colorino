@@ -157,13 +157,13 @@ myLogger.info('Rebranded info!')
 
 `createColorino(palette?, options?)` accepts:
 
-| Option                     | Type                      | Default  | Description                                                                    |
-| -------------------------- | ------------------------- | -------- | ------------------------------------------------------------------------------ |
-| `theme`                    | `ThemeOption` (see below) | `'auto'` | Control the active color theme or force a specific mode.                       |
-| `maxDepth`                 | `number`                  | `5`      | Maximum depth when pretty-printing objects in log output.                      |
-| `areNodeFramesVisible`     | `boolean`                 | `true`   | Show Node.js internal frames (e.g., `node:internal/...`) in stack traces.      |
-| `areColorinoFramesVisible` | `boolean`                 | `false`  | Show Colorino internal frames in stack traces (useful for debugging Colorino). |
-| `isOsc11Enabled` | `boolean`                 | `true`  | Enables auto light/dark theme detection, but can eventually lead to crashes/unwatented behaviour. |
+| Option                     | Type                      | Default  | Description                                                                                       |
+| -------------------------- | ------------------------- | -------- | ------------------------------------------------------------------------------------------------- |
+| `theme`                    | `ThemeOption` (see below) | `'auto'` | Control the active color theme or force a specific mode.                                          |
+| `maxDepth`                 | `number`                  | `5`      | Maximum depth when pretty-printing objects in log output.                                         |
+| `areNodeFramesVisible`     | `boolean`                 | `true`   | Show Node.js internal frames (e.g., `node:internal/...`) in stack traces.                         |
+| `areColorinoFramesVisible` | `boolean`                 | `false`  | Show Colorino internal frames in stack traces (useful for debugging Colorino).                    |
+| `isOsc11Enabled`           | `boolean`                 | `true`   | Enables auto light/dark theme detection, but can eventually lead to crashes/unwatented behaviour. |
 
 **`theme` accepts three types of values:**
 
@@ -262,18 +262,18 @@ myLogger.info('Still styled by theme.') // Uses the default theme color
 
 Colorino auto-detects your environment and color support, but you can override behavior using these standard environment variables (compatible with Chalk):
 
-| Variable         | What It Does                                                                                | Example                        |
-| ---------------- | ------------------------------------------------------------------------------------------- | ------------------------------ |
-| `NO_COLOR`       | Removes all colors from output (any value works)                                            | `NO_COLOR=1 node app.js`       |
-| `FORCE_COLOR`    | Override color detection: `0`=none, `1`=basic (16 colors), `2`=extended (256), `3`=full RGB | `FORCE_COLOR=3 node app.js`    |
-| `CLICOLOR`       | Set to `0` to disable colors                                                                | `CLICOLOR=0 node app.js`       |
-| `CLICOLOR_FORCE` | Set to `1` to force colors even when output is piped/redirected                             | `CLICOLOR_FORCE=1 node app.js` |
-| `TERM`           | Your terminal type (e.g., `xterm-256color` enables 256 colors) — auto-set by your terminal  | `TERM=xterm-256color`          |
-| `COLORTERM`      | Set to `truecolor` or `24bit` to enable full RGB colors — auto-set by modern terminals      | `COLORTERM=truecolor`          |
-| `TERM_PROGRAM`   | Terminal program name (e.g., `WezTerm`, `iTerm2`) — auto-set by terminals for OSC 11 support | (automatic)                    |
-| `VTE_VERSION`    | VTE library version — auto-set by GNOME Terminal and VTE-based terminals for OSC 11 detection | (automatic)                    |
+| Variable         | What It Does                                                                                           | Example                        |
+| ---------------- | ------------------------------------------------------------------------------------------------------ | ------------------------------ | --- |
+| `NO_COLOR`       | Removes all colors from output (any value works)                                                       | `NO_COLOR=1 node app.js`       |
+| `FORCE_COLOR`    | Override color detection: `0`=none, `1`=basic (16 colors), `2`=extended (256), `3`=full RGB            | `FORCE_COLOR=3 node app.js`    |
+| `CLICOLOR`       | Set to `0` to disable colors                                                                           | `CLICOLOR=0 node app.js`       |
+| `CLICOLOR_FORCE` | Set to `1` to force colors even when output is piped/redirected                                        | `CLICOLOR_FORCE=1 node app.js` |
+| `TERM`           | Your terminal type (e.g., `xterm-256color` enables 256 colors) — auto-set by your terminal             | `TERM=xterm-256color`          |
+| `COLORTERM`      | Set to `truecolor` or `24bit` to enable full RGB colors — auto-set by modern terminals                 | `COLORTERM=truecolor`          |
+| `TERM_PROGRAM`   | Terminal program name (e.g., `WezTerm`, `iTerm2`) — auto-set by terminals for OSC 11 support           | (automatic)                    |
+| `VTE_VERSION`    | VTE library version — auto-set by GNOME Terminal and VTE-based terminals for OSC 11 detection          | (automatic)                    |
 | `WT_SESSION`     | Auto-set by Windows Terminal to enable advanced colors and OSC 11 theme detection (don't set manually) | (automatic)                    |
-| `CI`             | Auto-set by GitHub Actions, GitLab CI, etc. to disable colors in build logs                 | `CI=true`                      |              |
+| `CI`             | Auto-set by GitHub Actions, GitLab CI, etc. to disable colors in build logs                            | `CI=true`                      |     |
 
 ### <a id="5-6"></a>Colorize Helper (Manual Overrides) (`colorize(text, hex)`)
 
