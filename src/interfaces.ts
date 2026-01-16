@@ -11,6 +11,7 @@ export interface ColorinoOptions {
   maxDepth?: number
   areNodeFramesVisible?: boolean // Default: true
   areColorinoFramesVisible?: boolean // Default: false
+  isOsc11Enabled?: boolean // Default: true
 }
 
 interface Colorino {

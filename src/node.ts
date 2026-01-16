@@ -23,7 +23,8 @@ export function createColorino(
 
   const nodeDetector = new NodeColorSupportDetector(
     process,
-    detectorThemeOverride
+    detectorThemeOverride,
+    options.isOsc11Enabled
   )
   const detectedTerminalTheme =
     themeOpt === 'auto' ? nodeDetector.getTheme() : 'unknown'

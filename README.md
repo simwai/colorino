@@ -163,6 +163,7 @@ myLogger.info('Rebranded info!')
 | `maxDepth`                 | `number`                  | `5`      | Maximum depth when pretty-printing objects in log output.                      |
 | `areNodeFramesVisible`     | `boolean`                 | `true`   | Show Node.js internal frames (e.g., `node:internal/...`) in stack traces.      |
 | `areColorinoFramesVisible` | `boolean`                 | `false`  | Show Colorino internal frames in stack traces (useful for debugging Colorino). |
+| `isOsc11Enabled` | `boolean`                 | `true`  | Enables auto light/dark theme detection, but can eventually lead to crashes/unwatented behaviour. |
 
 **`theme` accepts three types of values:**
 
@@ -269,8 +270,10 @@ Colorino auto-detects your environment and color support, but you can override b
 | `CLICOLOR_FORCE` | Set to `1` to force colors even when output is piped/redirected                             | `CLICOLOR_FORCE=1 node app.js` |
 | `TERM`           | Your terminal type (e.g., `xterm-256color` enables 256 colors) — auto-set by your terminal  | `TERM=xterm-256color`          |
 | `COLORTERM`      | Set to `truecolor` or `24bit` to enable full RGB colors — auto-set by modern terminals      | `COLORTERM=truecolor`          |
-| `WT_SESSION`     | Auto-set by Windows Terminal to enable advanced colors (don't set manually)                 | (automatic)                    |
-| `CI`             | Auto-set by GitHub Actions, GitLab CI, etc. to disable colors in build logs                 | `CI=true`                      |
+| `TERM_PROGRAM`   | Terminal program name (e.g., `WezTerm`, `iTerm2`) — auto-set by terminals for OSC 11 support | (automatic)                    |
+| `VTE_VERSION`    | VTE library version — auto-set by GNOME Terminal and VTE-based terminals for OSC 11 detection | (automatic)                    |
+| `WT_SESSION`     | Auto-set by Windows Terminal to enable advanced colors and OSC 11 theme detection (don't set manually) | (automatic)                    |
+| `CI`             | Auto-set by GitHub Actions, GitLab CI, etc. to disable colors in build logs                 | `CI=true`                      |              |
 
 ### <a id="5-6"></a>Colorize Helper (Manual Overrides) (`colorize(text, hex)`)
 
