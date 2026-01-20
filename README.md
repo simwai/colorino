@@ -3,7 +3,6 @@
 [![npm](https://img.shields.io/npm/v/colorino?color=8B5CF6&logo=npm&logoColor=white)](https://www.npmjs.com/package/colorino)
 [![License](https://img.shields.io/npm/l/colorino?color=8B5CF6)](https://github.com/simwai/colorino/blob/master/LICENSE.MD)
 [![npm downloads](https://img.shields.io/npm/dm/colorino?color=8B5CF6&logo=npm&logoColor=white)](https://www.npmjs.com/package/colorino)
-[![Minzipped](https://img.shields.io/bundlephobia/minzip/colorino?color=8B5CF6)](https://bundlephobia.com/result?p=colorino)
 [![Vitest](https://img.shields.io/badge/Test-Vitest-8B5CF6?logo=vitest&logoColor=white)](https://vitest.dev/)
 
 **The zero‑configuration, context‑aware `console` logger for Node.js and the browser—with smart theming and graceful color degradation.**
