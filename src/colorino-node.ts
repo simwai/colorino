@@ -112,9 +112,7 @@ export class ColorinoNode
       if (TypeValidator.isStackLikeString(arg)) {
         const filtered = this.filterStack(arg)
 
-        if (!filtered.trim()) {
-          continue
-        }
+        if (!filtered.trim()) continue
 
         const lines = filtered.split('\n')
         const firstLine = lines[0] || ''
