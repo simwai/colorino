@@ -6,6 +6,9 @@ import {
   BrowserCssArg,
   CssConsoleStyle,
   ColorinoBrowserCss,
+  LogLevel,
+  FormattedTag,
+  CallSiteInfo,
 } from './types.js'
 import { ColorinoBrowserInterface, ColorinoOptions } from './interfaces.js'
 import { TypeValidator } from './type-validator.js'
@@ -63,9 +66,14 @@ export class ColorinoBrowser
     }
   }
 
+  protected writeToFile(_level: LogLevel, _args: unknown[], _caller?: CallSiteInfo): void {
+    // No-op in browser
+  }
+
   protected formatArgs(
     consoleMethod: ConsoleMethod,
-    args: unknown[]
+    args: unknown[],
+    tags: FormattedTag[]
   ): unknown[] {
     const hasErrorOrStack = args.some(
       arg => TypeValidator.isError(arg) || TypeValidator.isStackLikeString(arg)
@@ -82,6 +90,13 @@ export class ColorinoBrowser
     const paletteHex = this.palette[consoleMethod]
     const formatParts: string[] = []
     const formatArgs: unknown[] = []
+    const { prefix, postfix } = this.partitionTags(tags)
+
+    for (const tag of prefix) {
+      formatParts.push('%c%s')
+      formatArgs.push(`color:${paletteHex}`, tag.text)
+    }
+
     let previousWasObject = false
 
     for (const arg of argsToProcess) {
@@ -166,6 +181,11 @@ export class ColorinoBrowser
       formatParts.push('%o')
       formatArgs.push(arg)
       previousWasObject = false
+    }
+
+    for (const tag of postfix) {
+      formatParts.push('%c %s')
+      formatArgs.push(`color:${paletteHex}`, tag.text)
     }
 
     if (formatParts.length === 0) return argsToProcess

@@ -1,16 +1,27 @@
+import * as fs from 'node:fs'
+import * as path from 'node:path'
 import { AbstractColorino } from './abstract-colorino.js'
 import { ColorLevel } from './enums.js'
-import { ConsoleMethod } from './types.js'
+import {
+  ConsoleMethod,
+  Palette,
+  LogLevel,
+  FormattedTag,
+  CallSiteInfo,
+  LOG_LEVEL_PRIORITY,
+} from './types.js'
+import { ColorinoNodeInterface, ColorinoOptions } from './interfaces.js'
 import { TypeValidator } from './type-validator.js'
 import { colorConverter } from './color-converter.js'
-import { Palette } from './types.js'
-import { ColorinoNodeInterface, ColorinoOptions } from './interfaces.js'
 import { InputValidator } from './input-validator.js'
 
 export class ColorinoNode
   extends AbstractColorino
   implements ColorinoNodeInterface
 {
+  private logQueue: string[] = []
+  private isWriting = false
+
   constructor(
     initialPalette: Palette,
     userPalette: Partial<Palette>,
@@ -53,9 +64,73 @@ export class ColorinoNode
     )
   }
 
+  protected writeToFile(level: LogLevel, args: unknown[], caller?: CallSiteInfo): void {
+    const config = this.options.fileLogging
+    if (!config?.isEnabled) return
+
+    const fileMin = config.minLevel ?? this.options.logLevel?.min ?? 'trace'
+    if (LOG_LEVEL_PRIORITY[level] < LOG_LEVEL_PRIORITY[fileMin]) return
+
+    const timestamp = new Date().toISOString()
+    const message = args.map(arg => {
+      if (TypeValidator.isError(arg)) return `${arg.name}: ${arg.message}\n${arg.stack}`
+      if (TypeValidator.isObject(arg)) return this.formatValue(arg)
+      return String(arg)
+    }).join(' ')
+
+    let line = `${timestamp} [${level}] ${message}`
+
+    const metaConfig = this.options.metadata?.callSite
+    const isEnabledDefault = true
+    const isEnabled = metaConfig?.isEnabled ?? isEnabledDefault
+
+    if (isEnabled && caller) {
+      const parts: string[] = []
+      if (metaConfig?.isCallerFileVisible ?? true) {
+        parts.push(metaConfig?.isCallerPathRelative ? caller.relativePath : caller.filename)
+      }
+      if (metaConfig?.isCallerLineVisible ?? true) {
+        parts.push(metaConfig?.isCallerColumnVisible ?? true ? `${caller.line}:${caller.column}` : `${caller.line}`)
+      }
+      const location = parts.join(':')
+      if (location) line += ` [${location}]`
+    }
+
+    this.logQueue.push(line + '\n')
+    this.processQueue()
+  }
+
+  private async processQueue() {
+    if (this.isWriting || this.logQueue.length === 0) return
+    this.isWriting = true
+
+    const config = this.options.fileLogging!
+    const logPath = path.resolve(process.cwd(), config.path)
+    const logDir = path.dirname(logPath)
+
+    try {
+      if (!fs.existsSync(logDir)) {
+        fs.mkdirSync(logDir, { recursive: true })
+      }
+
+      while (this.logQueue.length > 0) {
+        const line = this.logQueue.shift()!
+        await fs.promises.appendFile(logPath, line, { flag: config.isAppendMode === false ? 'w' : 'a' })
+        if (config.isAppendMode === false) {
+           config.isAppendMode = true
+        }
+      }
+    } catch (err) {
+      console.error('Colorino failed to write to log file:', err)
+    } finally {
+      this.isWriting = false
+    }
+  }
+
   protected formatArgs(
     consoleMethod: ConsoleMethod,
-    args: unknown[]
+    args: unknown[],
+    tags: FormattedTag[]
   ): unknown[] {
     const hasErrorOrStack = args.some(
       arg => TypeValidator.isError(arg) || TypeValidator.isStackLikeString(arg)
@@ -68,8 +143,14 @@ export class ColorinoNode
 
     const paletteHex = this.palette[consoleMethod]
     const ansiPrefix = this.toAnsiPrefix(paletteHex)
+    const { prefix, postfix } = this.partitionTags(tags)
 
     const formattedArgs: unknown[] = []
+
+    for (const tag of prefix) {
+      formattedArgs.push(ansiPrefix ? `${ansiPrefix}${tag.text}\x1b[0m` : tag.text)
+    }
+
     let previousWasObject = false
 
     for (const arg of argsToProcess) {
@@ -156,6 +237,10 @@ export class ColorinoNode
 
       formattedArgs.push(arg)
       previousWasObject = false
+    }
+
+    for (const tag of postfix) {
+      formattedArgs.push(ansiPrefix ? `${ansiPrefix}${tag.text}\x1b[0m` : tag.text)
     }
 
     return formattedArgs
