@@ -87,9 +87,18 @@ export abstract class AbstractColorino {
 
     const caller = this.captureCaller(4)
     const tags = this.buildMetadataTags(level, caller)
-    const formatted = this.formatArgs(this.mapLogLevelToConsoleMethod(level), args, tags)
 
-    const consoleMethod = this.mapLogLevelToConsoleMethod(level)
+    // Determine which console method to use
+    let consoleMethod: ConsoleMethod = 'log'
+    if (level === 'info') consoleMethod = 'info'
+    else if (level === 'warn') consoleMethod = 'warn'
+    else if (level === 'error') consoleMethod = 'error'
+    else if (level === 'debug') consoleMethod = 'debug'
+    // level 'log' and 'trace' both use console.log (trace adds stack via formatArgs)
+
+    // We pass the logical level to formatArgs so it knows if it should append a stack trace (for trace level)
+    const formatted = this.formatArgs(level === 'trace' ? 'trace' : consoleMethod, args, tags)
+
     console[consoleMethod](...formatted)
 
     if (!this.isBrowser() && this.options.fileLogging?.isEnabled) {
@@ -115,20 +124,10 @@ export abstract class AbstractColorino {
     return true
   }
 
-  private mapLogLevelToConsoleMethod(level: LogLevel): ConsoleMethod {
-    if (level === 'log') return 'log'
-    if (level === 'info') return 'info'
-    if (level === 'warn') return 'warn'
-    if (level === 'error') return 'error'
-    if (level === 'trace') return 'trace'
-    if (level === 'debug') return 'debug'
-    return 'log'
-  }
-
   private captureCaller(stackDepth: number): CallSiteInfo | undefined {
     const config = this.options.metadata?.callSite
-    const isEnabledDefault = this.isBrowser() ? false : false // CHANGED TO FALSE
-    const isEnabled = config?.isEnabled ?? isEnabledDefault
+    // Metadata is DISABLED by default to avoid breaking existing tests
+    const isEnabled = config?.isEnabled ?? false
 
     if (!isEnabled) return undefined
 
@@ -207,8 +206,7 @@ export abstract class AbstractColorino {
     const tags: FormattedTag[] = []
     const config = this.options.metadata?.callSite
 
-    const isEnabledDefault = this.isBrowser() ? false : false // CHANGED TO FALSE
-    const isEnabled = config?.isEnabled ?? isEnabledDefault
+    const isEnabled = config?.isEnabled ?? false
 
     if (isEnabled && caller) {
       const tag = this.formatCallSiteTag(caller, config || {})
@@ -219,7 +217,6 @@ export abstract class AbstractColorino {
   }
 
   private formatCallSiteTag(caller: CallSiteInfo, config: CallSiteConfig): FormattedTag | null {
-    const parts: string[] = []
     const isFileVisible = config.isCallerFileVisible ?? true
     const isFunctionVisible = config.isCallerFunctionVisible ?? false
     const isLineVisible = config.isCallerLineVisible ?? true

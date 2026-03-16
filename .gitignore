@@ -94,3 +94,7 @@ dist
 dist-ssr
 out
 *.old
+
+# Test artifacts
+test-logs/
+.vitest-attachments/

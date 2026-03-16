@@ -3,7 +3,7 @@ import { createColorino } from '../../node.js'
 
 describe('Colorino - Log Filtering', () => {
   it('should filter logs based on min level', () => {
-    const consoleSpy = vi.spyOn(console, 'debug').mockImplementation(() => {})
+    const debugSpy = vi.spyOn(console, 'debug').mockImplementation(() => {})
     const infoSpy = vi.spyOn(console, 'info').mockImplementation(() => {})
 
     const logger = createColorino({}, { logLevel: { min: 'info' } })
@@ -11,10 +11,10 @@ describe('Colorino - Log Filtering', () => {
     logger.debug('should not show')
     logger.info('should show')
 
-    expect(consoleSpy).not.toHaveBeenCalled()
+    expect(debugSpy).not.toHaveBeenCalled()
     expect(infoSpy).toHaveBeenCalled()
 
-    consoleSpy.mockRestore()
+    debugSpy.mockRestore()
     infoSpy.mockRestore()
   })
 
