@@ -73,7 +73,7 @@ export class ColorinoBrowser
   protected formatArgs(
     consoleMethod: ConsoleMethod,
     args: unknown[],
-    tags: FormattedTag[]
+    tags: FormattedTag[] = []
   ): unknown[] {
     const hasErrorOrStack = args.some(
       arg => TypeValidator.isError(arg) || TypeValidator.isStackLikeString(arg)
@@ -87,7 +87,7 @@ export class ColorinoBrowser
           })()
         : args
 
-    const paletteHex = this.palette[consoleMethod]
+    const paletteHex = this.palette[consoleMethod === 'trace' ? 'trace' : consoleMethod] || '#ffffff'
     const formatParts: string[] = []
     const formatArgs: unknown[] = []
     const { prefix, postfix } = this.partitionTags(tags)

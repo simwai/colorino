@@ -115,7 +115,8 @@ export class ColorinoNode
 
       while (this.logQueue.length > 0) {
         const line = this.logQueue.shift()!
-        await fs.promises.appendFile(logPath, line, { flag: config.isAppendMode === false ? 'w' : 'a' })
+        const flag = config.isAppendMode === false ? 'w' : 'a'
+        await fs.promises.appendFile(logPath, line, { flag })
         if (config.isAppendMode === false) {
            config.isAppendMode = true
         }
@@ -130,7 +131,7 @@ export class ColorinoNode
   protected formatArgs(
     consoleMethod: ConsoleMethod,
     args: unknown[],
-    tags: FormattedTag[]
+    tags: FormattedTag[] = []
   ): unknown[] {
     const hasErrorOrStack = args.some(
       arg => TypeValidator.isError(arg) || TypeValidator.isStackLikeString(arg)
@@ -141,7 +142,7 @@ export class ColorinoNode
         ? [...args, this.buildCallerStack()]
         : args
 
-    const paletteHex = this.palette[consoleMethod]
+    const paletteHex = this.palette[consoleMethod === 'trace' ? 'trace' : consoleMethod] || '#ffffff'
     const ansiPrefix = this.toAnsiPrefix(paletteHex)
     const { prefix, postfix } = this.partitionTags(tags)
 

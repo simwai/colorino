@@ -4,17 +4,18 @@ import * as fs from 'node:fs'
 import * as path from 'node:path'
 
 describe('Colorino - File Logging', () => {
-  const logPath = 'test-logs/test.log'
+  const logDir = path.join(process.cwd(), 'test-logs-dir')
+  const logPath = path.join(logDir, 'test.log')
 
   beforeEach(() => {
-    if (fs.existsSync('test-logs')) {
-      fs.rmSync('test-logs', { recursive: true, force: true })
+    if (fs.existsSync(logDir)) {
+      fs.rmSync(logDir, { recursive: true, force: true })
     }
   })
 
   afterEach(() => {
-    if (fs.existsSync('test-logs')) {
-      fs.rmSync('test-logs', { recursive: true, force: true })
+    if (fs.existsSync(logDir)) {
+      fs.rmSync(logDir, { recursive: true, force: true })
     }
   })
 
@@ -28,8 +29,11 @@ describe('Colorino - File Logging', () => {
 
     logger.info('Test log message')
 
-    // Wait a bit for async write
-    await new Promise(resolve => setTimeout(resolve, 100))
+    let retries = 0
+    while (retries < 20 && !fs.existsSync(logPath)) {
+      await new Promise(resolve => setTimeout(resolve, 50))
+      retries++
+    }
 
     expect(fs.existsSync(logPath)).toBe(true)
     const content = fs.readFileSync(logPath, 'utf-8')

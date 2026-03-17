@@ -24,7 +24,7 @@ export class InputValidator {
       if (!TypeValidator.isConsoleMethod(level))
         return err(inputValidationerror)
 
-      const hex = palette[level]
+      const hex = palette[level as keyof Palette]
       const result = this.validateHex(hex)
       if (result.isErr()) return err(result.error)
     }
@@ -71,7 +71,7 @@ export class InputValidator {
     return ok(true)
   }
 
-  private isValidLogLevel(level: any): level is LogLevel {
-    return ['trace', 'debug', 'log', 'info', 'warn', 'error'].includes(level)
+  private isValidLogLevel(level: unknown): level is LogLevel {
+    return (['trace', 'debug', 'log', 'info', 'warn', 'error'] as unknown[]).includes(level)
   }
 }

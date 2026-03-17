@@ -88,15 +88,12 @@ export abstract class AbstractColorino {
     const caller = this.captureCaller(4)
     const tags = this.buildMetadataTags(level, caller)
 
-    // Determine which console method to use
     let consoleMethod: ConsoleMethod = 'log'
     if (level === 'info') consoleMethod = 'info'
     else if (level === 'warn') consoleMethod = 'warn'
     else if (level === 'error') consoleMethod = 'error'
     else if (level === 'debug') consoleMethod = 'debug'
-    // level 'log' and 'trace' both use console.log (trace adds stack via formatArgs)
 
-    // We pass the logical level to formatArgs so it knows if it should append a stack trace (for trace level)
     const formatted = this.formatArgs(level === 'trace' ? 'trace' : consoleMethod, args, tags)
 
     console[consoleMethod](...formatted)
@@ -126,8 +123,8 @@ export abstract class AbstractColorino {
 
   private captureCaller(stackDepth: number): CallSiteInfo | undefined {
     const config = this.options.metadata?.callSite
-    // Metadata is DISABLED by default to avoid breaking existing tests
-    const isEnabled = config?.isEnabled ?? false
+    const isEnabledDefault = false
+    const isEnabled = config?.isEnabled ?? isEnabledDefault
 
     if (!isEnabled) return undefined
 
@@ -183,8 +180,8 @@ export abstract class AbstractColorino {
   private extractFilename(path: string): string {
     const cleanedPath = path.replace(/^(?:https?|file):\/\//, '')
     const parts = cleanedPath.split(/[/\\]/)
-    const lastPart = parts[parts.length - 1]
-    return lastPart.split(/[?#]/)[0]
+    const lastPart = parts[parts.length - 1] ?? ''
+    return lastPart.split(/[?#]/)[0] ?? ''
   }
 
   private extractRelativePath(path: string): string {
@@ -206,7 +203,8 @@ export abstract class AbstractColorino {
     const tags: FormattedTag[] = []
     const config = this.options.metadata?.callSite
 
-    const isEnabled = config?.isEnabled ?? false
+    const isEnabledDefault = false
+    const isEnabled = config?.isEnabled ?? isEnabledDefault
 
     if (isEnabled && caller) {
       const tag = this.formatCallSiteTag(caller, config || {})

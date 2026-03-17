@@ -5,50 +5,20 @@ import {
   TerminalTheme,
   ThemeName,
   LogLevel,
+  BrowserColorizedArg,
 } from './types.js'
 
 export interface MetadataTagBase {
-  /**
-   * Enable or disable this metadata tag.
-   * @default platform-dependent
-   */
   isEnabled?: boolean
-  /**
-   * Tag placement relative to the log message.
-   * @default 'postfix'
-   */
   position?: 'prefix' | 'postfix'
 }
 
 export interface CallSiteConfig extends MetadataTagBase {
-  /**
-   * Display the caller's filename.
-   * @default true
-   */
   isCallerFileVisible?: boolean
-  /**
-   * Display the caller's function name.
-   * @default false
-   */
   isCallerFunctionVisible?: boolean
-  /**
-   * Display the caller's line number.
-   * @default true
-   */
   isCallerLineVisible?: boolean
-  /**
-   * Display the caller's column number.
-   * @default true
-   */
   isCallerColumnVisible?: boolean
-  /**
-   * Show path relative to process.cwd() instead of just filename (Node only).
-   * @default false
-   */
   isCallerPathRelative?: boolean
-  /**
-   * Optional hook to transform raw file/line/column.
-   */
   resolve?(frame: {
     file: string
     line: number
@@ -68,45 +38,21 @@ export interface TimestampConfig extends MetadataTagBase {
 }
 
 export interface FileLoggingConfig {
-  /**
-   * Enable writing logs to a file (Node only).
-   * @default false
-   */
   isEnabled: boolean
-  /**
-   * Path to the log file.
-   */
   path: string
-  /**
-   * Whether to append to an existing file.
-   * @default true
-   */
   isAppendMode?: boolean
-  /**
-   * Minimum level to write to this file.
-   */
   minLevel?: LogLevel
 }
 
 export interface ColorinoOptions {
   theme?: TerminalTheme | ThemeName | 'auto'
   maxDepth?: number
-  areNodeFramesVisible?: boolean // Default: true
-  areColorinoFramesVisible?: boolean // Default: false
-  isOsc11Enabled?: boolean // Default: true
+  areNodeFramesVisible?: boolean
+  areColorinoFramesVisible?: boolean
+  isOsc11Enabled?: boolean
   logLevel?: {
-    /**
-     * Minimum level to log to console.
-     * @default 'trace'
-     */
     min?: LogLevel
-    /**
-     * Explicit whitelist. If present, only these levels are considered.
-     */
     allow?: LogLevel[]
-    /**
-     * Blacklist. Levels here are disabled even if they pass min/allow.
-     */
     deny?: LogLevel[]
   }
   metadata?: {
@@ -123,8 +69,8 @@ interface Colorino {
   error(...args: unknown[]): void
   debug(...args: unknown[]): void
   trace(...args: unknown[]): void
-  colorize(text: string, hex: string): any
-  gradient(text: string, startHex: string, endHex: string): any
+  colorize(text: string, hex: string): string | BrowserColorizedArg
+  gradient(text: string, startHex: string, endHex: string): string | BrowserCssArg
 }
 
 export interface ColorinoBrowserInterface extends Colorino {
