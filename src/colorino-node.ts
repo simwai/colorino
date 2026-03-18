@@ -30,8 +30,8 @@ export class ColorinoNode extends AbstractColorino implements ColorinoNodeInterf
   }
 
   public gradient(text: string, startHex: string, endHex: string): string {
-    const noColor = this.colorLevel === ColorLevel.NO_COLOR || this.colorLevel === 'UnknownEnv'
-    if (noColor || this.colorLevel === ColorLevel.ANSI) {
+    const isNoColor = this.colorLevel === ColorLevel.NO_COLOR || this.colorLevel === 'UnknownEnv'
+    if (isNoColor || this.colorLevel === ColorLevel.ANSI) {
       return text
     }
 
@@ -59,8 +59,8 @@ export class ColorinoNode extends AbstractColorino implements ColorinoNodeInterf
       return
     }
 
-    const minLevel = config.minLevel ?? this.options.logLevel?.min ?? 'trace'
-    if (LOG_LEVEL_PRIORITY[level] < LOG_LEVEL_PRIORITY[minLevel]) {
+    const minimumLevel = config.minLevel ?? this.options.logLevel?.min ?? 'trace'
+    if (LOG_LEVEL_PRIORITY[level] < LOG_LEVEL_PRIORITY[minimumLevel]) {
       return
     }
 
@@ -139,11 +139,12 @@ export class ColorinoNode extends AbstractColorino implements ColorinoNodeInterf
       result.push(coloredTag)
     }
 
-    let lastWasObject = false
+    let previousWasObject = false
     for (const arg of toProcess) {
       if (TypeValidator.isFormattableObject(arg)) {
-        result.push(`\n${this.formatValue(arg)}`)
-        lastWasObject = true
+        const formatted = this.formatValue(arg)
+        result.push(`\n${formatted}`)
+        previousWasObject = true
       } else if (TypeValidator.isError(arg)) {
         const cleaned = this.cleanErrorStack(arg)
         if (!cleaned.name.trim() || !cleaned.message.trim() || !cleaned.stack?.trim()) {
@@ -156,8 +157,8 @@ export class ColorinoNode extends AbstractColorino implements ColorinoNodeInterf
           ? `${ansiPrefix ? `${ansiPrefix}${header}\x1b[0m` : header}\n${stackLines}`
           : (ansiPrefix ? `${ansiPrefix}${header}\x1b[0m` : header)
 
-        result.push(lastWasObject ? formatted : `\n${formatted}`)
-        lastWasObject = true
+        result.push(previousWasObject ? formatted : `\n${formatted}`)
+        previousWasObject = true
       } else if (TypeValidator.isStackLikeString(arg)) {
         const filtered = this.filterStack(arg)
         if (!filtered.trim()) {
@@ -174,16 +175,16 @@ export class ColorinoNode extends AbstractColorino implements ColorinoNodeInterf
         } else {
           result.push(`\n${filtered}`)
         }
-        lastWasObject = true
+        previousWasObject = true
       } else if (TypeValidator.isString(arg)) {
-        const str = lastWasObject ? `\n${arg}` : arg
+        const str = previousWasObject ? `\n${arg}` : arg
         const shouldColor = ansiPrefix && !TypeValidator.isAnsiColoredString(arg) && !TypeValidator.isStackLikeString(arg)
 
         result.push(shouldColor ? `${ansiPrefix}${str}\x1b[0m` : str)
-        lastWasObject = false
+        previousWasObject = false
       } else {
         result.push(arg)
-        lastWasObject = false
+        previousWasObject = false
       }
     }
 
@@ -201,8 +202,8 @@ export class ColorinoNode extends AbstractColorino implements ColorinoNodeInterf
   }
 
   protected override toAnsiPrefix(hex: string): string {
-    const noColor = this.colorLevel === ColorLevel.NO_COLOR || this.colorLevel === 'UnknownEnv'
-    if (noColor) {
+    const isNoColor = this.colorLevel === ColorLevel.NO_COLOR || this.colorLevel === 'UnknownEnv'
+    if (isNoColor) {
       return ''
     }
 

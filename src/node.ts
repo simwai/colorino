@@ -16,13 +16,17 @@ export function createColorino(
   options: ColorinoOptions = {}
 ): ColorinoNodeInterface {
   const validator = new InputValidator()
-  const themeOpt = options.theme ?? 'auto'
-  let detTheme: TerminalTheme | undefined
-  if (themeOpt === 'dark' || themeOpt === 'light') detTheme = themeOpt
-  else if (themeOpt !== 'auto') detTheme = 'unknown'
+  const themeOption = options.theme ?? 'auto'
 
-  const detector = new NodeColorSupportDetector(process, detTheme, options.isOsc11Enabled)
-  const baseTheme = determineBaseTheme(themeOpt, themeOpt === 'auto' ? detector.getTheme() : 'unknown')
+  let detectorTheme: TerminalTheme | undefined
+  if (themeOption === 'dark' || themeOption === 'light') {
+    detectorTheme = themeOption
+  } else if (themeOption !== 'auto') {
+    detectorTheme = 'unknown'
+  }
+
+  const detector = new NodeColorSupportDetector(process, detectorTheme, options.isOsc11Enabled)
+  const baseTheme = determineBaseTheme(themeOption, themeOption === 'auto' ? detector.getTheme() : 'unknown')
   const finalPalette: Palette = { ...themePalettes[baseTheme], ...userPalette }
   const colorLevel = detector.isNodeEnv() ? (detector.getColorLevel() ?? 'UnknownEnv') : 'UnknownEnv'
 

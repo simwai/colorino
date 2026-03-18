@@ -26,8 +26,8 @@ export class ColorinoBrowser extends AbstractColorino implements ColorinoBrowser
   }
 
   public gradient(text: string, startHex: string, endHex: string): string | BrowserCssArg {
-    const noColor = this.colorLevel === ColorLevel.NO_COLOR || this.colorLevel === 'UnknownEnv'
-    if (noColor) {
+    const isNoColor = this.colorLevel === ColorLevel.NO_COLOR || this.colorLevel === 'UnknownEnv'
+    if (isNoColor) {
       return text
     }
 
@@ -36,8 +36,8 @@ export class ColorinoBrowser extends AbstractColorino implements ColorinoBrowser
   }
 
   public css(text: string, style: CssConsoleStyle): string | BrowserCssArg {
-    const noColor = this.colorLevel === ColorLevel.NO_COLOR || this.colorLevel === 'UnknownEnv'
-    if (noColor) {
+    const isNoColor = this.colorLevel === ColorLevel.NO_COLOR || this.colorLevel === 'UnknownEnv'
+    if (isNoColor) {
       return text
     }
     return {
@@ -72,20 +72,20 @@ export class ColorinoBrowser extends AbstractColorino implements ColorinoBrowser
       finalArgs.push(`color:${colorHex}`, tag.text)
     }
 
-    let lastWasObject = false
+    let previousWasObject = false
     for (const arg of toProcess) {
       if (TypeValidator.isBrowserColorizedArg(arg)) {
         formatParts.push(`%c${arg.text}`)
         finalArgs.push(`color:${arg.hex}`)
-        lastWasObject = false
+        previousWasObject = false
       } else if (TypeValidator.isBrowserCssArg(arg)) {
         formatParts.push(`%c${arg.text}`)
         finalArgs.push(arg.css)
-        lastWasObject = false
+        previousWasObject = false
       } else if (TypeValidator.isFormattableObject(arg)) {
-        formatParts.push(lastWasObject ? '%o' : '\n%o')
+        formatParts.push(previousWasObject ? '%o' : '\n%o')
         finalArgs.push(arg)
-        lastWasObject = true
+        previousWasObject = true
       } else if (TypeValidator.isError(arg)) {
         const cleaned = this.cleanErrorStack(arg)
         if (!cleaned.name.trim() || !cleaned.message.trim() || !cleaned.stack?.trim()) {
@@ -95,14 +95,14 @@ export class ColorinoBrowser extends AbstractColorino implements ColorinoBrowser
         const header = `${cleaned.name}: ${cleaned.message}`
         const stackLines = cleaned.stack.split('\n').slice(1).join('\n')
 
-        formatParts.push(lastWasObject ? '%c%s' : '\n%c%s')
+        formatParts.push(previousWasObject ? '%c%s' : '\n%c%s')
         finalArgs.push(`color:${colorHex}`, header)
 
         if (stackLines) {
           formatParts.push('\n%s')
           finalArgs.push(stackLines)
         }
-        lastWasObject = true
+        previousWasObject = true
       } else if (TypeValidator.isStackLikeString(arg)) {
         const filtered = this.filterStack(arg)
         if (!filtered.trim()) {
@@ -111,16 +111,16 @@ export class ColorinoBrowser extends AbstractColorino implements ColorinoBrowser
 
         formatParts.push('\n%s')
         finalArgs.push(filtered)
-        lastWasObject = true
+        previousWasObject = true
       } else if (TypeValidator.isString(arg)) {
-        const str = lastWasObject ? `\n${arg}` : arg
+        const str = previousWasObject ? `\n${arg}` : arg
         formatParts.push(`%c${str}`)
         finalArgs.push(`color:${colorHex}`)
-        lastWasObject = false
+        previousWasObject = false
       } else {
         formatParts.push('%o')
         finalArgs.push(arg)
-        lastWasObject = false
+        previousWasObject = false
       }
     }
 
