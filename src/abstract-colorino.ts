@@ -70,17 +70,17 @@ export abstract class AbstractColorino {
   protected logInternal(level: LogLevel, args: unknown[]): void {
     if (!this.isLevelEnabled(level)) return
 
-    const caller = this.captureCaller()
-    const tags = this.buildMetadataTags(level, caller)
+    const callerInfo = this.captureCaller()
+    const metadataTags = this.buildMetadataTags(level, callerInfo)
 
     const method = this.mapLevelToConsoleMethod(level)
-    const formattedArgs = this.formatArgs(method, args, tags)
+    const formattedArgs = this.formatArgs(method, args, metadataTags)
 
     const consoleTarget = method === 'trace' ? 'log' : method
     console[consoleTarget](...formattedArgs)
 
     if (!this.isBrowser() && this.options.fileLogging?.isEnabled) {
-      this.writeToFile(level, args, caller)
+      this.writeToFile(level, args, callerInfo)
     }
   }
 
@@ -95,32 +95,33 @@ export abstract class AbstractColorino {
   protected abstract writeToFile(level: LogLevel, args: unknown[], caller?: CallSiteInfo): void
 
   private isLevelEnabled(level: LogLevel): boolean {
-    const config = this.options.logLevel
-    if (!config) return true
+    const logLevelConfig = this.options.logLevel
+    if (!logLevelConfig) return true
 
-    const allowedLevels = config.allow ?? (Object.keys(LOG_LEVEL_PRIORITY) as LogLevel[])
+    const allowedLevels = logLevelConfig.allow ?? (Object.keys(LOG_LEVEL_PRIORITY) as LogLevel[])
     if (!allowedLevels.includes(level)) return false
 
-    const minLevel = config.min ?? 'trace'
-    if (LOG_LEVEL_PRIORITY[level] < LOG_LEVEL_PRIORITY[minLevel]) return false
+    const minimumLevel = logLevelConfig.min ?? 'trace'
+    if (LOG_LEVEL_PRIORITY[level] < LOG_LEVEL_PRIORITY[minimumLevel]) return false
 
-    if (config.deny?.includes(level)) return false
+    if (logLevelConfig.deny?.includes(level)) return false
 
     return true
   }
 
   private captureCaller(): CallSiteInfo | undefined {
-    const config = this.options.metadata?.callSite
-    if (!(config?.isEnabled ?? false)) return undefined
+    const callSiteConfig = this.options.metadata?.callSite
+    if (!(callSiteConfig?.isEnabled ?? false)) return undefined
 
-    const stack = new Error().stack
+    const error = new Error()
+    const stack = error.stack
     if (!stack) return undefined
 
-    const lines = stack.split('\n')
+    const stackLines = stack.split('\n')
     let frameLine: string | undefined
 
-    for (let index = 1; index < lines.length; index++) {
-      const line = lines[index]
+    for (let index = 1; index < stackLines.length; index++) {
+      const line = stackLines[index]
       if (!line) continue
       const lowerLine = line.toLowerCase()
       const isInternal = lowerLine.includes('colorino') || lowerLine.includes('loginternal') || lowerLine.includes('capturecaller')
@@ -184,8 +185,8 @@ export abstract class AbstractColorino {
   }
 
   private extractFilename(filePath: string): string {
-    const segments = filePath.replace(/^(?:https?|file):\/\//, '').split(/[/\\]/)
-    const lastSegment = segments[segments.length - 1] || ''
+    const pathSegments = filePath.replace(/^(?:https?|file):\/\//, '').split(/[/\\]/)
+    const lastSegment = pathSegments[pathSegments.length - 1] || ''
     return lastSegment.split(/[?#]/)[0] || ''
   }
 
@@ -203,10 +204,10 @@ export abstract class AbstractColorino {
     return this.extractFilename(filePath)
   }
 
-  private buildMetadataTags(_level: LogLevel, caller?: CallSiteInfo): FormattedTag[] {
-    const config = this.options.metadata?.callSite
-    if ((config?.isEnabled ?? false) && caller) {
-      const tag = this.formatCallSiteTag(caller, config || {})
+  private buildMetadataTags(_level: LogLevel, callerInfo?: CallSiteInfo): FormattedTag[] {
+    const callSiteConfig = this.options.metadata?.callSite
+    if ((callSiteConfig?.isEnabled ?? false) && callerInfo) {
+      const tag = this.formatCallSiteTag(callerInfo, callSiteConfig || {})
       return tag ? [tag] : []
     }
     return []
@@ -234,12 +235,12 @@ export abstract class AbstractColorino {
   }
 
   protected partitionTags(tags: FormattedTag[]): { prefix: FormattedTag[]; postfix: FormattedTag[] } {
-    const prefix: FormattedTag[] = [], postfix: FormattedTag[] = []
+    const prefixTags: FormattedTag[] = [], postfixTags: FormattedTag[] = []
     for (const tag of tags) {
-      if (tag.position === 'prefix') prefix.push(tag)
-      else postfix.push(tag)
+      if (tag.position === 'prefix') prefixTags.push(tag)
+      else postfixTags.push(tag)
     }
-    return { prefix, postfix }
+    return { prefix: prefixTags, postfix: postfixTags }
   }
 
   protected abstract formatArgs(method: ConsoleMethod, args: unknown[], tags: FormattedTag[]): unknown[]
@@ -299,16 +300,17 @@ export abstract class AbstractColorino {
   }
 
   protected buildCallerStack(): string | undefined {
-    const stack = new Error('Trace').stack
+    const errorTrace = new Error('Trace')
+    const stack = errorTrace.stack
     if (!stack) return undefined
-    const lines = stack.split('\n')
+    const stackLines = stack.split('\n')
     let startIndex = 1
-    for (let index = 1; index < lines.length; index++) {
-      if (!lines[index].toLowerCase().includes('colorino')) {
+    for (let index = 1; index < stackLines.length; index++) {
+      if (!stackLines[index].toLowerCase().includes('colorino')) {
         startIndex = index
         break
       }
     }
-    return this.filterStack(lines.slice(startIndex).join('\n')) || undefined
+    return this.filterStack(stackLines.slice(startIndex).join('\n')) || undefined
   }
 }

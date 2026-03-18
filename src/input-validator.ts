@@ -5,15 +5,15 @@ import { TypeValidator } from './type-validator.js'
 import { ColorinoOptions } from './interfaces.js'
 
 export class InputValidator {
-  validateHex(hex: string): Result<boolean, InputValidationError> {
-    if (!TypeValidator.isString(hex)) {
-      return err(new InputValidationError(`Invalid hex color: '${hex}'`))
+  validateHex(hexColor: string): Result<boolean, InputValidationError> {
+    if (!TypeValidator.isString(hexColor)) {
+      return err(new InputValidationError(`Invalid hex color: '${hexColor}'`))
     }
 
-    const trimmedHex = hex.trim()
+    const trimmedHex = hexColor.trim()
     // Support #RRGGBB format
     if (!/^#[0-9A-F]{6}$/i.test(trimmedHex)) {
-      return err(new InputValidationError(`Invalid hex color: '${hex}'`))
+      return err(new InputValidationError(`Invalid hex color: '${hexColor}'`))
     }
 
     return ok(true)
@@ -48,30 +48,30 @@ export class InputValidator {
     }
 
     if (options.logLevel) {
-      const { min, allow, deny } = options.logLevel
+      const { min: minimumLevel, allow: allowedLevels, deny: deniedLevels } = options.logLevel
 
-      if (min && !this.isValidLogLevel(min)) {
-        return err(new ColorinoConfigError('logLevel.min', 'invalid level', min))
+      if (minimumLevel && !this.isValidLogLevel(minimumLevel)) {
+        return err(new ColorinoConfigError('logLevel.min', 'invalid level', minimumLevel))
       }
 
-      if (allow?.some(level => !this.isValidLogLevel(level))) {
-        return err(new ColorinoConfigError('logLevel.allow', 'invalid level in list', allow))
+      if (allowedLevels?.some(level => !this.isValidLogLevel(level))) {
+        return err(new ColorinoConfigError('logLevel.allow', 'invalid level in list', allowedLevels))
       }
 
-      if (deny?.some(level => !this.isValidLogLevel(level))) {
-        return err(new ColorinoConfigError('logLevel.deny', 'invalid level in list', deny))
+      if (deniedLevels?.some(level => !this.isValidLogLevel(level))) {
+        return err(new ColorinoConfigError('logLevel.deny', 'invalid level in list', deniedLevels))
       }
     }
 
     if (options.fileLogging) {
-      const { isEnabled, path: logPath } = options.fileLogging
+      const { isEnabled, path: logFilePath } = options.fileLogging
 
       if (typeof isEnabled !== 'boolean') {
         return err(new ColorinoConfigError('fileLogging.isEnabled', 'must be boolean', isEnabled))
       }
 
-      if (typeof logPath !== 'string' || !logPath) {
-        return err(new ColorinoConfigError('fileLogging.path', 'must be non-empty string', logPath))
+      if (typeof logFilePath !== 'string' || !logFilePath) {
+        return err(new ColorinoConfigError('fileLogging.path', 'must be non-empty string', logFilePath))
       }
     }
 

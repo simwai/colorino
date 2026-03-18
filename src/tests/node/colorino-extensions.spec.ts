@@ -11,14 +11,14 @@ describe('Colorino - Node Extensions', () => {
     test('respects min log level', ({ stdoutSpy, stderrSpy }) => {
       const logger = createColorino({}, { logLevel: { min: 'warn' } })
 
-      logger.info('should not show')
+      logger.info('should not show info')
       logger.warn('should show warn')
       logger.error('should show error')
 
-      const combined = stdoutSpy.getOutput() + stderrSpy.getOutput()
-      expect(combined).not.toContain('should not show')
-      expect(combined).toContain('should show warn')
-      expect(combined).toContain('should show error')
+      const combinedOutput = stdoutSpy.getOutput() + stderrSpy.getOutput()
+      expect(combinedOutput).not.toContain('should not show info')
+      expect(combinedOutput).toContain('should show warn')
+      expect(combinedOutput).toContain('should show error')
     })
 
     test('respects allow list', ({ stdoutSpy, stderrSpy }) => {
@@ -29,11 +29,11 @@ describe('Colorino - Node Extensions', () => {
       logger.error('yes error')
       logger.debug('yes debug')
 
-      const combined = stdoutSpy.getOutput() + stderrSpy.getOutput()
-      expect(combined).not.toContain('no info')
-      expect(combined).not.toContain('no warn')
-      expect(combined).toContain('yes error')
-      expect(combined).toContain('yes debug')
+      const combinedOutput = stdoutSpy.getOutput() + stderrSpy.getOutput()
+      expect(combinedOutput).not.toContain('no info')
+      expect(combinedOutput).not.toContain('no warn')
+      expect(combinedOutput).toContain('yes error')
+      expect(combinedOutput).toContain('yes debug')
     })
 
     test('respects deny list', ({ stdoutSpy, stderrSpy }) => {
@@ -43,10 +43,10 @@ describe('Colorino - Node Extensions', () => {
       logger.warn('no warn')
       logger.error('yes error')
 
-      const combined = stdoutSpy.getOutput() + stderrSpy.getOutput()
-      expect(combined).toContain('yes info')
-      expect(combined).not.toContain('no warn')
-      expect(combined).toContain('yes error')
+      const combinedOutput = stdoutSpy.getOutput() + stderrSpy.getOutput()
+      expect(combinedOutput).toContain('yes info')
+      expect(combinedOutput).not.toContain('no warn')
+      expect(combinedOutput).toContain('yes error')
     })
   })
 
@@ -61,8 +61,7 @@ describe('Colorino - Node Extensions', () => {
       logger.log('Hello with meta')
 
       const output = stdoutSpy.getOutput()
-      // Matches [filename.spec.ts:line:column] or [filename.spec.ts:line:col:line:col]
-      expect(output).toMatch(/Hello with meta \[.+:\d+:\d+.*\]/)
+      expect(output).toMatch(/Hello with meta \[.+:\d+:\d+\]/)
     })
 
     test('respects position prefix', ({ stdoutSpy }) => {
@@ -81,7 +80,7 @@ describe('Colorino - Node Extensions', () => {
         metadata: {
           callSite: {
             isEnabled: true,
-            resolve: (f) => ({ ...f, file: 'custom.ts' })
+            resolve: (frame) => ({ ...frame, file: 'custom-file.ts' })
           }
         }
       })
@@ -89,30 +88,30 @@ describe('Colorino - Node Extensions', () => {
       logger.log('Hook test')
 
       const output = stdoutSpy.getOutput()
-      expect(output).toContain('[custom.ts')
+      expect(output).toContain('[custom-file.ts')
     })
   })
 
   describe('File Logging Integration', () => {
-    const logFile = path.resolve(process.cwd(), 'temp-extension-2.log')
+    const logFilePath = path.resolve(process.cwd(), 'temp-extension-verification.log')
 
     test.afterEach(() => {
-      if (fs.existsSync(logFile)) fs.unlinkSync(logFile)
+      if (fs.existsSync(logFilePath)) fs.unlinkSync(logFilePath)
     })
 
     test('writes to file asynchronously', async () => {
       const logger = createColorino({}, {
-        fileLogging: { isEnabled: true, path: 'temp-extension-2.log', isAppendMode: false }
+        fileLogging: { isEnabled: true, path: 'temp-extension-verification.log', isAppendMode: false }
       })
 
-      logger.info('file log test')
+      logger.info('file log test message')
 
-      // Give it a moment to write
-      await new Promise(r => setTimeout(r, 200))
+      // Allow some time for background write
+      await new Promise(resolve => setTimeout(resolve, 250))
 
-      expect(fs.existsSync(logFile)).toBe(true)
-      const content = fs.readFileSync(logFile, 'utf8')
-      expect(content).toContain('[info] file log test')
+      expect(fs.existsSync(logFilePath)).toBe(true)
+      const content = fs.readFileSync(logFilePath, 'utf8')
+      expect(content).toContain('[info] file log test message')
     })
   })
 })

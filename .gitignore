@@ -95,3 +95,7 @@ dist-ssr
 out
 *.old
 test-logs/
+
+# Test attachments
+.vitest-attachments/
+temp-extension*.log

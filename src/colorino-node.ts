@@ -36,18 +36,18 @@ export class ColorinoNode extends AbstractColorino implements ColorinoNodeInterf
     }
 
     const characters = Array.from(text)
-    const colors = colorConverter.hex.gradient(startHex, endHex, characters.length)
+    const gradientColors = colorConverter.hex.gradient(startHex, endHex, characters.length)
 
     const coloredText = characters.map((char, index) => {
-      const rgb = colors[index] || [0, 0, 0]
-      const [r, g, b] = rgb
+      const rgbColor = gradientColors[index] || [0, 0, 0]
+      const [red, green, blue] = rgbColor
 
       if (this.colorLevel === ColorLevel.TRUECOLOR) {
-        return `\x1b[38;2;${r};${g};${b}m${char}`
+        return `\x1b[38;2;${red};${green};${blue}m${char}`
       }
 
-      const ansi256 = colorConverter.rgb.toAnsi256(rgb)
-      return `\x1b[38;5;${ansi256}m${char}`
+      const ansi256Color = colorConverter.rgb.toAnsi256(rgbColor)
+      return `\x1b[38;5;${ansi256Color}m${char}`
     }).join('')
 
     return `${coloredText}\x1b[0m`
@@ -77,10 +77,10 @@ export class ColorinoNode extends AbstractColorino implements ColorinoNodeInterf
     const timestamp = new Date().toISOString()
     let logLine = `${timestamp} [${level}] ${message}`
 
-    const metadata = this.options.metadata?.callSite
-    const isMetadataEnabled = metadata?.isEnabled ?? false
+    const metadataConfig = this.options.metadata?.callSite
+    const isMetadataEnabled = metadataConfig?.isEnabled ?? false
     if (isMetadataEnabled && caller) {
-      const file = metadata?.isCallerPathRelative ? caller.relativePath : caller.filename
+      const file = metadataConfig?.isCallerPathRelative ? caller.relativePath : caller.filename
       const location = `${file}:${caller.line}:${caller.column}`
       logLine += ` [${location}]`
     }
@@ -95,23 +95,23 @@ export class ColorinoNode extends AbstractColorino implements ColorinoNodeInterf
     }
 
     this.isWriting = true
-    const config = this.options.fileLogging!
-    const logPath = path.resolve(process.cwd(), config.path)
+    const fileLoggingConfig = this.options.fileLogging!
+    const logFilePath = path.resolve(process.cwd(), fileLoggingConfig.path)
 
     try {
-      const directory = path.dirname(logPath)
-      if (!fs.existsSync(directory)) {
-        fs.mkdirSync(directory, { recursive: true })
+      const directoryPath = path.dirname(logFilePath)
+      if (!fs.existsSync(directoryPath)) {
+        fs.mkdirSync(directoryPath, { recursive: true })
       }
 
       while (this.logQueue.length > 0) {
         const line = this.logQueue.shift()!
-        const flag = config.isAppendMode === false ? 'w' : 'a'
+        const writeFlag = fileLoggingConfig.isAppendMode === false ? 'w' : 'a'
 
-        await fs.promises.appendFile(logPath, line, { flag })
+        await fs.promises.appendFile(logFilePath, line, { flag: writeFlag })
 
-        if (config.isAppendMode === false) {
-           config.isAppendMode = true
+        if (fileLoggingConfig.isAppendMode === false) {
+           fileLoggingConfig.isAppendMode = true
         }
       }
     } catch (error) {
@@ -122,79 +122,79 @@ export class ColorinoNode extends AbstractColorino implements ColorinoNodeInterf
   }
 
   protected formatArgs(method: ConsoleMethod, args: unknown[], tags: FormattedTag[] = []): unknown[] {
-    const hasError = args.some(arg => TypeValidator.isError(arg) || TypeValidator.isStackLikeString(arg))
-    const toProcess = (method === 'trace' && !hasError)
+    const hasErrorArg = args.some(arg => TypeValidator.isError(arg) || TypeValidator.isStackLikeString(arg))
+    const argsToProcess = (method === 'trace' && !hasErrorArg)
       ? [...args, this.buildCallerStack()]
       : args
 
-    const colorHex = this.palette[method] || '#ffffff'
-    const ansiPrefix = this.toAnsiPrefix(colorHex)
+    const colorHexValue = this.palette[method] || '#ffffff'
+    const ansiPrefixCode = this.toAnsiPrefix(colorHexValue)
 
     const { prefix, postfix } = this.partitionTags(tags)
-    const result: unknown[] = []
+    const finalFormattedArgs: unknown[] = []
 
     // Prepend prefix tags
     for (const tag of prefix) {
-      const coloredTag = ansiPrefix ? `${ansiPrefix}${tag.text}\x1b[0m` : tag.text
-      result.push(coloredTag)
+      const coloredTag = ansiPrefixCode ? `${ansiPrefixCode}${tag.text}\x1b[0m` : tag.text
+      finalFormattedArgs.push(coloredTag)
     }
 
     let previousWasObject = false
-    for (const arg of toProcess) {
+    for (const arg of argsToProcess) {
       if (TypeValidator.isFormattableObject(arg)) {
-        const formatted = this.formatValue(arg)
-        result.push(`\n${formatted}`)
+        const formattedValue = this.formatValue(arg)
+        finalFormattedArgs.push(`\n${formattedValue}`)
         previousWasObject = true
       } else if (TypeValidator.isError(arg)) {
-        const cleaned = this.cleanErrorStack(arg)
-        if (!cleaned.name.trim() || !cleaned.message.trim() || !cleaned.stack?.trim()) {
+        const cleanedError = this.cleanErrorStack(arg)
+        if (!cleanedError.name.trim() || !cleanedError.message.trim() || !cleanedError.stack?.trim()) {
           continue
         }
 
-        const header = `${cleaned.name}: ${cleaned.message}`
-        const stackLines = cleaned.stack.split('\n').slice(1).join('\n')
-        const formatted = stackLines
-          ? `${ansiPrefix ? `${ansiPrefix}${header}\x1b[0m` : header}\n${stackLines}`
-          : (ansiPrefix ? `${ansiPrefix}${header}\x1b[0m` : header)
+        const errorHeader = `${cleanedError.name}: ${cleanedError.message}`
+        const errorStackLines = cleanedError.stack.split('\n').slice(1).join('\n')
+        const formattedError = errorStackLines
+          ? `${ansiPrefixCode ? `${ansiPrefixCode}${errorHeader}\x1b[0m` : errorHeader}\n${errorStackLines}`
+          : (ansiPrefixCode ? `${ansiPrefixCode}${errorHeader}\x1b[0m` : errorHeader)
 
-        result.push(previousWasObject ? formatted : `\n${formatted}`)
+        finalFormattedArgs.push(previousWasObject ? formattedError : `\n${formattedError}`)
         previousWasObject = true
       } else if (TypeValidator.isStackLikeString(arg)) {
-        const filtered = this.filterStack(arg)
-        if (!filtered.trim()) {
+        const filteredStackString = this.filterStack(arg)
+        if (!filteredStackString.trim()) {
           continue
         }
 
-        const lines = filtered.split('\n')
-        const hasErrorHeader = lines[0]?.includes('Error') && lines[0]?.includes(':')
+        const stackLines = filteredStackString.split('\n')
+        const hasErrorHeaderLine = stackLines[0]?.includes('Error') && stackLines[0]?.includes(':')
 
-        if (hasErrorHeader) {
-          const header = ansiPrefix ? `${ansiPrefix}${lines[0]}\x1b[0m` : lines[0]
-          const body = lines.slice(1).join('\n')
-          result.push(`\n${body ? `${header}\n${body}` : header}`)
+        if (hasErrorHeaderLine) {
+          const header = ansiPrefixCode ? `${ansiPrefixCode}${stackLines[0]}\x1b[0m` : stackLines[0]
+          const body = stackLines.slice(1).join('\n')
+          finalFormattedArgs.push(`\n${body ? `${header}\n${body}` : header}`)
         } else {
-          result.push(`\n${filtered}`)
+          finalFormattedArgs.push(`\n${filteredStackString}`)
         }
         previousWasObject = true
       } else if (TypeValidator.isString(arg)) {
-        const str = previousWasObject ? `\n${arg}` : arg
-        const shouldColor = ansiPrefix && !TypeValidator.isAnsiColoredString(arg) && !TypeValidator.isStackLikeString(arg)
+        const stringContent = previousWasObject ? `\n${arg}` : arg
+        const shouldApplyColor = ansiPrefixCode && !TypeValidator.isAnsiColoredString(arg) && !TypeValidator.isStackLikeString(arg)
 
-        result.push(shouldColor ? `${ansiPrefix}${str}\x1b[0m` : str)
+        finalFormattedArgs.push(shouldApplyColor ? `${ansiPrefixCode}${stringContent}\x1b[0m` : stringContent)
         previousWasObject = false
       } else {
-        result.push(arg)
+        finalFormattedArgs.push(arg)
         previousWasObject = false
       }
     }
 
     // Append postfix tags
     for (const tag of postfix) {
-      const coloredTag = ansiPrefix ? `${ansiPrefix}${tag.text}\x1b[0m` : tag.text
-      result.push(coloredTag)
+      const coloredTag = ansiPrefixCode ? `${ansiPrefixCode}${tag.text}\x1b[0m` : tag.text
+      finalFormattedArgs.push(coloredTag)
     }
 
-    return result
+    return finalFormattedArgs
   }
 
   protected isBrowser(): boolean {
@@ -202,22 +202,22 @@ export class ColorinoNode extends AbstractColorino implements ColorinoNodeInterf
   }
 
   protected override toAnsiPrefix(hex: string): string {
-    const isNoColor = this.colorLevel === ColorLevel.NO_COLOR || this.colorLevel === 'UnknownEnv'
-    if (isNoColor) {
+    const isNoColorEnv = this.colorLevel === ColorLevel.NO_COLOR || this.colorLevel === 'UnknownEnv'
+    if (isNoColorEnv) {
       return ''
     }
 
     if (this.colorLevel === ColorLevel.TRUECOLOR) {
-      const [r, g, b] = colorConverter.hex.toRgb(hex)
-      return `\x1b[38;2;${r};${g};${b}m`
+      const [red, green, blue] = colorConverter.hex.toRgb(hex)
+      return `\x1b[38;2;${red};${green};${blue}m`
     }
 
     if (this.colorLevel === ColorLevel.ANSI256) {
-      const ansi256 = colorConverter.hex.toAnsi256(hex)
-      return `\x1b[38;5;${ansi256}m`
+      const ansi256ColorCode = colorConverter.hex.toAnsi256(hex)
+      return `\x1b[38;5;${ansi256ColorCode}m`
     }
 
-    const ansi16 = colorConverter.hex.toAnsi16(hex)
-    return `\x1b[${ansi16}m`
+    const ansi16ColorCode = colorConverter.hex.toAnsi16(hex)
+    return `\x1b[${ansi16ColorCode}m`
   }
 }

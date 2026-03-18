@@ -9,6 +9,7 @@ import {
   LogLevel,
   FormattedTag,
   CallSiteInfo,
+  ColorinoBrowserColorized,
 } from './types.js'
 import { ColorinoBrowserInterface, ColorinoOptions } from './interfaces.js'
 import { TypeValidator } from './type-validator.js'
@@ -31,8 +32,8 @@ export class ColorinoBrowser extends AbstractColorino implements ColorinoBrowser
       return text
     }
 
-    const css = `background: linear-gradient(to right, ${startHex}, ${endHex}); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;`
-    return { [ColorinoBrowserCss]: true, text, css } as BrowserCssArg
+    const gradientCss = `background: linear-gradient(to right, ${startHex}, ${endHex}); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;`
+    return { [ColorinoBrowserCss]: true, text, css: gradientCss } as BrowserCssArg
   }
 
   public css(text: string, style: CssConsoleStyle): string | BrowserCssArg {
@@ -48,12 +49,12 @@ export class ColorinoBrowser extends AbstractColorino implements ColorinoBrowser
   }
 
   protected writeToFile(): void {
-    // File logging is not supported in the browser
+    // File logging is not supported in the browser environment
   }
 
   protected formatArgs(method: ConsoleMethod, args: unknown[], tags: FormattedTag[] = []): unknown[] {
     const hasError = args.some(arg => TypeValidator.isError(arg) || TypeValidator.isStackLikeString(arg))
-    const toProcess = (method === 'trace' && !hasError)
+    const argsToProcess = (method === 'trace' && !hasError)
       ? (() => {
           const stack = this.buildCallerStack()
           return stack ? [...args, stack] : args
@@ -61,80 +62,80 @@ export class ColorinoBrowser extends AbstractColorino implements ColorinoBrowser
       : args
 
     const colorHex = this.palette[method] || '#ffffff'
-    const formatParts: string[] = []
-    const finalArgs: unknown[] = []
+    const formatStringParts: string[] = []
+    const finalArguments: unknown[] = []
 
     const { prefix, postfix } = this.partitionTags(tags)
 
-    // Add prefix tags
+    // Prepend prefix tags
     for (const tag of prefix) {
-      formatParts.push('%c%s')
-      finalArgs.push(`color:${colorHex}`, tag.text)
+      formatStringParts.push('%c%s')
+      finalArguments.push(`color:${colorHex}`, tag.text)
     }
 
-    let previousWasObject = false
-    for (const arg of toProcess) {
+    let lastWasObject = false
+    for (const arg of argsToProcess) {
       if (TypeValidator.isBrowserColorizedArg(arg)) {
-        formatParts.push(`%c${arg.text}`)
-        finalArgs.push(`color:${arg.hex}`)
-        previousWasObject = false
+        formatStringParts.push(`%c${arg.text}`)
+        finalArguments.push(`color:${arg.hex}`)
+        lastWasObject = false
       } else if (TypeValidator.isBrowserCssArg(arg)) {
-        formatParts.push(`%c${arg.text}`)
-        finalArgs.push(arg.css)
-        previousWasObject = false
+        formatStringParts.push(`%c${arg.text}`)
+        finalArguments.push(arg.css)
+        lastWasObject = false
       } else if (TypeValidator.isFormattableObject(arg)) {
-        formatParts.push(previousWasObject ? '%o' : '\n%o')
-        finalArgs.push(arg)
-        previousWasObject = true
+        formatStringParts.push(lastWasObject ? '%o' : '\n%o')
+        finalArguments.push(arg)
+        lastWasObject = true
       } else if (TypeValidator.isError(arg)) {
-        const cleaned = this.cleanErrorStack(arg)
-        if (!cleaned.name.trim() || !cleaned.message.trim() || !cleaned.stack?.trim()) {
+        const cleanedError = this.cleanErrorStack(arg)
+        if (!cleanedError.name.trim() || !cleanedError.message.trim() || !cleanedError.stack?.trim()) {
           continue
         }
 
-        const header = `${cleaned.name}: ${cleaned.message}`
-        const stackLines = cleaned.stack.split('\n').slice(1).join('\n')
+        const errorHeader = `${cleanedError.name}: ${cleanedError.message}`
+        const errorStack = cleanedError.stack.split('\n').slice(1).join('\n')
 
-        formatParts.push(previousWasObject ? '%c%s' : '\n%c%s')
-        finalArgs.push(`color:${colorHex}`, header)
+        formatStringParts.push(lastWasObject ? '%c%s' : '\n%c%s')
+        finalArguments.push(`color:${colorHex}`, errorHeader)
 
-        if (stackLines) {
-          formatParts.push('\n%s')
-          finalArgs.push(stackLines)
+        if (errorStack) {
+          formatStringParts.push('\n%s')
+          finalArguments.push(errorStack)
         }
-        previousWasObject = true
+        lastWasObject = true
       } else if (TypeValidator.isStackLikeString(arg)) {
-        const filtered = this.filterStack(arg)
-        if (!filtered.trim()) {
+        const filteredStack = this.filterStack(arg)
+        if (!filteredStack.trim()) {
           continue
         }
 
-        formatParts.push('\n%s')
-        finalArgs.push(filtered)
-        previousWasObject = true
+        formatStringParts.push('\n%s')
+        finalArguments.push(filteredStack)
+        lastWasObject = true
       } else if (TypeValidator.isString(arg)) {
-        const str = previousWasObject ? `\n${arg}` : arg
-        formatParts.push(`%c${str}`)
-        finalArgs.push(`color:${colorHex}`)
-        previousWasObject = false
+        const stringValue = lastWasObject ? `\n${arg}` : arg
+        formatStringParts.push(`%c${stringValue}`)
+        finalArguments.push(`color:${colorHex}`)
+        lastWasObject = false
       } else {
-        formatParts.push('%o')
-        finalArgs.push(arg)
-        previousWasObject = false
+        formatStringParts.push('%o')
+        finalArguments.push(arg)
+        lastWasObject = false
       }
     }
 
-    // Add postfix tags
+    // Append postfix tags
     for (const tag of postfix) {
-      formatParts.push('%c %s')
-      finalArgs.push(`color:${colorHex}`, tag.text)
+      formatStringParts.push('%c %s')
+      finalArguments.push(`color:${colorHex}`, tag.text)
     }
 
-    if (formatParts.length === 0) {
-      return toProcess
+    if (formatStringParts.length === 0) {
+      return argsToProcess
     }
 
-    return [formatParts.join(' '), ...finalArgs]
+    return [formatStringParts.join(' '), ...finalArguments]
   }
 
   protected isBrowser(): boolean {
@@ -146,12 +147,12 @@ export class ColorinoBrowser extends AbstractColorino implements ColorinoBrowser
       return style
     }
 
-    const parts = []
+    const styleParts = []
     for (const property in style) {
        if (Object.prototype.hasOwnProperty.call(style, property) && style[property]) {
-          parts.push(`${property}:${style[property]}`)
+          styleParts.push(`${property}:${style[property]}`)
        }
     }
-    return parts.join(';')
+    return styleParts.join(';')
   }
 }
