@@ -29,14 +29,16 @@ describe('Colorino - File Logging', () => {
 
     logger.info('Test log message')
 
-    let retries = 0
-    while (retries < 20 && !fs.existsSync(logPath)) {
-      await new Promise(resolve => setTimeout(resolve, 50))
-      retries++
+    let content = ''
+    for (let i = 0; i < 50; i++) {
+      await new Promise(resolve => setTimeout(resolve, 100))
+      if (fs.existsSync(logPath)) {
+        content = fs.readFileSync(logPath, 'utf-8')
+        if (content.includes('[info] Test log message')) break
+      }
     }
 
     expect(fs.existsSync(logPath)).toBe(true)
-    const content = fs.readFileSync(logPath, 'utf-8')
     expect(content).toContain('[info] Test log message')
   })
 })

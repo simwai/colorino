@@ -6,6 +6,7 @@ export class InputValidationError extends Error {
   }
 }
 
+/** Error thrown when a configuration option is invalid. */
 export class ColorinoConfigError extends Error {
   constructor(
     public readonly optionPath: string,

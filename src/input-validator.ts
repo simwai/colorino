@@ -6,72 +6,43 @@ import { ColorinoOptions } from './interfaces.js'
 
 export class InputValidator {
   validateHex(hex: string): Result<boolean, InputValidationError> {
-    const inputValidationError = new InputValidationError(
-      `Invalid hex color: '${hex}'`
-    )
-    if (!TypeValidator.isString(hex)) return err(inputValidationError)
-
-    const trimmedHex = hex.trim()
-    const isHexValid = /^#[0-9A-F]{6}$/i.test(trimmedHex)
-    if (!isHexValid) return err(inputValidationError)
-
+    if (!TypeValidator.isString(hex)) return err(new InputValidationError(`Invalid hex color: '${hex}'`))
+    const trimmed = hex.trim()
+    if (!/^#[0-9A-F]{6}$/i.test(trimmed)) return err(new InputValidationError(`Invalid hex color: '${hex}'`))
     return ok(true)
   }
 
   validatePalette(palette: Palette): Result<boolean, InputValidationError> {
-    const inputValidationerror = new InputValidationError(`Invalid log method`)
     for (const level in palette) {
-      if (!TypeValidator.isConsoleMethod(level))
-        return err(inputValidationerror)
-
-      const hex = palette[level as keyof Palette]
-      const result = this.validateHex(hex)
-      if (result.isErr()) return err(result.error)
+      if (!TypeValidator.isConsoleMethod(level)) return err(new InputValidationError(`Invalid log method`))
+      const res = this.validateHex(palette[level as keyof Palette])
+      if (res.isErr()) return err(res.error)
     }
-
     return ok(true)
   }
 
+  /** Validates ColorinoOptions at runtime. */
   validateOptions(options: ColorinoOptions): Result<boolean, ColorinoConfigError> {
     if (options.maxDepth !== undefined) {
       if (!Number.isInteger(options.maxDepth) || options.maxDepth < 0 || options.maxDepth > 100) {
-        return err(new ColorinoConfigError('maxDepth', 'must be an integer between 0 and 100', options.maxDepth))
+        return err(new ColorinoConfigError('maxDepth', 'must be integer 0-100', options.maxDepth))
       }
     }
-
     if (options.logLevel) {
-      if (options.logLevel.min && !this.isValidLogLevel(options.logLevel.min)) {
-        return err(new ColorinoConfigError('logLevel.min', 'invalid log level', options.logLevel.min))
-      }
-      if (options.logLevel.allow) {
-        for (const level of options.logLevel.allow) {
-          if (!this.isValidLogLevel(level)) {
-            return err(new ColorinoConfigError('logLevel.allow', 'contains invalid log level', level))
-          }
-        }
-      }
-      if (options.logLevel.deny) {
-        for (const level of options.logLevel.deny) {
-          if (!this.isValidLogLevel(level)) {
-            return err(new ColorinoConfigError('logLevel.deny', 'contains invalid log level', level))
-          }
-        }
-      }
+      const { min, allow, deny } = options.logLevel
+      if (min && !this.isL(min)) return err(new ColorinoConfigError('logLevel.min', 'invalid level', min))
+      if (allow?.some(l => !this.isL(l))) return err(new ColorinoConfigError('logLevel.allow', 'invalid level in list', allow))
+      if (deny?.some(l => !this.isL(l))) return err(new ColorinoConfigError('logLevel.deny', 'invalid level in list', deny))
     }
-
     if (options.fileLogging) {
-      if (typeof options.fileLogging.isEnabled !== 'boolean') {
-        return err(new ColorinoConfigError('fileLogging.isEnabled', 'must be a boolean', options.fileLogging.isEnabled))
-      }
-      if (typeof options.fileLogging.path !== 'string' || !options.fileLogging.path) {
-        return err(new ColorinoConfigError('fileLogging.path', 'must be a non-empty string', options.fileLogging.path))
-      }
+      const { isEnabled, path: p } = options.fileLogging
+      if (typeof isEnabled !== 'boolean') return err(new ColorinoConfigError('fileLogging.isEnabled', 'must be boolean', isEnabled))
+      if (typeof p !== 'string' || !p) return err(new ColorinoConfigError('fileLogging.path', 'must be non-empty string', p))
     }
-
     return ok(true)
   }
 
-  private isValidLogLevel(level: unknown): level is LogLevel {
-    return (['trace', 'debug', 'log', 'info', 'warn', 'error'] as unknown[]).includes(level)
+  private isL(l: unknown): l is LogLevel {
+    return (['trace', 'debug', 'log', 'info', 'warn', 'error'] as unknown[]).includes(l)
   }
 }

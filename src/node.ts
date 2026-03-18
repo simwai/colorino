@@ -6,47 +6,32 @@ import { themePalettes } from './theme.js'
 import { LogLevel, Palette, TerminalTheme, ThemeName } from './types.js'
 import { ColorinoOptions, ColorinoNodeInterface } from './interfaces.js'
 
+/**
+ * Creates a new Colorino logger instance for Node.js.
+ * @param userPalette - Optional custom hex colors for log levels.
+ * @param options - Configuration for theme, filtering, metadata, and file logging.
+ */
 export function createColorino(
   userPalette: Partial<Palette> = {},
   options: ColorinoOptions = {}
 ): ColorinoNodeInterface {
   const validator = new InputValidator()
-
   const themeOpt = options.theme ?? 'auto'
+  let detTheme: TerminalTheme | undefined
+  if (themeOpt === 'dark' || themeOpt === 'light') detTheme = themeOpt
+  else if (themeOpt !== 'auto') detTheme = 'unknown'
 
-  let detectorThemeOverride: TerminalTheme | undefined
-  if (themeOpt === 'dark' || themeOpt === 'light') {
-    detectorThemeOverride = themeOpt
-  } else if (themeOpt !== 'auto') {
-    detectorThemeOverride = 'unknown'
-  }
+  const detector = new NodeColorSupportDetector(process, detTheme, options.isOsc11Enabled)
+  const baseTheme = determineBaseTheme(themeOpt, themeOpt === 'auto' ? detector.getTheme() : 'unknown')
+  const finalPalette: Palette = { ...themePalettes[baseTheme], ...userPalette }
+  const colorLevel = detector.isNodeEnv() ? (detector.getColorLevel() ?? 'UnknownEnv') : 'UnknownEnv'
 
-  const nodeDetector = new NodeColorSupportDetector(
-    process,
-    detectorThemeOverride,
-    options.isOsc11Enabled
-  )
-  const detectedTerminalTheme =
-    themeOpt === 'auto' ? nodeDetector.getTheme() : 'unknown'
-
-  const baseThemeName = determineBaseTheme(themeOpt, detectedTerminalTheme)
-  const basePalette = themePalettes[baseThemeName]
-  const finalPalette: Palette = { ...basePalette, ...userPalette }
-
-  const colorLevel = nodeDetector.isNodeEnv()
-    ? (nodeDetector.getColorLevel() ?? 'UnknownEnv')
-    : 'UnknownEnv'
-
-  return new ColorinoNode(
-    finalPalette,
-    userPalette,
-    validator,
-    colorLevel,
-    options
-  )
+  return new ColorinoNode(finalPalette, userPalette, validator, colorLevel, options)
 }
 
 export type { Palette, LogLevel, ThemeName }
 export type { ColorinoOptions, ColorinoNodeInterface }
 export { themePalettes }
+
+/** Default Colorino logger instance for Node.js. */
 export const colorino = createColorino()

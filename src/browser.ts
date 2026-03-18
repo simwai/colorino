@@ -6,45 +6,28 @@ import { determineBaseTheme } from './determine-base-theme.js'
 import { LogLevel, Palette, TerminalTheme, ThemeName } from './types.js'
 import { ColorinoOptions, ColorinoBrowserInterface } from './interfaces.js'
 
+/**
+ * Creates a new Colorino logger instance for the browser.
+ * @param userPalette - Optional custom hex colors for log levels.
+ * @param options - Configuration for theme, filtering, and metadata.
+ */
 export function createColorino(
   userPalette: Partial<Palette> = {},
   options: ColorinoOptions = {}
 ): ColorinoBrowserInterface {
   const validator = new InputValidator()
+  const detTheme = (options.theme === 'dark' || options.theme === 'light') ? options.theme : undefined
+  const detector = new BrowserColorSupportDetector(window, navigator, detTheme)
+  const baseTheme = determineBaseTheme(options.theme ?? 'auto', detector.getTheme())
+  const finalPalette: Palette = { ...themePalettes[baseTheme], ...userPalette }
+  const colorLevel = detector.isBrowserEnv() ? (detector.getColorLevel() ?? 'UnknownEnv') : 'UnknownEnv'
 
-  let detectorThemeOverride: TerminalTheme | undefined
-  if (options.theme === 'dark' || options.theme === 'light') {
-    detectorThemeOverride = options.theme
-  }
-
-  const browserDetector = new BrowserColorSupportDetector(
-    window,
-    navigator,
-    detectorThemeOverride
-  )
-
-  const detectedBrowserTheme = browserDetector.getTheme()
-
-  const themeOpt = options.theme ?? 'auto'
-  const baseThemeName = determineBaseTheme(themeOpt, detectedBrowserTheme)
-
-  const basePalette = themePalettes[baseThemeName]
-  const finalPalette: Palette = { ...basePalette, ...userPalette }
-
-  const colorLevel = browserDetector.isBrowserEnv()
-    ? (browserDetector.getColorLevel() ?? 'UnknownEnv')
-    : 'UnknownEnv'
-
-  return new ColorinoBrowser(
-    finalPalette,
-    userPalette,
-    validator,
-    colorLevel,
-    options
-  )
+  return new ColorinoBrowser(finalPalette, userPalette, validator, colorLevel, options)
 }
 
 export type { Palette, LogLevel, ThemeName }
 export type { ColorinoOptions, ColorinoBrowserInterface }
 export { themePalettes }
+
+/** Default Colorino logger instance for the browser. */
 export const colorino = createColorino()

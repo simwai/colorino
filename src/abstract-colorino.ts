@@ -26,362 +26,148 @@ export abstract class AbstractColorino {
     protected readonly options: ColorinoOptions = {}
   ) {
     this.palette = initialPalette
-
-    const validatePaletteResult = this.validator.validatePalette(this.palette)
-    if (validatePaletteResult.isErr()) throw validatePaletteResult.error
-
-    const validateOptionsResult = this.validator.validateOptions(this.options)
-    if (validateOptionsResult.isErr()) throw validateOptionsResult.error
-
+    const vP = this.validator.validatePalette(this.palette); if (vP.isErr()) throw vP.error
+    const vO = this.validator.validateOptions(this.options); if (vO.isErr()) throw vO.error
     this.colorLevel = colorLevel
   }
 
-  log(...args: unknown[]): void {
-    this.logInternal('log', args)
-  }
-
-  info(...args: unknown[]): void {
-    this.logInternal('info', args)
-  }
-
-  warn(...args: unknown[]): void {
-    this.logInternal('warn', args)
-  }
-
-  error(...args: unknown[]): void {
-    this.logInternal('error', args)
-  }
-
-  trace(...args: unknown[]): void {
-    this.logInternal('trace', args)
-  }
-
-  debug(...args: unknown[]): void {
-    this.logInternal('debug', args)
-  }
+  log(...args: unknown[]): void { this.logInternal('log', args) }
+  info(...args: unknown[]): void { this.logInternal('info', args) }
+  warn(...args: unknown[]): void { this.logInternal('warn', args) }
+  error(...args: unknown[]): void { this.logInternal('error', args) }
+  trace(...args: unknown[]): void { this.logInternal('trace', args) }
+  debug(...args: unknown[]): void { this.logInternal('debug', args) }
 
   colorize(text: string, hex: string): string | BrowserColorizedArg {
-    if (
-      this.colorLevel === ColorLevel.NO_COLOR ||
-      this.colorLevel === 'UnknownEnv'
-    ) {
-      return text
-    }
-
-    if (this.isBrowser()) {
-      return {
-        [ColorinoBrowserColorized]: true,
-        text,
-        hex,
-      }
-    }
-
-    const ansiPrefix = this.toAnsiPrefix(hex)
-    if (!ansiPrefix) return text
-
-    return `${ansiPrefix}${text}\x1b[0m`
+    if (this.colorLevel === ColorLevel.NO_COLOR || this.colorLevel === 'UnknownEnv') return text
+    if (this.isBrowser()) return { [ColorinoBrowserColorized]: true, text, hex }
+    const ansi = this.toAnsiPrefix(hex)
+    return ansi ? `${ansi}${text}\x1b[0m` : text
   }
 
   protected logInternal(level: LogLevel, args: unknown[]): void {
     if (!this.isLevelEnabled(level)) return
-
     const caller = this.captureCaller(4)
     const tags = this.buildMetadataTags(level, caller)
-
-    let consoleMethod: ConsoleMethod = 'log'
-    if (level === 'info') consoleMethod = 'info'
-    else if (level === 'warn') consoleMethod = 'warn'
-    else if (level === 'error') consoleMethod = 'error'
-    else if (level === 'debug') consoleMethod = 'debug'
-
-    const formatted = this.formatArgs(level === 'trace' ? 'trace' : consoleMethod, args, tags)
-
-    console[consoleMethod](...formatted)
-
-    if (!this.isBrowser() && this.options.fileLogging?.isEnabled) {
-      this.writeToFile(level, args, caller)
-    }
+    let method: ConsoleMethod = 'log'
+    if (level === 'info') method = 'info'
+    else if (level === 'warn') method = 'warn'
+    else if (level === 'error') method = 'error'
+    else if (level === 'debug') method = 'debug'
+    const formatted = this.formatArgs(level === 'trace' ? 'trace' : method, args, tags)
+    console[method](...formatted)
+    if (!this.isBrowser() && this.options.fileLogging?.isEnabled) this.writeToFile(level, args, caller)
   }
 
   protected abstract writeToFile(level: LogLevel, args: unknown[], caller?: CallSiteInfo): void
 
   private isLevelEnabled(level: LogLevel): boolean {
-    const { logLevel } = this.options
-    if (!logLevel) return true
-
-    const allLevels: LogLevel[] = ['trace', 'debug', 'log', 'info', 'warn', 'error']
-    const candidates = logLevel.allow ?? allLevels
+    const { logLevel: cfg } = this.options; if (!cfg) return true
+    const candidates = cfg.allow ?? (['trace', 'debug', 'log', 'info', 'warn', 'error'] as LogLevel[])
     if (!candidates.includes(level)) return false
-
-    const min = logLevel.min ?? 'trace'
+    const min = cfg.min ?? 'trace'
     if (LOG_LEVEL_PRIORITY[level] < LOG_LEVEL_PRIORITY[min]) return false
-
-    if (logLevel.deny?.includes(level)) return false
-
-    return true
+    return !cfg.deny?.includes(level)
   }
 
-  private captureCaller(stackDepth: number): CallSiteInfo | undefined {
-    const config = this.options.metadata?.callSite
-    const isEnabledDefault = false
-    const isEnabled = config?.isEnabled ?? isEnabledDefault
-
-    if (!isEnabled) return undefined
-
-    const error = new Error()
-    const stack = error.stack
-    if (!stack) return undefined
-
-    const lines = stack.split('\n')
-    const line = lines[stackDepth] || lines[lines.length - 1]
-    if (!line) return undefined
-
-    return this.parseStackLine(line)
+  private captureCaller(depth: number): CallSiteInfo | undefined {
+    const cfg = this.options.metadata?.callSite
+    // Disabled by default to maintain compatibility
+    if (!(cfg?.isEnabled ?? false)) return undefined
+    const stack = new Error().stack; if (!stack) return undefined
+    const lines = stack.split('\n'), line = lines[depth] || lines[lines.length - 1]
+    return line ? this.parseStackLine(line) : undefined
   }
 
   protected parseStackLine(line: string): CallSiteInfo | undefined {
-    const v8Regex = /at\s+(?:async\s+)?(?:new\s+)?(?:(.+?)\s+\()?(?:(.+?):(\d+):(\d+))\)?/
-    const match = line.match(v8Regex)
-
-    if (!match) return undefined
-
-    const functionName = match[1]
-    const fullPath = match[2]
-    const lineNumber = parseInt(match[3], 10)
-    const columnNumber = parseInt(match[4], 10)
-
-    let info: CallSiteInfo = {
-      filename: this.extractFilename(fullPath),
-      relativePath: this.extractRelativePath(fullPath),
-      line: lineNumber,
-      column: columnNumber,
-      functionName,
-    }
-
+    const v8 = /at\s+(?:async\s+)?(?:new\s+)?(?:(.+?)\s+\()?(?:(.+?):(\d+):(\d+))\)?/
+    const m = line.match(v8); if (!m) return undefined
+    const name = m[1], path = m[2] || '', l = parseInt(m[3] || '0', 10), c = parseInt(m[4] || '0', 10)
+    let info: CallSiteInfo = { filename: this.extractF(path), relativePath: this.extractR(path), line: l, column: c, functionName: name }
     if (this.options.metadata?.callSite?.resolve) {
-      const resolved = this.options.metadata.callSite.resolve({
-        file: info.filename,
-        line: info.line,
-        column: info.column,
-        functionName: info.functionName,
-      })
-      info = {
-        ...info,
-        filename: resolved.file,
-        line: resolved.line,
-        column: resolved.column,
-        functionName: resolved.functionName,
-      }
+      const r = this.options.metadata.callSite.resolve({ file: info.filename, line: info.line, column: info.column, functionName: info.functionName })
+      info = { ...info, filename: r.file, line: r.line, column: r.column, functionName: r.functionName }
     }
-
     return info
   }
 
-  private extractFilename(path: string): string {
-    const cleanedPath = path.replace(/^(?:https?|file):\/\//, '')
-    const parts = cleanedPath.split(/[/\\]/)
-    const lastPart = parts[parts.length - 1] ?? ''
-    return lastPart.split(/[?#]/)[0] ?? ''
+  private extractF(p: string): string {
+    const s = p.replace(/^(?:https?|file):\/\//, '').split(/[/\\]/)
+    const last = s[s.length - 1] || ''
+    return last.split(/[?#]/)[0] || ''
   }
 
-  private extractRelativePath(path: string): string {
-    if (this.isBrowser()) return this.extractFilename(path)
-
+  private extractR(p: string): string {
+    if (this.isBrowser()) return this.extractF(p)
     try {
       if (typeof process !== 'undefined' && process.cwd) {
         const cwd = process.cwd()
-        if (path.startsWith(cwd)) {
-          return path.slice(cwd.length).replace(/^[/\\]/, '').replace(/\\/g, '/')
-        }
+        if (p.startsWith(cwd)) return p.slice(cwd.length).replace(/^[/\\]/, '').replace(/\\/g, '/')
       }
-    } catch (e) {}
-
-    return this.extractFilename(path)
+    } catch {}
+    return this.extractF(p)
   }
 
   private buildMetadataTags(level: LogLevel, caller?: CallSiteInfo): FormattedTag[] {
-    const tags: FormattedTag[] = []
-    const config = this.options.metadata?.callSite
-
-    const isEnabledDefault = false
-    const isEnabled = config?.isEnabled ?? isEnabledDefault
-
-    if (isEnabled && caller) {
-      const tag = this.formatCallSiteTag(caller, config || {})
-      if (tag) tags.push(tag)
+    const cfg = this.options.metadata?.callSite
+    if ((cfg?.isEnabled ?? false) && caller) {
+      const tag = this.formatCallSiteTag(caller, cfg || {})
+      return tag ? [tag] : []
     }
-
-    return tags
+    return []
   }
 
   private formatCallSiteTag(caller: CallSiteInfo, config: CallSiteConfig): FormattedTag | null {
-    const isFileVisible = config.isCallerFileVisible ?? true
-    const isFunctionVisible = config.isCallerFunctionVisible ?? false
-    const isLineVisible = config.isCallerLineVisible ?? true
-    const isColumnVisible = config.isCallerColumnVisible ?? true
-    const isRelative = config.isCallerPathRelative ?? false
-
-    let filePart = ''
-    if (isFileVisible) {
-      filePart = isRelative ? caller.relativePath : caller.filename
-    }
-
-    let lineColPart = ''
-    if (isLineVisible) {
-      lineColPart = isColumnVisible ? `${caller.line}:${caller.column}` : `${caller.line}`
-    }
-
-    let locationPart = ''
-    if (filePart && lineColPart) {
-      locationPart = `${filePart}:${lineColPart}`
-    } else {
-      locationPart = filePart || lineColPart
-    }
-
+    const isF = config.isCallerFileVisible ?? true, isFn = config.isCallerFunctionVisible ?? false, isL = config.isCallerLineVisible ?? true, isC = config.isCallerColumnVisible ?? true, isR = config.isCallerPathRelative ?? false
+    const fP = isF ? (isR ? caller.relativePath : caller.filename) : ''
+    const lP = isL ? (isC ? `${caller.line}:${caller.column}` : `${caller.line}`) : ''
+    const loc = fP && lP ? `${fP}:${lP}` : (fP || lP)
     let text = ''
-    if (isFunctionVisible && caller.functionName) {
-      text = locationPart ? `[${caller.functionName}@${locationPart}]` : `[${caller.functionName}]`
-    } else if (locationPart) {
-      text = `[${locationPart}]`
-    }
-
-    if (!text) return null
-
-    return {
-      text,
-      position: config.position ?? 'postfix',
-    }
+    if (isFn && caller.functionName) text = loc ? `[${caller.functionName}@${loc}]` : `[${caller.functionName}]`
+    else if (loc) text = `[${loc}]`
+    return text ? { text, position: config.position ?? 'postfix' } : null
   }
 
   protected partitionTags(tags: FormattedTag[]): { prefix: FormattedTag[]; postfix: FormattedTag[] } {
-    const prefix: FormattedTag[] = []
-    const postfix: FormattedTag[] = []
-
-    for (const tag of tags) {
-      if (tag.position === 'prefix') prefix.push(tag)
-      else postfix.push(tag)
-    }
-
+    const prefix: FormattedTag[] = [], postfix: FormattedTag[] = []
+    for (const t of tags) { if (t.position === 'prefix') prefix.push(t); else postfix.push(t) }
     return { prefix, postfix }
   }
 
-  protected abstract formatArgs(
-    consoleMethod: ConsoleMethod,
-    args: unknown[],
-    tags: FormattedTag[]
-  ): unknown[]
-
+  protected abstract formatArgs(method: ConsoleMethod, args: unknown[], tags: FormattedTag[]): unknown[]
   protected abstract isBrowser(): boolean
+  protected abstract gradient(text: string, start: string, end: string): string | BrowserCssArg
+  protected toAnsiPrefix(_hex: string): string { return '' }
 
-  protected abstract gradient(
-    text: string,
-    startHex: string,
-    endHex: string
-  ): string | BrowserCssArg
-
-  protected toAnsiPrefix(_hex: string): string {
-    return ''
-  }
-
-  protected formatValue(
-    value: unknown,
-    maxDepth = this.options.maxDepth ?? 5
-  ): string {
+  protected formatValue(v: unknown, maxDepth = this.options.maxDepth ?? 5): string {
     const seen = new WeakSet<object>()
-
-    const sanitizeArray = (items: unknown[], depth: number): unknown[] => {
-      return items.map(item => sanitize(item, depth))
+    const sanitize = (val: unknown, d: number): unknown => {
+      if (TypeValidator.isNullOrUndefined(val) || !TypeValidator.isObject(val)) return val
+      if (seen.has(val)) return '[Circular]'; seen.add(val)
+      if (d >= maxDepth) return '[Object]'
+      if (TypeValidator.isArray(val)) return val.map(i => sanitize(i, d + 1))
+      const res: Record<string, unknown> = {}
+      for (const k in val) res[k] = sanitize(val[k], d + 1)
+      return res
     }
-
-    const sanitizeObject = (
-      obj: Record<string, unknown>,
-      depth: number
-    ): Record<string, unknown> => {
-      const result: Record<string, unknown> = {}
-      for (const key in obj) {
-        result[key] = sanitize(obj[key], depth)
-      }
-      return result
-    }
-
-    const sanitize = (val: unknown, currentDepth: number): unknown => {
-      if (
-        TypeValidator.isNullOrUndefined(val) ||
-        !TypeValidator.isObject(val)
-      ) {
-        return val
-      }
-
-      if (seen.has(val)) return '[Circular]'
-      seen.add(val)
-
-      if (currentDepth >= maxDepth) return '[Object]'
-
-      const nextDepth = currentDepth + 1
-
-      if (TypeValidator.isArray(val)) {
-        return sanitizeArray(val as unknown[], nextDepth)
-      }
-
-      return sanitizeObject(val as Record<string, unknown>, nextDepth)
-    }
-
-    return JSON.stringify(sanitize(value, 0), null, 2)
+    return JSON.stringify(sanitize(v, 0), null, 2)
   }
 
-  protected filterStack(inputStack: string | Error | undefined): string {
-    const areNodeFramesShown = this.options.areNodeFramesVisible ?? true
-    const areColorinoFramesShown =
-      this.options.areColorinoFramesVisible ?? false
-
-    const stack = TypeValidator.isError(inputStack)
-      ? inputStack.stack
-      : TypeValidator.isStackLikeString(inputStack)
-        ? inputStack
-        : ''
-    if (!stack) return ''
-
-    const lines = stack.split('\n')
-    const firstLine = lines[0] || ''
-
-    const isErrorHeader = !firstLine.trim().startsWith('at ')
-    const startIndex = isErrorHeader ? 1 : 0
-
-    const filtered = lines.slice(startIndex).filter(line => {
-      const lower = line.toLowerCase()
-
-      if (
-        (!areColorinoFramesShown && lower.includes('colorino')) ||
-        (!areNodeFramesShown && lower.includes('node:'))
-      ) {
-        return false
-      }
-
-      return true
+  protected filterStack(input: string | Error | undefined): string {
+    const nV = this.options.areNodeFramesVisible ?? true, cV = this.options.areColorinoFramesVisible ?? false
+    const s = TypeValidator.isError(input) ? input.stack : (TypeValidator.isStackLikeString(input) ? input : '')
+    if (!s) return ''
+    const lines = s.split('\n'), h = lines[0] || '', isE = !h.trim().startsWith('at ')
+    const filtered = lines.slice(isE ? 1 : 0).filter(l => {
+      const low = l.toLowerCase()
+      return !((!cV && low.includes('colorino')) || (!nV && low.includes('node:')))
     })
-
-    return isErrorHeader
-      ? [firstLine, ...filtered].join('\n')
-      : filtered.join('\n')
+    return isE ? [h, ...filtered].join('\n') : filtered.join('\n')
   }
 
-  protected cleanErrorStack(error: Error): Error {
-    if (!error.stack) return error
-
-    const cleanStack = this.filterStack(error.stack)
-    error.stack = cleanStack
-
-    return error
-  }
-
+  protected cleanErrorStack(e: Error): Error { if (e.stack) e.stack = this.filterStack(e.stack); return e }
   protected buildCallerStack(): string | undefined {
-    const error = new Error('Trace')
-
-    if (!error.stack) return undefined
-
-    const lines = error.stack.split('\n')
-    const stackFrames = lines.slice(1).join('\n')
-
-    return this.filterStack(stackFrames)
+    const s = new Error('Trace').stack
+    return s ? this.filterStack(s.split('\n').slice(1).join('\n')) : undefined
   }
 }
