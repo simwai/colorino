@@ -109,6 +109,8 @@ interface Colorino {
   warn(...args: unknown[]): void
   /** Log serious errors that require attention. */
   error(...args: unknown[]): void
+  /** Log critical errors that cause the application to fail. */
+  fatal(...args: unknown[]): void
   /** Log detailed information for developers. */
   debug(...args: unknown[]): void
   /** Log extremely detailed trace information. */

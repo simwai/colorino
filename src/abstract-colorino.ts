@@ -1,173 +1,295 @@
+import { ColorLevel } from './enums.js'
 import {
-  type Palette,
   ConsoleMethod,
-  ColorinoBrowserColorized,
-  BrowserColorizedArg,
-  BrowserCssArg,
+  Palette,
   LogLevel,
   LOG_LEVEL_PRIORITY,
   CallSiteInfo,
   FormattedTag,
+  ColorinoBrowserColorized,
 } from './types.js'
-import { type ColorinoOptions, CallSiteConfig } from './interfaces.js'
-import { InputValidator } from './input-validator.js'
-import { ColorLevel } from './enums.js'
+import { ColorinoOptions } from './interfaces.js'
 import { TypeValidator } from './type-validator.js'
+import { InputValidator } from './input-validator.js'
 
 export abstract class AbstractColorino {
-  protected colorLevel: ColorLevel | 'UnknownEnv'
-  protected palette: Palette
+  protected readonly palette: Palette
 
-  protected constructor(
+  constructor(
     initialPalette: Palette,
-    protected readonly userPalette: Partial<Palette>,
+    userPalette: Partial<Palette>,
     protected readonly validator: InputValidator,
-    colorLevel: ColorLevel | 'UnknownEnv',
+    protected readonly colorLevel: ColorLevel | 'UnknownEnv',
     protected readonly options: ColorinoOptions = {}
   ) {
-    this.palette = initialPalette
-    const vP = this.validator.validatePalette(this.palette); if (vP.isErr()) throw vP.error
-    const vO = this.validator.validateOptions(this.options); if (vO.isErr()) throw vO.error
-    this.colorLevel = colorLevel
+    this.palette = { ...initialPalette, ...userPalette }
+
+    const paletteRes = this.validator.validatePalette(this.palette)
+    if (paletteRes.isErr()) throw paletteRes.error
+
+    const optionsRes = this.validator.validateOptions(this.options)
+    if (optionsRes.isErr()) throw optionsRes.error
   }
 
-  log(...args: unknown[]): void { this.logInternal('log', args) }
-  info(...args: unknown[]): void { this.logInternal('info', args) }
-  warn(...args: unknown[]): void { this.logInternal('warn', args) }
-  error(...args: unknown[]): void { this.logInternal('error', args) }
-  trace(...args: unknown[]): void { this.logInternal('trace', args) }
-  debug(...args: unknown[]): void { this.logInternal('debug', args) }
+  public log(...args: unknown[]): void { this.logInternal('log', args) }
+  public info(...args: unknown[]): void { this.logInternal('info', args) }
+  public warn(...args: unknown[]): void { this.logInternal('warn', args) }
+  public error(...args: unknown[]): void { this.logInternal('error', args) }
+  public trace(...args: unknown[]): void { this.logInternal('trace', args) }
+  public debug(...args: unknown[]): void { this.logInternal('debug', args) }
+  public fatal(...args: unknown[]): void { this.logInternal('fatal', args) }
 
-  colorize(text: string, hex: string): string | BrowserColorizedArg {
-    if (this.colorLevel === ColorLevel.NO_COLOR || this.colorLevel === 'UnknownEnv') return text
-    if (this.isBrowser()) return { [ColorinoBrowserColorized]: true, text, hex }
-    const ansi = this.toAnsiPrefix(hex)
-    return ansi ? `${ansi}${text}\x1b[0m` : text
+  public abstract gradient(text: string, startHex: string, endHex: string): string | { text: string; css: string; [key: symbol]: boolean }
+
+  public colorize(text: string, hex: string): string | { text: string; hex: string; [key: symbol]: boolean } {
+    if (this.colorLevel === ColorLevel.NO_COLOR || this.colorLevel === 'UnknownEnv') {
+      return text
+    }
+
+    if (this.isBrowser()) {
+      return { [ColorinoBrowserColorized]: true, text, hex } as any
+    }
+
+    return `${this.toAnsiPrefix(hex)}${text}\x1b[0m`
   }
 
   protected logInternal(level: LogLevel, args: unknown[]): void {
     if (!this.isLevelEnabled(level)) return
-    const caller = this.captureCaller(4)
+
+    const caller = this.captureCaller()
     const tags = this.buildMetadataTags(level, caller)
-    let method: ConsoleMethod = 'log'
-    if (level === 'info') method = 'info'
-    else if (level === 'warn') method = 'warn'
-    else if (level === 'error') method = 'error'
-    else if (level === 'debug') method = 'debug'
-    const formatted = this.formatArgs(level === 'trace' ? 'trace' : method, args, tags)
-    console[method](...formatted)
-    if (!this.isBrowser() && this.options.fileLogging?.isEnabled) this.writeToFile(level, args, caller)
+
+    const method = this.mapLevelToConsoleMethod(level)
+    const formattedArgs = this.formatArgs(method, args, tags)
+
+    const consoleTarget = method === 'trace' ? 'log' : method
+    console[consoleTarget](...formattedArgs)
+
+    if (!this.isBrowser() && this.options.fileLogging?.isEnabled) {
+      this.writeToFile(level, args, caller)
+    }
+  }
+
+  private mapLevelToConsoleMethod(level: LogLevel): ConsoleMethod {
+    if (level === 'fatal') return 'error'
+    if (level === 'log' || level === 'info' || level === 'warn' || level === 'error' || level === 'trace' || level === 'debug') {
+      return level as ConsoleMethod
+    }
+    return 'log'
   }
 
   protected abstract writeToFile(level: LogLevel, args: unknown[], caller?: CallSiteInfo): void
 
   private isLevelEnabled(level: LogLevel): boolean {
-    const { logLevel: cfg } = this.options; if (!cfg) return true
-    const candidates = cfg.allow ?? (['trace', 'debug', 'log', 'info', 'warn', 'error'] as LogLevel[])
-    if (!candidates.includes(level)) return false
-    const min = cfg.min ?? 'trace'
+    const config = this.options.logLevel
+    if (!config) return true
+
+    const allowed = config.allow ?? (Object.keys(LOG_LEVEL_PRIORITY) as LogLevel[])
+    if (!allowed.includes(level)) return false
+
+    const min = config.min ?? 'trace'
     if (LOG_LEVEL_PRIORITY[level] < LOG_LEVEL_PRIORITY[min]) return false
-    return !cfg.deny?.includes(level)
+
+    if (config.deny?.includes(level)) return false
+
+    return true
   }
 
-  private captureCaller(depth: number): CallSiteInfo | undefined {
-    const cfg = this.options.metadata?.callSite
-    // Disabled by default to maintain compatibility
-    if (!(cfg?.isEnabled ?? false)) return undefined
-    const stack = new Error().stack; if (!stack) return undefined
-    const lines = stack.split('\n'), line = lines[depth] || lines[lines.length - 1]
-    return line ? this.parseStackLine(line) : undefined
+  private captureCaller(): CallSiteInfo | undefined {
+    const config = this.options.metadata?.callSite
+    if (!(config?.isEnabled ?? false)) return undefined
+
+    const stack = new Error().stack
+    if (!stack) return undefined
+
+    const lines = stack.split('\n')
+    let frameLine: string | undefined
+
+    for (let i = 1; i < lines.length; i++) {
+      const line = lines[i]
+      if (!line) continue
+      const lower = line.toLowerCase()
+      const isInternal = lower.includes('colorino') || lower.includes('loginternal') || lower.includes('capturecaller')
+      if (!isInternal) {
+        frameLine = line
+        break
+      }
+    }
+
+    return frameLine ? this.parseStackLine(frameLine) : undefined
   }
 
   protected parseStackLine(line: string): CallSiteInfo | undefined {
-    const v8 = /at\s+(?:async\s+)?(?:new\s+)?(?:(.+?)\s+\()?(?:(.+?):(\d+):(\d+))\)?/
-    const m = line.match(v8); if (!m) return undefined
-    const name = m[1], path = m[2] || '', l = parseInt(m[3] || '0', 10), c = parseInt(m[4] || '0', 10)
-    let info: CallSiteInfo = { filename: this.extractF(path), relativePath: this.extractR(path), line: l, column: c, functionName: name }
-    if (this.options.metadata?.callSite?.resolve) {
-      const r = this.options.metadata.callSite.resolve({ file: info.filename, line: info.line, column: info.column, functionName: info.functionName })
-      info = { ...info, filename: r.file, line: r.line, column: r.column, functionName: r.functionName }
+    const parts = line.trim().split(/\s+/)
+    let locationStr = parts[parts.length - 1]
+    if (locationStr.startsWith('(') && locationStr.endsWith(')')) {
+      locationStr = locationStr.slice(1, -1)
     }
+
+    const lastColon = locationStr.lastIndexOf(':')
+    if (lastColon === -1) return undefined
+    const column = parseInt(locationStr.slice(lastColon + 1), 10)
+
+    const secondLastColon = locationStr.lastIndexOf(':', lastColon - 1)
+    if (secondLastColon === -1) return undefined
+    const lineNum = parseInt(locationStr.slice(secondLastColon + 1, lastColon), 10)
+
+    const rawPath = locationStr.slice(0, secondLastColon)
+    if (!rawPath) return undefined
+
+    // Simple function name detection
+    let functionName: string | undefined
+    if (parts[1] !== locationStr && parts[1] !== 'at') {
+      functionName = parts[1]
+    }
+
+    const info: CallSiteInfo = {
+      filename: this.extractFilename(rawPath),
+      relativePath: this.extractRelativePath(rawPath),
+      line: lineNum,
+      column: column,
+      functionName
+    }
+
+    if (this.options.metadata?.callSite?.resolve) {
+      const resolved = this.options.metadata.callSite.resolve({
+        file: info.filename,
+        line: info.line,
+        column: info.column,
+        functionName: info.functionName
+      })
+      return {
+        ...info,
+        filename: resolved.file,
+        line: resolved.line,
+        column: resolved.column,
+        functionName: resolved.functionName
+      }
+    }
+
     return info
   }
 
-  private extractF(p: string): string {
-    const s = p.replace(/^(?:https?|file):\/\//, '').split(/[/\\]/)
-    const last = s[s.length - 1] || ''
+  private extractFilename(path: string): string {
+    const segments = path.replace(/^(?:https?|file):\/\//, '').split(/[/\\]/)
+    const last = segments[segments.length - 1] || ''
     return last.split(/[?#]/)[0] || ''
   }
 
-  private extractR(p: string): string {
-    if (this.isBrowser()) return this.extractF(p)
+  private extractRelativePath(path: string): string {
+    if (this.isBrowser()) return this.extractFilename(path)
     try {
       if (typeof process !== 'undefined' && process.cwd) {
         const cwd = process.cwd()
-        if (p.startsWith(cwd)) return p.slice(cwd.length).replace(/^[/\\]/, '').replace(/\\/g, '/')
+        const normalizedPath = path.replace(/^(?:file):\/\//, '')
+        if (normalizedPath.startsWith(cwd)) {
+          return normalizedPath.slice(cwd.length).replace(/^[/\\]/, '').replace(/\\/g, '/')
+        }
       }
     } catch {}
-    return this.extractF(p)
+    return this.extractFilename(path)
   }
 
   private buildMetadataTags(level: LogLevel, caller?: CallSiteInfo): FormattedTag[] {
-    const cfg = this.options.metadata?.callSite
-    if ((cfg?.isEnabled ?? false) && caller) {
-      const tag = this.formatCallSiteTag(caller, cfg || {})
+    const config = this.options.metadata?.callSite
+    if ((config?.isEnabled ?? false) && caller) {
+      const tag = this.formatCallSiteTag(caller, config || {})
       return tag ? [tag] : []
     }
     return []
   }
 
-  private formatCallSiteTag(caller: CallSiteInfo, config: CallSiteConfig): FormattedTag | null {
-    const isF = config.isCallerFileVisible ?? true, isFn = config.isCallerFunctionVisible ?? false, isL = config.isCallerLineVisible ?? true, isC = config.isCallerColumnVisible ?? true, isR = config.isCallerPathRelative ?? false
-    const fP = isF ? (isR ? caller.relativePath : caller.filename) : ''
-    const lP = isL ? (isC ? `${caller.line}:${caller.column}` : `${caller.line}`) : ''
-    const loc = fP && lP ? `${fP}:${lP}` : (fP || lP)
-    let text = ''
-    if (isFn && caller.functionName) text = loc ? `[${caller.functionName}@${loc}]` : `[${caller.functionName}]`
-    else if (loc) text = `[${loc}]`
-    return text ? { text, position: config.position ?? 'postfix' } : null
+  private formatCallSiteTag(caller: CallSiteInfo, config: ColorinoOptions['metadata']['callSite'] = {}): FormattedTag | null {
+    const parts: string[] = []
+
+    if (config.isCallerFunctionVisible && caller.functionName) parts.push(`${caller.functionName}@`)
+
+    const file = config.isCallerPathRelative ? caller.relativePath : caller.filename
+    if (config.isCallerFileVisible !== false) parts.push(file)
+
+    if (config.isCallerLineVisible !== false) {
+      parts.push(`:${caller.line}`)
+      if (config.isCallerColumnVisible !== false) parts.push(`:${caller.column}`)
+    }
+
+    const text = parts.join('')
+    return text ? { text: `[${text}]`, position: config.position ?? 'postfix' } : null
   }
 
   protected partitionTags(tags: FormattedTag[]): { prefix: FormattedTag[]; postfix: FormattedTag[] } {
     const prefix: FormattedTag[] = [], postfix: FormattedTag[] = []
-    for (const t of tags) { if (t.position === 'prefix') prefix.push(t); else postfix.push(t) }
+    for (const tag of tags) {
+      if (tag.position === 'prefix') prefix.push(tag)
+      else postfix.push(tag)
+    }
     return { prefix, postfix }
   }
 
   protected abstract formatArgs(method: ConsoleMethod, args: unknown[], tags: FormattedTag[]): unknown[]
   protected abstract isBrowser(): boolean
-  protected abstract gradient(text: string, start: string, end: string): string | BrowserCssArg
+  protected abstract gradient(text: string, start: string, end: string): string | { text: string; css: string; [key: symbol]: boolean }
   protected toAnsiPrefix(_hex: string): string { return '' }
 
-  protected formatValue(v: unknown, maxDepth = this.options.maxDepth ?? 5): string {
-    const seen = new WeakSet<object>()
-    const sanitize = (val: unknown, d: number): unknown => {
-      if (TypeValidator.isNullOrUndefined(val) || !TypeValidator.isObject(val)) return val
-      if (seen.has(val)) return '[Circular]'; seen.add(val)
-      if (d >= maxDepth) return '[Object]'
-      if (TypeValidator.isArray(val)) return val.map(i => sanitize(i, d + 1))
-      const res: Record<string, unknown> = {}
-      for (const k in val) res[k] = sanitize(val[k], d + 1)
-      return res
+  protected formatValue(value: unknown, maxDepth = this.options.maxDepth ?? 5): string {
+    const visited = new WeakSet<object>()
+    const transform = (val: unknown, depth: number): unknown => {
+      if (TypeValidator.isNullOrUndefined(val) || !TypeValidator.isObject(val)) {
+        if (typeof val === 'bigint') return `${val.toString()}n`
+        return val
+      }
+      if (visited.has(val)) return '[Circular]'
+      visited.add(val)
+      if (depth >= maxDepth) return '[Object]'
+
+      if (TypeValidator.isArray(val)) {
+        return val.map(item => transform(item, depth + 1))
+      }
+      const result: Record<string, unknown> = {}
+      for (const key in val) {
+        if (Object.prototype.hasOwnProperty.call(val, key)) {
+          result[key] = transform(val[key], depth + 1)
+        }
+      }
+      visited.delete(val) // Allow same object at different paths
+      return result
     }
-    return JSON.stringify(sanitize(v, 0), null, 2)
+    return JSON.stringify(transform(value, 0), null, 2)
   }
 
   protected filterStack(input: string | Error | undefined): string {
-    const nV = this.options.areNodeFramesVisible ?? true, cV = this.options.areColorinoFramesVisible ?? false
-    const s = TypeValidator.isError(input) ? input.stack : (TypeValidator.isStackLikeString(input) ? input : '')
-    if (!s) return ''
-    const lines = s.split('\n'), h = lines[0] || '', isE = !h.trim().startsWith('at ')
-    const filtered = lines.slice(isE ? 1 : 0).filter(l => {
-      const low = l.toLowerCase()
-      return !((!cV && low.includes('colorino')) || (!nV && low.includes('node:')))
+    const showNode = this.options.areNodeFramesVisible ?? true
+    const showInternal = this.options.areColorinoFramesVisible ?? false
+    const stack = TypeValidator.isError(input) ? input.stack : (TypeValidator.isStackLikeString(input) ? input : '')
+    if (!stack) return ''
+
+    const lines = stack.split('\n')
+    const header = lines[0] || ''
+    const isErrorHeader = !header.trim().startsWith('at ')
+
+    const frames = lines.slice(isErrorHeader ? 1 : 0).filter(line => {
+      const lower = line.toLowerCase()
+      return !((!showInternal && lower.includes('colorino')) || (!showNode && lower.includes('node:')))
     })
-    return isE ? [h, ...filtered].join('\n') : filtered.join('\n')
+
+    return isErrorHeader ? [header, ...frames].join('\n') : frames.join('\n')
   }
 
-  protected cleanErrorStack(e: Error): Error { if (e.stack) e.stack = this.filterStack(e.stack); return e }
+  protected cleanErrorStack(error: Error): Error {
+    if (error.stack) error.stack = this.filterStack(error.stack)
+    return error
+  }
+
   protected buildCallerStack(): string | undefined {
-    const s = new Error('Trace').stack
-    return s ? this.filterStack(s.split('\n').slice(1).join('\n')) : undefined
+    const stack = new Error('Trace').stack
+    if (!stack) return undefined
+    const lines = stack.split('\n')
+    let start = 1
+    for (let i = 1; i < lines.length; i++) {
+      if (!lines[i].toLowerCase().includes('colorino')) {
+        start = i
+        break
+      }
+    }
+    return this.filterStack(lines.slice(start).join('\n')) || undefined
   }
 }

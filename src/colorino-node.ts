@@ -19,83 +19,204 @@ export class ColorinoNode extends AbstractColorino implements ColorinoNodeInterf
   private logQueue: string[] = []
   private isWriting = false
 
-  constructor(iP: Palette, uP: Partial<Palette>, v: InputValidator, cL: ColorLevel | 'UnknownEnv', o: ColorinoOptions = {}) {
-    super(iP, uP, v, cL, o)
+  constructor(
+    initialPalette: Palette,
+    userPalette: Partial<Palette>,
+    validator: InputValidator,
+    colorLevel: ColorLevel | 'UnknownEnv',
+    options: ColorinoOptions = {}
+  ) {
+    super(initialPalette, userPalette, validator, colorLevel, options)
   }
 
-  public gradient(text: string, sH: string, eH: string): string {
-    if (this.colorLevel === ColorLevel.NO_COLOR || this.colorLevel === 'UnknownEnv' || this.colorLevel === ColorLevel.ANSI) return text
-    const chars = [...text], colors = colorConverter.hex.gradient(sH, eH, chars.length)
-    return chars.map((c, i) => {
-      const [r, g, b] = colors[i] || [0, 0, 0]
-      if (this.colorLevel === ColorLevel.TRUECOLOR) return `\x1b[38;2;${r};${g};${b}m${c}`
-      return `\x1b[38;5;${colorConverter.rgb.toAnsi256([r, g, b])}m${c}`
-    }).join('') + '\x1b[0m'
+  public gradient(text: string, startHex: string, endHex: string): string {
+    const noColor = this.colorLevel === ColorLevel.NO_COLOR || this.colorLevel === 'UnknownEnv'
+    if (noColor || this.colorLevel === ColorLevel.ANSI) {
+      return text
+    }
+
+    const characters = Array.from(text)
+    const colors = colorConverter.hex.gradient(startHex, endHex, characters.length)
+
+    const coloredText = characters.map((char, index) => {
+      const rgb = colors[index] || [0, 0, 0]
+      const [r, g, b] = rgb
+
+      if (this.colorLevel === ColorLevel.TRUECOLOR) {
+        return `\x1b[38;2;${r};${g};${b}m${char}`
+      }
+
+      const ansi256 = colorConverter.rgb.toAnsi256(rgb)
+      return `\x1b[38;5;${ansi256}m${char}`
+    }).join('')
+
+    return `${coloredText}\x1b[0m`
   }
 
   protected writeToFile(level: LogLevel, args: unknown[], caller?: CallSiteInfo): void {
-    const cfg = this.options.fileLogging; if (!cfg?.isEnabled) return
-    const min = cfg.minLevel ?? this.options.logLevel?.min ?? 'trace'
-    if (LOG_LEVEL_PRIORITY[level] < LOG_LEVEL_PRIORITY[min]) return
-    const msg = args.map(a => TypeValidator.isError(a) ? `${a.name}: ${a.message}\n${a.stack}` : (TypeValidator.isObject(a) ? this.formatValue(a) : String(a))).join(' ')
-    let line = `${new Date().toISOString()} [${level}] ${msg}`
-    const meta = this.options.metadata?.callSite
-    if ((meta?.isEnabled ?? false) && caller) {
-      const f = meta?.isCallerFileVisible ?? true ? (meta?.isCallerPathRelative ? caller.relativePath : caller.filename) : ''
-      const l = meta?.isCallerLineVisible ?? true ? (meta?.isCallerColumnVisible ?? true ? `${caller.line}:${caller.column}` : `${caller.line}`) : ''
-      const loc = f && l ? `${f}:${l}` : (f || l)
-      if (loc) line += ` [${loc}]`
+    const config = this.options.fileLogging
+    if (!config?.isEnabled) {
+      return
     }
-    this.logQueue.push(line + '\n'); this.processQueue()
+
+    const minLevel = config.minLevel ?? this.options.logLevel?.min ?? 'trace'
+    if (LOG_LEVEL_PRIORITY[level] < LOG_LEVEL_PRIORITY[minLevel]) {
+      return
+    }
+
+    const message = args.map(arg => {
+      if (TypeValidator.isError(arg)) {
+        return `${arg.name}: ${arg.message}\n${arg.stack}`
+      }
+      if (TypeValidator.isObject(arg)) {
+        return this.formatValue(arg)
+      }
+      return String(arg)
+    }).join(' ')
+
+    const timestamp = new Date().toISOString()
+    let logLine = `${timestamp} [${level}] ${message}`
+
+    const metadata = this.options.metadata?.callSite
+    const isMetadataEnabled = metadata?.isEnabled ?? false
+    if (isMetadataEnabled && caller) {
+      const file = metadata?.isCallerPathRelative ? caller.relativePath : caller.filename
+      const location = `${file}:${caller.line}:${caller.column}`
+      logLine += ` [${location}]`
+    }
+
+    this.logQueue.push(`${logLine}\n`)
+    this.processQueue()
   }
 
   private async processQueue() {
-    if (this.isWriting || !this.logQueue.length) return
+    if (this.isWriting || this.logQueue.length === 0) {
+      return
+    }
+
     this.isWriting = true
-    const cfg = this.options.fileLogging!, logP = path.resolve(process.cwd(), cfg.path)
+    const config = this.options.fileLogging!
+    const logPath = path.resolve(process.cwd(), config.path)
+
     try {
-      const dir = path.dirname(logP); if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true })
-      while (this.logQueue.length) {
-        const line = this.logQueue.shift()!, flag = cfg.isAppendMode === false ? 'w' : 'a'
-        await fs.promises.appendFile(logP, line, { flag })
-        if (cfg.isAppendMode === false) cfg.isAppendMode = true
+      const directory = path.dirname(logPath)
+      if (!fs.existsSync(directory)) {
+        fs.mkdirSync(directory, { recursive: true })
       }
-    } catch (e) { console.error('File write failed:', e) }
-    finally { this.isWriting = false }
+
+      while (this.logQueue.length > 0) {
+        const line = this.logQueue.shift()!
+        const flag = config.isAppendMode === false ? 'w' : 'a'
+
+        await fs.promises.appendFile(logPath, line, { flag })
+
+        if (config.isAppendMode === false) {
+           config.isAppendMode = true
+        }
+      }
+    } catch (error) {
+      console.error('Colorino: Failed to write to log file:', error)
+    } finally {
+      this.isWriting = false
+    }
   }
 
   protected formatArgs(method: ConsoleMethod, args: unknown[], tags: FormattedTag[] = []): unknown[] {
-    const hasE = args.some(a => TypeValidator.isError(a) || TypeValidator.isStackLikeString(a))
-    const toP = method === 'trace' && !hasE ? [...args, this.buildCallerStack()] : args
-    const hex = this.palette[method === 'trace' ? 'trace' : method] || '#ffffff', ansi = this.toAnsiPrefix(hex)
-    const { prefix, postfix } = this.partitionTags(tags), res: unknown[] = []
-    for (const t of prefix) res.push(ansi ? `${ansi}${t.text}\x1b[0m` : t.text)
-    let pO = false
-    for (const a of toP) {
-      if (TypeValidator.isFormattableObject(a)) { const s = this.formatValue(a); res.push(`\n${s}`); pO = true }
-      else if (TypeValidator.isError(a)) {
-        const c = this.cleanErrorStack(a); if (!c.name.trim() || !c.message.trim() || !c.stack?.trim()) continue
-        const h = `${c.name}: ${c.message}`, s = c.stack.split('\n').slice(1).join('\n')
-        const f = s ? `${ansi ? `${ansi}${h}\x1b[0m` : h}\n${s}` : (ansi ? `${ansi}${h}\x1b[0m` : h)
-        res.push(pO ? f : `\n${f}`); pO = true
-      } else if (TypeValidator.isStackLikeString(a)) {
-        const f = this.filterStack(a); if (!f.trim()) continue
-        const lines = f.split('\n'), isE = lines[0]?.includes('Error') && lines[0]?.includes(':')
-        if (isE) { const c = ansi ? `${ansi}${lines[0]}\x1b[0m` : lines[0], s = lines.slice(1).join('\n'); res.push(`\n${s ? `${c}\n${s}` : c}`) }
-        else res.push(`\n${f}`); pO = true
-      } else if (TypeValidator.isString(a)) {
-        const s = pO ? `\n${a}` : a; res.push(ansi && !TypeValidator.isAnsiColoredString(a) && !TypeValidator.isStackLikeString(a) ? `${ansi}${s}\x1b[0m` : s); pO = false
-      } else { res.push(a); pO = false }
+    const hasError = args.some(arg => TypeValidator.isError(arg) || TypeValidator.isStackLikeString(arg))
+    const toProcess = (method === 'trace' && !hasError)
+      ? [...args, this.buildCallerStack()]
+      : args
+
+    const colorHex = this.palette[method] || '#ffffff'
+    const ansiPrefix = this.toAnsiPrefix(colorHex)
+
+    const { prefix, postfix } = this.partitionTags(tags)
+    const result: unknown[] = []
+
+    // Prepend prefix tags
+    for (const tag of prefix) {
+      const coloredTag = ansiPrefix ? `${ansiPrefix}${tag.text}\x1b[0m` : tag.text
+      result.push(coloredTag)
     }
-    for (const t of postfix) res.push(ansi ? `${ansi}${t.text}\x1b[0m` : t.text)
-    return res
+
+    let lastWasObject = false
+    for (const arg of toProcess) {
+      if (TypeValidator.isFormattableObject(arg)) {
+        result.push(`\n${this.formatValue(arg)}`)
+        lastWasObject = true
+      } else if (TypeValidator.isError(arg)) {
+        const cleaned = this.cleanErrorStack(arg)
+        if (!cleaned.name.trim() || !cleaned.message.trim() || !cleaned.stack?.trim()) {
+          continue
+        }
+
+        const header = `${cleaned.name}: ${cleaned.message}`
+        const stackLines = cleaned.stack.split('\n').slice(1).join('\n')
+        const formatted = stackLines
+          ? `${ansiPrefix ? `${ansiPrefix}${header}\x1b[0m` : header}\n${stackLines}`
+          : (ansiPrefix ? `${ansiPrefix}${header}\x1b[0m` : header)
+
+        result.push(lastWasObject ? formatted : `\n${formatted}`)
+        lastWasObject = true
+      } else if (TypeValidator.isStackLikeString(arg)) {
+        const filtered = this.filterStack(arg)
+        if (!filtered.trim()) {
+          continue
+        }
+
+        const lines = filtered.split('\n')
+        const hasErrorHeader = lines[0]?.includes('Error') && lines[0]?.includes(':')
+
+        if (hasErrorHeader) {
+          const header = ansiPrefix ? `${ansiPrefix}${lines[0]}\x1b[0m` : lines[0]
+          const body = lines.slice(1).join('\n')
+          result.push(`\n${body ? `${header}\n${body}` : header}`)
+        } else {
+          result.push(`\n${filtered}`)
+        }
+        lastWasObject = true
+      } else if (TypeValidator.isString(arg)) {
+        const str = lastWasObject ? `\n${arg}` : arg
+        const shouldColor = ansiPrefix && !TypeValidator.isAnsiColoredString(arg) && !TypeValidator.isStackLikeString(arg)
+
+        result.push(shouldColor ? `${ansiPrefix}${str}\x1b[0m` : str)
+        lastWasObject = false
+      } else {
+        result.push(arg)
+        lastWasObject = false
+      }
+    }
+
+    // Append postfix tags
+    for (const tag of postfix) {
+      const coloredTag = ansiPrefix ? `${ansiPrefix}${tag.text}\x1b[0m` : tag.text
+      result.push(coloredTag)
+    }
+
+    return result
   }
 
-  protected isBrowser(): boolean { return false }
-  protected override toAnsiPrefix(h: string): string {
-    if (this.colorLevel === ColorLevel.NO_COLOR || this.colorLevel === 'UnknownEnv') return ''
-    if (this.colorLevel === ColorLevel.TRUECOLOR) { const [r, g, b] = colorConverter.hex.toRgb(h); return `\x1b[38;2;${r};${g};${b}m` }
-    if (this.colorLevel === ColorLevel.ANSI256) return `\x1b[38;5;${colorConverter.hex.toAnsi256(h)}m`
-    return `\x1b[${colorConverter.hex.toAnsi16(h)}m`
+  protected isBrowser(): boolean {
+    return false
+  }
+
+  protected override toAnsiPrefix(hex: string): string {
+    const noColor = this.colorLevel === ColorLevel.NO_COLOR || this.colorLevel === 'UnknownEnv'
+    if (noColor) {
+      return ''
+    }
+
+    if (this.colorLevel === ColorLevel.TRUECOLOR) {
+      const [r, g, b] = colorConverter.hex.toRgb(hex)
+      return `\x1b[38;2;${r};${g};${b}m`
+    }
+
+    if (this.colorLevel === ColorLevel.ANSI256) {
+      const ansi256 = colorConverter.hex.toAnsi256(hex)
+      return `\x1b[38;5;${ansi256}m`
+    }
+
+    const ansi16 = colorConverter.hex.toAnsi16(hex)
+    return `\x1b[${ansi16}m`
   }
 }

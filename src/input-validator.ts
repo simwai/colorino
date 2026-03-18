@@ -43,6 +43,6 @@ export class InputValidator {
   }
 
   private isL(l: unknown): l is LogLevel {
-    return (['trace', 'debug', 'log', 'info', 'warn', 'error'] as unknown[]).includes(l)
+    return (['trace', 'debug', 'log', 'info', 'warn', 'error', 'fatal'] as unknown[]).includes(l)
   }
 }
