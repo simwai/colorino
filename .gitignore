@@ -94,3 +94,7 @@ dist
 dist-ssr
 out
 *.old
+
+# VitePress
+docs/.vitepress/dist
+docs/.vitepress/cache
