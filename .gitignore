@@ -99,3 +99,8 @@ test-logs/
 # Test attachments
 .vitest-attachments/
 temp-extension*.log
+
+# Unwanted artifacts
+src/**/*.js
+src/**/*.map
+temp-source-map-*
