@@ -1,12 +1,26 @@
-# Colorino
+---
+layout: home
 
-A super simple colorized logger that gets the most out of your terminal.
+hero:
+  name: "Colorino"
+  text: "A super simple colorized logger"
+  tagline: "Gets the most out of your terminal with zero configuration"
+  image:
+    src: /logo.png
+    alt: Colorino Logo
+  actions:
+    - theme: brand
+      text: Get Started
+      link: /guide
+    - theme: alt
+      text: View on GitHub
+      link: https://github.com/simwai/colorino
 
-## Quick Start
-
-```ts twoslash
-// @errors: 2307
-import { colorino } from 'colorino'
-
-colorino.info('Hello VitePress!')
-```
+features:
+  - title: Zero Configuration
+    details: Automatically detects terminal color support (ANSI 16, 256, RGB).
+  - title: Themed Output
+    details: Comes with predefined themes like Dracula and GitHub Light.
+  - title: Cross Platform
+    details: Supports both Node.js and Browser environments.
+---

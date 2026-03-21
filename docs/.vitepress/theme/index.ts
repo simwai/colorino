@@ -1,6 +1,6 @@
 import DefaultTheme from 'vitepress/theme'
-import 'vitepress-plugin-shiki-twoslash/styles.css'
 import type { Theme } from 'vitepress'
+import './custom.css'
 
 export default {
   extends: DefaultTheme,
