@@ -1,40 +1,22 @@
-# Examples
+# Dynamic Examples
 
-Here are some common usage examples of Colorino.
+This page demonstrates how Colorino works in different scenarios.
 
-## Basic Usage
+## Simple Example
 
 ```ts
 import { colorino } from 'colorino'
 
-colorino.log('Basic log')
-colorino.info('Information')
-colorino.warn('Warning')
-colorino.error('Error')
+colorino.info('Dynamic loading works!')
 ```
 
-## Custom Logger Factory
+## Advanced Example
 
-Create a customized logger instance with your own brand colors:
+Create a context-aware logger:
 
 ```ts
 import { createColorino } from 'colorino'
 
-const customLogger = createColorino({
-  error: '#ff007b',
-  warn: '#ffa500',
-})
-
-customLogger.error('This is a custom error color!')
-```
-
-## Gradients
-
-Smooth color transitions:
-
-```ts
-import { colorino } from 'colorino'
-
-const rainbow = colorino.gradient('Hello Gradient!', '#ff0000', '#0000ff')
-colorino.log(rainbow)
+const logger = createColorino({ info: '#8be9fd' })
+logger.info('Custom colors')
 ```

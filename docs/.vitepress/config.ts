@@ -7,30 +7,18 @@ export default defineConfig({
   themeConfig: {
     logo: '/logo.png',
     nav: [
-      { text: 'Guide', link: '/guide' },
-      { text: 'API Reference', link: '/api' },
+      { text: 'Guide', link: '/README' },
+      { text: 'Examples', link: '/example' },
       { text: 'Changelog', link: '/CHANGELOG' },
       { text: 'Contributing', link: '/CONTRIBUTING' }
     ],
     sidebar: [
       {
-        text: 'Introduction',
+        text: 'Getting Started',
         items: [
-          { text: 'What is Colorino?', link: '/README' },
-          { text: 'Getting Started', link: '/guide' },
+          { text: 'Introduction', link: '/' },
+          { text: 'Guide', link: '/README' },
           { text: 'Examples', link: '/example' },
-        ]
-      },
-      {
-        text: 'Configuration',
-        items: [
-          { text: 'Config Options', link: '/config' },
-        ]
-      },
-      {
-        text: 'API',
-        items: [
-          { text: 'API Reference', link: '/api' },
         ]
       },
       {
