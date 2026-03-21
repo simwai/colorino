@@ -5,9 +5,6 @@ hero:
   name: "Colorino"
   text: "A super simple colorized logger"
   tagline: "Gets the most out of your terminal with zero configuration"
-  image:
-    src: /logo.png
-    alt: Colorino Logo
   actions:
     - theme: brand
       text: Get Started
@@ -23,4 +20,11 @@ features:
     details: Comes with predefined themes like Dracula and GitHub Light.
   - title: Cross Platform
     details: Supports both Node.js and Browser environments.
+
 ---
+
+# About Colorino
+
+Colorino is a zero-dependency, lightweight colorized logger that helps you build better terminal applications. It aims to provide the best possible developer experience by handling all the complex terminal color detection and fallback logic for you.
+
+To see all features in action, check out the [Guide](/guide.md) or the [API Reference](/api.md).
