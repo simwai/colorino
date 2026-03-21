@@ -9,16 +9,28 @@ export default defineConfig({
     nav: [
       { text: 'Guide', link: '/README' },
       { text: 'Examples', link: '/example' },
-      { text: 'Changelog', link: '/CHANGELOG' },
-      { text: 'Contributing', link: '/CONTRIBUTING' }
+      { text: 'Reference', items: [
+        { text: 'Configuration', link: '/config' },
+        { text: 'API Reference', link: '/api' }
+      ]},
+      { text: 'Project', items: [
+        { text: 'Changelog', link: '/CHANGELOG' },
+        { text: 'Contributing', link: '/CONTRIBUTING' }
+      ]}
     ],
     sidebar: [
       {
-        text: 'Getting Started',
+        text: 'Guide',
         items: [
-          { text: 'Introduction', link: '/' },
-          { text: 'Guide', link: '/README' },
+          { text: 'Introduction', link: '/README' },
           { text: 'Examples', link: '/example' },
+        ]
+      },
+      {
+        text: 'Reference',
+        items: [
+          { text: 'Configuration', link: '/config' },
+          { text: 'API Reference', link: '/api' },
         ]
       },
       {
@@ -35,6 +47,10 @@ export default defineConfig({
     footer: {
       message: 'Released under the MIT License.',
       copyright: 'Copyright © 2024-present simwai'
+    },
+    editLink: {
+      pattern: 'https://github.com/simwai/colorino/edit/main/docs/:path',
+      text: 'Edit this page on GitHub'
     }
   }
 })
