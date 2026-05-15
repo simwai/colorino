@@ -1,4 +1,4 @@
-# 🎨 Colorino
+# <a id="0"></a>🎨 Colorino
 
 [![npm](https://img.shields.io/npm/v/colorino?color=8B5CF6&logo=npm&logoColor=white)](https://www.npmjs.com/package/colorino)
 [![License](https://img.shields.io/npm/l/colorino?color=8B5CF6)](https://github.com/simwai/colorino/blob/master/LICENSE.MD)
@@ -12,34 +12,34 @@ It ships a default instance and a factory (`createColorino`) for custom palettes
 ![Demo](https://github.com/simwai/colorino/blob/master/screenshots/demo-ps.png?raw=true)
 ![Demo 2](https://github.com/simwai/colorino/blob/master/screenshots/demo-ps-2.png?raw=true)
 
----
+# <a id="0"></a>
 
-- [Features](#features)
-- [Installation](#installation)
-- [Browser via CDN (unpkg)](#browser-via-cdn-unpkg)
-  - [ESM (Recommended)](#esm-recommended)
-  - [UMD (Classic `<script>`)](#umd-classic-script)
-- [Usage](#usage)
-  - [Quick Start](#quick-start)
-  - [Creating a Custom Logger](#creating-a-custom-logger)
-  - [Options & Theme Overrides](#options--theme-overrides)
-    - [Available Theme Presets](#available-theme-presets)
-    - [Examples](#examples)
-  - [Customization](#customization)
-  - [Supported Environment Variables](#supported-environment-variables)
-  - [Colorize Helper (`colorize(text, hex)`)](#colorize-helper-colorizetext-hex)
-  - [Browser-only CSS Helper (`css(text, style)`)](#browser-only-css-helper-csstext-style)
-  - [Gradient Text (`gradient(text, startHex, endHex)`)](#gradient-text-gradienttext-starthex-endhex)
-- [API Reference](#api-reference)
-  - [1. `colorino` (default instance)](#1-colorino-default-instance)
-  - [2. `createColorino(palette?, options?)` (factory)](#2-createcolorinopalette-options-factory)
-- [Extending Colorino](#extending-colorino)
-  - [Use Case: Automatic File/Context Info](#use-case-automatic-filecontext-info)
-- [License](#license)
+- [Features](#1)
+- [Installation](#2)
+- [Browser via CDN (unpkg)](#3)
+  - [ESM (Recommended)](#3-1)
+  - [UMD (Classic `<script>`)](#3-2)
+- [Usage](#4)
+  - [Quick Start](#4-1)
+  - [Creating a Custom Logger](#4-2)
+  - [Options & Theme Overrides](#4-3)
+    - [Available Theme Presets](#4-3-1)
+    - [Examples](#4-3-2)
+  - [Customization](#4-4)
+  - [Supported Environment Variables](#4-5)
+  - [Colorize Helper (Manual Overrides) (`colorize(text, hex)`)](#4-6)
+  - [Browser‑only CSS Helper (`css(text, style)`)](#4-7)
+  - [Gradient Text (`gradient(text, startHex, endHex)`)](#4-8)
+- [API Reference](#5)
+  - [1. `colorino` (default instance)](#5-1)
+  - [2. `createColorino(palette?, options?)` (factory)](#5-2)
+- [Extending Colorino](#6)
+  - [Use Case: Automatic File/Context Info](#6-1)
+- [License](#7)
 
 <!-- Table of contents is made with https://github.com/eugene-khyst/md-toc-cli -->
 
-## Features
+## <a id="1"></a>Features
 
 - Applies ANSI-16, ANSI-256, or Truecolor output in Node.js; CSS `%c` formatting in browser DevTools
 - Auto-detects terminal or browser dark/light theme via OSC 11; falls back to a configurable default
@@ -52,7 +52,7 @@ It ships a default instance and a factory (`createColorino`) for custom palettes
 - Throws `InputValidationError` at construction time on invalid palette values
 - Respects `NO_COLOR`, `FORCE_COLOR`, `CLICOLOR`, `CLICOLOR_FORCE`, and related env vars
 
-## Installation
+## <a id="2"></a>Installation
 
 ```bash
 npm install colorino
@@ -60,9 +60,9 @@ npm install colorino
 pnpm add colorino
 ```
 
-## Browser via CDN (unpkg)
+## <a id="3"></a>Browser via CDN (unpkg)
 
-### ESM (Recommended)
+### <a id="3-1"></a>ESM (Recommended)
 
 ```html
 <!DOCTYPE html>
@@ -87,7 +87,7 @@ Non-minified (for debugging):
 </script>
 ```
 
-### UMD (Classic `<script>`)
+### <a id="3-2"></a>UMD (Classic `<script>`)
 
 ```html
 <!DOCTYPE html>
@@ -109,9 +109,9 @@ Non-minified:
 <script src="https://unpkg.com/colorino/dist/cdn.js"></script>
 ```
 
-## Usage
+## <a id="4"></a>Usage
 
-### Quick Start
+### <a id="4-1"></a>Quick Start
 
 ```typescript
 import { colorino } from 'colorino'
@@ -124,7 +124,7 @@ colorino.debug('Debug with objects:', { x: 5, y: 9 })
 colorino.trace('Tracing app start...')
 ```
 
-### Creating a Custom Logger
+### <a id="4-2"></a>Creating a Custom Logger
 
 ```typescript
 import { createColorino } from 'colorino'
@@ -137,7 +137,7 @@ myLogger.error('Critical!')
 myLogger.info('Rebranded info!')
 ```
 
-### Options & Theme Overrides
+### <a id="4-3"></a>Options & Theme Overrides
 
 `createColorino(palette?, options?)` accepts:
 
@@ -155,7 +155,7 @@ myLogger.info('Rebranded info!')
 - `'dark' | 'light'` — forces the matching default preset regardless of detected theme
 - `ThemeName` — forces a specific built-in palette (e.g. `'dracula'`)
 
-#### Available Theme Presets
+#### <a id="4-3-1"></a>Available Theme Presets
 
 | Theme Name | Type | Description |
 | --- | --- | --- |
@@ -166,7 +166,7 @@ myLogger.info('Rebranded info!')
 
 In `auto` mode: `dracula` in dark environments, `github-light` in light environments.
 
-#### Examples
+#### <a id="4-3-2"></a>Examples
 
 **1. Partial palette override on top of auto-detected theme:**
 
@@ -213,7 +213,7 @@ const darkLogger = createColorino({}, { theme: 'dark' })
 
 > Forcing `'dark'` or `'light'` bypasses OSC 11 detection. Use this in CI pipelines, dumb terminals, or environments where detection is unreliable.
 
-### Customization
+### <a id="4-4"></a>Customization
 
 Pass a partial palette to `createColorino`. Unspecified log levels fall back to the detected or selected theme.
 
@@ -230,7 +230,7 @@ myLogger.error('Oh no!')
 myLogger.info('Still styled by theme.')
 ```
 
-### Supported Environment Variables
+### <a id="4-5"></a>Supported Environment Variables
 
 | Variable | Effect | Example |
 | --- | --- | --- |
@@ -245,7 +245,7 @@ myLogger.info('Still styled by theme.')
 | `WT_SESSION` | Set by Windows Terminal for OSC 11 support | (automatic) |
 | `CI` | Set by CI systems (GitHub Actions, GitLab CI, etc.) to disable colors | `CI=true` |
 
-### Colorize Helper (`colorize(text, hex)`)
+### <a id="4-6"></a>Colorize Helper (Manual Overrides) (`colorize(text, hex)`)
 
 Applies a specific hex color to a single string without modifying the global palette. Returns plain text when color is disabled.
 
@@ -256,7 +256,7 @@ const important = colorino.colorize('IMPORTANT', '#ff5733')
 colorino.info(important, 'Something happened')
 ```
 
-### Browser-only CSS Helper (`css(text, style)`)
+### <a id="4-7"></a>Browser‑only CSS Helper (`css(text, style)`)
 
 Applies arbitrary CSS to a console segment using the `%c` formatter. No-op outside browser environments.
 
@@ -274,7 +274,7 @@ const badge = colorino.css('NEW', {
 colorino.info('Release status:', badge, 'shipped')
 ```
 
-### Gradient Text (`gradient(text, startHex, endHex)`)
+### <a id="4-8"></a>Gradient Text (`gradient(text, startHex, endHex)`)
 
 Interpolates colors across each character of `text` from `startHex` to `endHex`. Requires ANSI-256 or Truecolor support.
 
@@ -285,11 +285,11 @@ const rainbow = colorino.gradient('Hello Gradient!', '#ff0000', '#0000ff')
 colorino.log(rainbow)
 ```
 
-## API Reference
+## <a id="5"></a>API Reference
 
-### 1. `colorino` (default instance)
+### <a id="5-1"></a>1. `colorino` (default instance)
 
-A pre-configured logger using auto theme detection. No setup required.
+A pre-configured logger using auto theme detection.
 
 - `.log(...args)`
 - `.info(...args)`
@@ -301,18 +301,18 @@ A pre-configured logger using auto theme detection. No setup required.
 - `.css(text, style)` (browser only)
 - `.gradient(text, startHex, endHex)`
 
-### 2. `createColorino(palette?, options?)` (factory)
+### <a id="5-2"></a>2. `createColorino(palette?, options?)` (factory)
 
 Returns a new logger instance with the given palette and options.
 
 - `palette` (`Partial<Palette>`): Per-level color overrides (e.g. `{ error: '#ff007b' }`)
-- `options` (`ColorinoOptions`): Behavior options — see [Options & Theme Overrides](#options--theme-overrides)
+- `options` (`ColorinoOptions`): Behavior options — see [Options & Theme Overrides](#4-3)
 
-## Extending Colorino
+## <a id="6"></a>Extending Colorino
 
 Create a base instance via `createColorino()`, then compose extensions by overriding specific methods via `Object.assign`. This avoids subclassing and keeps the type surface intact.
 
-### Use Case: Automatic File/Context Info
+### <a id="6-1"></a>Use Case: Automatic File/Context Info
 
 Prefixes `.info()` and `.error()` calls with caller context derived from a synthetic `Error` stack.
 
@@ -369,6 +369,6 @@ logger.info('User created', { id: 123 })
 logger.error('Failed to load user', { id: 456 })
 ```
 
-## License
+## <a id="7"></a>License
 
 [MIT](LICENSE.md)
