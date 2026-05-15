@@ -303,27 +303,22 @@ A pre-configured logger using auto theme detection.
 
 ### <a id="5-2"></a>2. `createColorino(palette?, options?)` (factory)
 
-Returns a new logger instance with the given palette and options.
+Returns a new `ColorinoNode` instance with the given palette and options.
 
 - `palette` (`Partial<Palette>`): Per-level color overrides (e.g. `{ error: '#ff007b' }`)
 - `options` (`ColorinoOptions`): Behavior options — see [Options & Theme Overrides](#4-3)
 
 ## <a id="6"></a>Extending Colorino
 
-Create a base instance via `createColorino()`, then compose extensions by overriding specific methods via `Object.assign`. This avoids subclassing and keeps the type surface intact.
+`createColorino` returns a `ColorinoNode` class instance. Extend it via `extends ColorinoNode` and use `override` for existing methods or add new ones directly.
 
 ### <a id="6-1"></a>Use Case: Automatic File/Context Info
 
-Prefixes `.info()` and `.error()` calls with caller context derived from a synthetic `Error` stack.
+Overrides `.info()` and `.error()` to prefix each call with caller context derived from a synthetic `Error` stack.
 
 ```ts
-import {
-  createColorino,
-  type ColorinoOptions,
-  type Palette,
-} from 'colorino'
-
-type ColorinoType = ReturnType<typeof createColorino>
+import { ColorinoNode } from 'colorino/node'
+import type { ColorinoOptions, Palette } from 'colorino'
 
 function getCallerContext(): string {
   const err = new Error()
@@ -345,26 +340,23 @@ function getCallerContext(): string {
   return `${file}:${line}`
 }
 
-export function createContextLogger(
-  palette?: Partial<Palette>,
-  options?: ColorinoOptions
-): ColorinoType {
-  const base = createColorino(palette, options)
-  const logger = Object.create(base) as ColorinoType
+class ContextLogger extends ColorinoNode {
+  override info(...args: unknown[]): void {
+    super.info(`[${getCallerContext()}]`, ...args)
+  }
 
-  Object.assign(logger, {
-    info(...args: unknown[]) {
-      base.info(`[${getCallerContext()}]`, ...args)
-    },
-    error(...args: unknown[]) {
-      base.error(`[${getCallerContext()}]`, ...args)
-    },
-  })
-
-  return logger
+  override error(...args: unknown[]): void {
+    super.error(`[${getCallerContext()}]`, ...args)
+  }
 }
 
-const logger = createContextLogger({}, { theme: 'dracula' })
+const logger = new ContextLogger(
+  finalPalette,
+  userPalette,
+  validator,
+  colorLevel,
+  { theme: 'dracula' }
+)
 logger.info('User created', { id: 123 })
 logger.error('Failed to load user', { id: 456 })
 ```
