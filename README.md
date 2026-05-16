@@ -1,68 +1,33 @@
-# <a id="0"></a>🎨 Colorino
-
-[![npm](https://img.shields.io/npm/v/colorino?color=8B5CF6&logo=npm&logoColor=white)](https://www.npmjs.com/package/colorino)
-[![License](https://img.shields.io/npm/l/colorino?color=8B5CF6)](https://github.com/simwai/colorino/blob/master/LICENSE.MD)
-[![npm downloads](https://img.shields.io/npm/dm/colorino?color=8B5CF6&logo=npm&logoColor=white)](https://www.npmjs.com/package/colorino)
-[![Vitest](https://img.shields.io/badge/Test-Vitest-8B5CF6?logo=vitest&logoColor=white)](https://vitest.dev/)
-
-Colorino is a `console`-compatible logger for Node.js and the browser that applies ANSI or CSS colors to log output based on the detected environment and theme.
-
-It ships a default instance and a factory (`createColorino`) for custom palettes and options.
-
-![Demo](https://github.com/simwai/colorino/blob/master/screenshots/demo-ps.png?raw=true)
-![Demo 2](https://github.com/simwai/colorino/blob/master/screenshots/demo-ps-2.png?raw=true)
-
-# <a id="0"></a>
-
-- [Features](#1)
-- [Installation](#2)
-- [Browser via CDN (unpkg)](#3)
-  - [ESM (Recommended)](#3-1)
-  - [UMD (Classic `<script>`)](#3-2)
-- [Usage](#4)
-  - [Quick Start](#4-1)
-  - [Creating a Custom Logger](#4-2)
-  - [Options & Theme Overrides](#4-3)
-    - [Available Theme Presets](#4-3-1)
-    - [Examples](#4-3-2)
-  - [Customization](#4-4)
-  - [Supported Environment Variables](#4-5)
-  - [Colorize Helper (Manual Overrides) (`colorize(text, hex)`)](#4-6)
-  - [Browser‑only CSS Helper (`css(text, style)`)](#4-7)
-  - [Gradient Text (`gradient(text, startHex, endHex)`)](#4-8)
-- [API Reference](#5)
-  - [1. `colorino` (default instance)](#5-1)
-  - [2. `createColorino(palette?, options?)` (factory)](#5-2)
-- [Extending Colorino](#6)
-  - [Use Case: Automatic File/Context Info](#6-1)
-- [License](#7)
+- [Browser via CDN (unpkg)](#1)
+  - [ESM (Recommended)](#1-1)
+  - [UMD (Classic `<script>`)](#1-2)
+- [Usage](#2)
+  - [Quick Start](#2-1)
+  - [Creating a Custom Logger](#2-2)
+  - [Options & Theme Overrides](#2-3)
+    - [Available Theme Presets](#2-3-1)
+    - [Examples](#2-3-2)
+  - [Customization](#2-4)
+  - [Supported Environment Variables](#2-5)
+  - [Colorize Helper (Manual Overrides) (`colorize(text, hex)`)](#2-6)
+  - [Browser‑only CSS Helper (`css(text, style)`)](#2-7)
+  - [Gradient Text (`gradient(text, startHex, endHex)`)](#2-8)
+- [API Reference](#3)
+  - [1. `colorino` (default instance)](#3-1)
+  - [2. `createColorino(palette?, options?)` (factory)](#3-2)
+- [Extending Colorino](#4)
+  - [Use Case: Automatic File/Context Info](#4-1)
+- [License](#5)
 
 <!-- Table of contents is made with https://github.com/eugene-khyst/md-toc-cli -->
 
-## <a id="1"></a>Features
-
-- Applies ANSI-16, ANSI-256, or Truecolor output in Node.js; CSS `%c` formatting in browser DevTools
-- Auto-detects terminal or browser dark/light theme via OSC 11; falls back to a configurable default
-- Down-samples hex/RGB palette values to the best color depth supported by the current environment
-- Supports all standard log levels: `log`, `info`, `warn`, `error`, `debug`, `trace`
-- `createColorino(palette?, options?)` factory for isolated logger instances with custom palettes
-- `colorize(text, hex)` helper for per-call color overrides
-- `css(text, style)` helper for arbitrary CSS styling in browser DevTools (browser only)
-- `gradient(text, startHex, endHex)` for per-character color interpolation (requires ANSI-256 or Truecolor)
-- Throws `InputValidationError` at construction time on invalid palette values
-- Respects `NO_COLOR`, `FORCE_COLOR`, `CLICOLOR`, `CLICOLOR_FORCE`, and related env vars
-
-## <a id="2"></a>Installation
-
-```bash
-npm install colorino
-# or
 pnpm add colorino
-```
 
-## <a id="3"></a>Browser via CDN (unpkg)
+````
 
-### <a id="3-1"></a>ESM (Recommended)
+## <a id="1"></a>Browser via CDN (unpkg)
+
+### <a id="1-1"></a>ESM (Recommended)
 
 ```html
 <!DOCTYPE html>
@@ -77,17 +42,17 @@ pnpm add colorino
   </head>
   <body></body>
 </html>
-```
+````
 
 Non-minified (for debugging):
 
 ```html
-<script type="module">
+
   import { colorino } from 'https://unpkg.com/colorino/dist/cdn.mjs'
 </script>
 ```
 
-### <a id="3-2"></a>UMD (Classic `<script>`)
+### <a id="1-2"></a>UMD (Classic `<script>`)
 
 ```html
 <!DOCTYPE html>
@@ -109,9 +74,9 @@ Non-minified:
 <script src="https://unpkg.com/colorino/dist/cdn.js"></script>
 ```
 
-## <a id="4"></a>Usage
+## <a id="2"></a>Usage
 
-### <a id="4-1"></a>Quick Start
+### <a id="2-1"></a>Quick Start
 
 ```typescript
 import { colorino } from 'colorino'
@@ -124,7 +89,7 @@ colorino.debug('Debug with objects:', { x: 5, y: 9 })
 colorino.trace('Tracing app start...')
 ```
 
-### <a id="4-2"></a>Creating a Custom Logger
+### <a id="2-2"></a>Creating a Custom Logger
 
 ```typescript
 import { createColorino } from 'colorino'
@@ -137,17 +102,17 @@ myLogger.error('Critical!')
 myLogger.info('Rebranded info!')
 ```
 
-### <a id="4-3"></a>Options & Theme Overrides
+### <a id="2-3"></a>Options & Theme Overrides
 
 `createColorino(palette?, options?)` accepts:
 
-| Option | Type | Default | Description |
-| --- | --- | --- | --- |
-| `theme` | `ThemeOption` (see below) | `'auto'` | Control the active color theme or force a specific mode. |
-| `maxDepth` | `number` | `5` | Maximum depth when pretty-printing objects in log output. |
-| `areNodeFramesVisible` | `boolean` | `true` | Show Node.js internal frames (e.g., `node:internal/...`) in stack traces. |
-| `areColorinoFramesVisible` | `boolean` | `false` | Show Colorino internal frames in stack traces (useful for debugging Colorino). |
-| `isOsc11Enabled` | `boolean` | `true` | Enables auto light/dark theme detection via OSC 11. Disable if it causes crashes or unwanted behaviour in your terminal. |
+| Option                     | Type                      | Default  | Description                                                                                                              |
+| -------------------------- | ------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------ |
+| `theme`                    | `ThemeOption` (see below) | `'auto'` | Control the active color theme or force a specific mode.                                                                 |
+| `maxDepth`                 | `number`                  | `5`      | Maximum depth when pretty-printing objects in log output.                                                                |
+| `areNodeFramesVisible`     | `boolean`                 | `true`   | Show Node.js internal frames (e.g., `node:internal/...`) in stack traces.                                                |
+| `areColorinoFramesVisible` | `boolean`                 | `false`  | Show Colorino internal frames in stack traces (useful for debugging Colorino).                                           |
+| `isOsc11Enabled`           | `boolean`                 | `true`   | Enables auto light/dark theme detection via OSC 11. Disable if it causes crashes or unwanted behaviour in your terminal. |
 
 **`theme` values:**
 
@@ -155,18 +120,18 @@ myLogger.info('Rebranded info!')
 - `'dark' | 'light'` — forces the matching default preset regardless of detected theme
 - `ThemeName` — forces a specific built-in palette (e.g. `'dracula'`)
 
-#### <a id="4-3-1"></a>Available Theme Presets
+#### <a id="2-3-1"></a>Available Theme Presets
 
-| Theme Name | Type | Description |
-| --- | --- | --- |
-| `'dracula'` | Dark (High Contrast) | Pinks, purples, and cyans |
-| `'catppuccin-mocha'` | Dark (Low Contrast) | Pastel colors |
-| `'github-light'` | Light (High Contrast) | High-contrast |
-| `'catppuccin-latte'` | Light (Low Contrast) | Soft warm tones |
+| Theme Name           | Type                  | Description               |
+| -------------------- | --------------------- | ------------------------- |
+| `'dracula'`          | Dark (High Contrast)  | Pinks, purples, and cyans |
+| `'catppuccin-mocha'` | Dark (Low Contrast)   | Pastel colors             |
+| `'github-light'`     | Light (High Contrast) | High-contrast             |
+| `'catppuccin-latte'` | Light (Low Contrast)  | Soft warm tones           |
 
 In `auto` mode: `dracula` in dark environments, `github-light` in light environments.
 
-#### <a id="4-3-2"></a>Examples
+#### <a id="2-3-2"></a>Examples
 
 **1. Partial palette override on top of auto-detected theme:**
 
@@ -213,7 +178,7 @@ const darkLogger = createColorino({}, { theme: 'dark' })
 
 > Forcing `'dark'` or `'light'` bypasses OSC 11 detection. Use this in CI pipelines, dumb terminals, or environments where detection is unreliable.
 
-### <a id="4-4"></a>Customization
+### <a id="2-4"></a>Customization
 
 Pass a partial palette to `createColorino`. Unspecified log levels fall back to the detected or selected theme.
 
@@ -230,22 +195,22 @@ myLogger.error('Oh no!')
 myLogger.info('Still styled by theme.')
 ```
 
-### <a id="4-5"></a>Supported Environment Variables
+### <a id="2-5"></a>Supported Environment Variables
 
-| Variable | Effect | Example |
-| --- | --- | --- |
-| `NO_COLOR` | Disables all colors (any value) | `NO_COLOR=1 node app.js` |
-| `FORCE_COLOR` | Override color depth: `0`=none, `1`=16, `2`=256, `3`=RGB | `FORCE_COLOR=3 node app.js` |
-| `CLICOLOR` | `0` disables colors | `CLICOLOR=0 node app.js` |
-| `CLICOLOR_FORCE` | `1` forces colors even when piped | `CLICOLOR_FORCE=1 node app.js` |
-| `TERM` | Terminal type (e.g. `xterm-256color`) — set by terminal | `TERM=xterm-256color` |
-| `COLORTERM` | `truecolor` or `24bit` enables full RGB — set by terminal | `COLORTERM=truecolor` |
-| `TERM_PROGRAM` | Terminal name for OSC 11 detection — set by terminal | (automatic) |
-| `VTE_VERSION` | VTE version for OSC 11 detection — set by GNOME Terminal | (automatic) |
-| `WT_SESSION` | Set by Windows Terminal for OSC 11 support | (automatic) |
-| `CI` | Set by CI systems (GitHub Actions, GitLab CI, etc.) to disable colors | `CI=true` |
+| Variable         | Effect                                                                | Example                        |
+| ---------------- | --------------------------------------------------------------------- | ------------------------------ |
+| `NO_COLOR`       | Disables all colors (any value)                                       | `NO_COLOR=1 node app.js`       |
+| `FORCE_COLOR`    | Override color depth: `0`=none, `1`=16, `2`=256, `3`=RGB              | `FORCE_COLOR=3 node app.js`    |
+| `CLICOLOR`       | `0` disables colors                                                   | `CLICOLOR=0 node app.js`       |
+| `CLICOLOR_FORCE` | `1` forces colors even when piped                                     | `CLICOLOR_FORCE=1 node app.js` |
+| `TERM`           | Terminal type (e.g. `xterm-256color`) — set by terminal               | `TERM=xterm-256color`          |
+| `COLORTERM`      | `truecolor` or `24bit` enables full RGB — set by terminal             | `COLORTERM=truecolor`          |
+| `TERM_PROGRAM`   | Terminal name for OSC 11 detection — set by terminal                  | (automatic)                    |
+| `VTE_VERSION`    | VTE version for OSC 11 detection — set by GNOME Terminal              | (automatic)                    |
+| `WT_SESSION`     | Set by Windows Terminal for OSC 11 support                            | (automatic)                    |
+| `CI`             | Set by CI systems (GitHub Actions, GitLab CI, etc.) to disable colors | `CI=true`                      |
 
-### <a id="4-6"></a>Colorize Helper (Manual Overrides) (`colorize(text, hex)`)
+### <a id="2-6"></a>Colorize Helper (Manual Overrides) (`colorize(text, hex)`)
 
 Applies a specific hex color to a single string without modifying the global palette. Returns plain text when color is disabled.
 
@@ -256,7 +221,7 @@ const important = colorino.colorize('IMPORTANT', '#ff5733')
 colorino.info(important, 'Something happened')
 ```
 
-### <a id="4-7"></a>Browser‑only CSS Helper (`css(text, style)`)
+### <a id="2-7"></a>Browser‑only CSS Helper (`css(text, style)`)
 
 Applies arbitrary CSS to a console segment using the `%c` formatter. No-op outside browser environments.
 
@@ -274,7 +239,7 @@ const badge = colorino.css('NEW', {
 colorino.info('Release status:', badge, 'shipped')
 ```
 
-### <a id="4-8"></a>Gradient Text (`gradient(text, startHex, endHex)`)
+### <a id="2-8"></a>Gradient Text (`gradient(text, startHex, endHex)`)
 
 Interpolates colors across each character of `text` from `startHex` to `endHex`. Requires ANSI-256 or Truecolor support.
 
@@ -285,9 +250,9 @@ const rainbow = colorino.gradient('Hello Gradient!', '#ff0000', '#0000ff')
 colorino.log(rainbow)
 ```
 
-## <a id="5"></a>API Reference
+## <a id="3"></a>API Reference
 
-### <a id="5-1"></a>1. `colorino` (default instance)
+### <a id="3-1"></a>1. `colorino` (default instance)
 
 A pre-configured logger using auto theme detection.
 
@@ -301,18 +266,18 @@ A pre-configured logger using auto theme detection.
 - `.css(text, style)` (browser only)
 - `.gradient(text, startHex, endHex)`
 
-### <a id="5-2"></a>2. `createColorino(palette?, options?)` (factory)
+### <a id="3-2"></a>2. `createColorino(palette?, options?)` (factory)
 
 Returns a new `ColorinoNode` instance with the given palette and options.
 
 - `palette` (`Partial<Palette>`): Per-level color overrides (e.g. `{ error: '#ff007b' }`)
 - `options` (`ColorinoOptions`): Behavior options — see [Options & Theme Overrides](#4-3)
 
-## <a id="6"></a>Extending Colorino
+## <a id="4"></a>Extending Colorino
 
 `createColorino` returns a `ColorinoNode` class instance. Extend it via `extends ColorinoNode` and use `override` for existing methods or add new ones directly.
 
-### <a id="6-1"></a>Use Case: Automatic File/Context Info
+### <a id="4-1"></a>Use Case: Automatic File/Context Info
 
 Overrides `.info()` and `.error()` to prefix each call with caller context derived from a synthetic `Error` stack.
 
@@ -361,6 +326,6 @@ logger.info('User created', { id: 123 })
 logger.error('Failed to load user', { id: 456 })
 ```
 
-## <a id="7"></a>License
+## <a id="5"></a>License
 
 [MIT](LICENSE.md)

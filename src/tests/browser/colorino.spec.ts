@@ -16,7 +16,7 @@ interface BrowserColorinoFixtures {
 }
 
 const test = baseTest.extend<BrowserColorinoFixtures>({
-  mocks: async ({}, use) => {
+  mocks: async ({ task: _ }, use) => {
     const spies: ConsoleSpies = {
       log: vi.spyOn(console, 'log').mockImplementation(() => {}),
       warn: vi.spyOn(console, 'warn').mockImplementation(() => {}),
@@ -256,7 +256,7 @@ describe('Colorino - Real Browser - Unit Test', () => {
     expect(call[0]).toContain('GRAD')
     expect(call[0]).toContain('CSS')
   })
-  test('returns plain text when NO_COLOR is simulated', ({}) => {
+  test('returns plain text when NO_COLOR is simulated', () => {
     const logger = createColorino(createTestPalette())
 
     const gradient = logger.gradient('TEST', '#ff0000', '#0000ff')
