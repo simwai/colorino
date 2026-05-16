@@ -42,12 +42,19 @@ function buildColorinoNode(
     detectorThemeOverride = 'unknown'
   }
 
-  const nodeDetector = new NodeColorSupportDetector(process, detectorThemeOverride, options.isOsc11Enabled)
-  const detectedTheme = themeOpt === 'auto' ? nodeDetector.getTheme() : 'unknown'
+  const nodeDetector = new NodeColorSupportDetector(
+    process,
+    detectorThemeOverride,
+    options.isOsc11Enabled
+  )
+  const detectedTheme =
+    themeOpt === 'auto' ? nodeDetector.getTheme() : 'unknown'
   const baseThemeName = determineBaseTheme(themeOpt, detectedTheme)
   const basePalette = themePalettes[baseThemeName]
   const finalPalette = { ...basePalette, ...palette }
-  const colorLevel = nodeDetector.isNodeEnv() ? (nodeDetector.getColorLevel() ?? 'UnknownEnv') : 'UnknownEnv'
+  const colorLevel = nodeDetector.isNodeEnv()
+    ? (nodeDetector.getColorLevel() ?? 'UnknownEnv')
+    : 'UnknownEnv'
 
   return [finalPalette, palette, validator, colorLevel, options]
 }
@@ -111,8 +118,12 @@ describe('README examples', () => {
     logger2.error('Failed to load user', { id: 456 })
 
     expect(loggerInfoSpy).toHaveBeenCalledWith('User created', { id: 123 })
-    expect(loggerErrorSpy).toHaveBeenCalledWith('Failed to load user', { id: 456 })
+    expect(loggerErrorSpy).toHaveBeenCalledWith('Failed to load user', {
+      id: 456,
+    })
     expect(logger2InfoSpy).toHaveBeenCalledWith('User created', { id: 123 })
-    expect(logger2ErrorSpy).toHaveBeenCalledWith('Failed to load user', { id: 456 })
+    expect(logger2ErrorSpy).toHaveBeenCalledWith('Failed to load user', {
+      id: 456,
+    })
   })
 })
