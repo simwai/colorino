@@ -18,26 +18,13 @@ export function createColorino(
   const validator = new InputValidator()
 
   const themeOption = options.theme ?? 'auto'
-  const detectorTheme =
-    themeOption === 'dark' || themeOption === 'light' ? themeOption : undefined
-  const detector = new BrowserColorSupportDetector(
-    window,
-    navigator,
-    detectorTheme
-  )
+  const detectorTheme = (themeOption === 'dark' || themeOption === 'light') ? themeOption : undefined
+  const detector = new BrowserColorSupportDetector(window, navigator, detectorTheme)
   const baseTheme = determineBaseTheme(themeOption, detector.getTheme())
   const finalPalette: Palette = { ...themePalettes[baseTheme], ...userPalette }
-  const colorLevel = detector.isBrowserEnv()
-    ? (detector.getColorLevel() ?? 'UnknownEnv')
-    : 'UnknownEnv'
+  const colorLevel = detector.isBrowserEnv() ? (detector.getColorLevel() ?? 'UnknownEnv') : 'UnknownEnv'
 
-  return new ColorinoBrowser(
-    finalPalette,
-    userPalette,
-    validator,
-    colorLevel,
-    options
-  )
+  return new ColorinoBrowser(finalPalette, userPalette, validator, colorLevel, options)
 }
 
 export type { Palette, LogLevel, ThemeName, TerminalTheme }

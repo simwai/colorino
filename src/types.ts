@@ -5,13 +5,41 @@ export type ConsoleMethod =
   | 'error'
   | 'trace'
   | 'debug'
-export type LogLevel = ConsoleMethod & string
+
+/** Valid log levels for Colorino. */
+export type LogLevel = 'trace' | 'debug' | 'log' | 'info' | 'warn' | 'error' | 'fatal'
+
+/** Priority mapping for log levels (higher is more important). */
+export const LOG_LEVEL_PRIORITY: Record<LogLevel, number> = {
+  trace: 10,
+  debug: 20,
+  info: 30,
+  log: 30,
+  warn: 40,
+  error: 50,
+  fatal: 60,
+} as const
+
+/** Internal representation of a call-site frame. */
+export interface CallSiteInfo {
+  filename: string
+  relativePath: string
+  line: number
+  column: number
+  functionName?: string
+}
+
+/** Formatted tag ready for injection. */
+export interface FormattedTag {
+  text: string
+  position: 'prefix' | 'postfix'
+}
 
 export type RgbColor = [number, number, number]
 export type HslColor = [number, number, number]
 export type RgbaColor = [number, number, number, number]
 
-export type Palette = Record<LogLevel, string>
+export type Palette = Record<ConsoleMethod, string>
 export type TerminalTheme = 'dark' | 'light' | 'unknown'
 
 export type ThemeName =

@@ -25,27 +25,12 @@ export function createColorino(
     detectorTheme = 'unknown'
   }
 
-  const detector = new NodeColorSupportDetector(
-    process,
-    detectorTheme,
-    options.isOsc11Enabled
-  )
-  const baseTheme = determineBaseTheme(
-    themeOption,
-    themeOption === 'auto' ? detector.getTheme() : 'unknown'
-  )
+  const detector = new NodeColorSupportDetector(process, detectorTheme, options.isOsc11Enabled)
+  const baseTheme = determineBaseTheme(themeOption, themeOption === 'auto' ? detector.getTheme() : 'unknown')
   const finalPalette: Palette = { ...themePalettes[baseTheme], ...userPalette }
-  const colorLevel = detector.isNodeEnv()
-    ? (detector.getColorLevel() ?? 'UnknownEnv')
-    : 'UnknownEnv'
+  const colorLevel = detector.isNodeEnv() ? (detector.getColorLevel() ?? 'UnknownEnv') : 'UnknownEnv'
 
-  return new ColorinoNode(
-    finalPalette,
-    userPalette,
-    validator,
-    colorLevel,
-    options
-  )
+  return new ColorinoNode(finalPalette, userPalette, validator, colorLevel, options)
 }
 
 export type { Palette, LogLevel, ThemeName, TerminalTheme }
