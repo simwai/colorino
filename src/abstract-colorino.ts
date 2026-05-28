@@ -8,7 +8,13 @@ import {
 import { type ColorinoOptions } from './interfaces.js'
 import { InputValidator } from './input-validator.js'
 import { ColorLevel } from './enums.js'
-import { TypeValidator } from './type-validator.js'
+import {
+  isArray,
+  isError,
+  isNullOrUndefined,
+  isObject,
+  isStackLikeString,
+} from './type-validator.js'
 
 export abstract class AbstractColorino {
   protected colorLevel: ColorLevel | 'UnknownEnv'
@@ -120,10 +126,7 @@ export abstract class AbstractColorino {
     }
 
     const sanitize = (val: unknown, currentDepth: number): unknown => {
-      if (
-        TypeValidator.isNullOrUndefined(val) ||
-        !TypeValidator.isObject(val)
-      ) {
+      if (isNullOrUndefined(val) || !isObject(val)) {
         return val
       }
 
@@ -134,7 +137,7 @@ export abstract class AbstractColorino {
 
       const nextDepth = currentDepth + 1
 
-      if (TypeValidator.isArray(val)) {
+      if (isArray(val)) {
         return sanitizeArray(val as unknown[], nextDepth)
       }
 
@@ -149,9 +152,9 @@ export abstract class AbstractColorino {
     const areColorinoFramesShown =
       this.options.areColorinoFramesVisible ?? false
 
-    const stack = TypeValidator.isError(inputStack)
+    const stack = isError(inputStack)
       ? inputStack.stack
-      : TypeValidator.isStackLikeString(inputStack)
+      : isStackLikeString(inputStack)
         ? inputStack
         : ''
     if (!stack) return ''

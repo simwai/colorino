@@ -1,11 +1,12 @@
 import { ColorinoBrowser } from './colorino-browser.js'
 import { BrowserColorSupportDetector } from './browser-color-support-detector.js'
 import { InputValidator } from './input-validator.js'
-import { themePalettes } from './theme.js'
+import { getThemePalette, themePalettes } from './theme.js'
 import { determineBaseTheme } from './determine-base-theme.js'
 import { LogLevel, Palette, TerminalTheme, ThemeName } from './types.js'
 import { ColorinoOptions, ColorinoBrowserInterface } from './interfaces.js'
 
+// @__NO_SIDE_EFFECTS__
 export function createColorino(
   userPalette: Partial<Palette> = {},
   options: ColorinoOptions = {}
@@ -28,7 +29,7 @@ export function createColorino(
   const themeOpt = options.theme ?? 'auto'
   const baseThemeName = determineBaseTheme(themeOpt, detectedBrowserTheme)
 
-  const basePalette = themePalettes[baseThemeName]
+  const basePalette = getThemePalette(baseThemeName)
   const finalPalette: Palette = { ...basePalette, ...userPalette }
 
   const colorLevel = browserDetector.isBrowserEnv()
@@ -47,4 +48,4 @@ export function createColorino(
 export type { Palette, LogLevel, ThemeName }
 export type { ColorinoOptions, ColorinoBrowserInterface }
 export { themePalettes }
-export const colorino = createColorino()
+export const colorino = /* @__PURE__ */ createColorino()
