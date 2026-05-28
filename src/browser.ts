@@ -27,7 +27,7 @@ export function createColorino(
   return new ColorinoBrowser(finalPalette, userPalette, validator, colorLevel, options)
 }
 
-export type { Palette, LogLevel, ThemeName }
+export type { Palette, LogLevel, ThemeName, TerminalTheme }
 export type { ColorinoOptions, ColorinoBrowserInterface }
 export { themePalettes }
 

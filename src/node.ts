@@ -33,7 +33,7 @@ export function createColorino(
   return new ColorinoNode(finalPalette, userPalette, validator, colorLevel, options)
 }
 
-export type { Palette, LogLevel, ThemeName }
+export type { Palette, LogLevel, ThemeName, TerminalTheme }
 export type { ColorinoOptions, ColorinoNodeInterface }
 export { themePalettes }
 
