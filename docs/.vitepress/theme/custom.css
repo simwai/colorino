@@ -1,0 +1,43 @@
+:root {
+  --vp-c-brand-1: #ff007b;
+  --vp-c-brand-2: #e6006e;
+  --vp-c-brand-3: #cc0062;
+  --vp-c-brand-soft: rgba(255, 0, 123, 0.14);
+
+  /* Hero section styling */
+  --vp-home-hero-name-color: transparent;
+  --vp-home-hero-name-background: -webkit-linear-gradient(120deg, #ff007b 30%, #89ddff);
+
+  /* Navigation */
+  --vp-nav-height: 64px;
+}
+
+.VPNavBarTitle.has-sidebar {
+  margin-right: 32px;
+}
+
+.VPHero .name {
+  background: var(--vp-home-hero-name-background);
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+
+.VPHero .image {
+  filter: drop-shadow(0 0 20px rgba(255, 0, 123, 0.3));
+}
+
+.VPFeature {
+  border: 1px solid var(--vp-c-bg-soft) !important;
+  background-color: var(--vp-c-bg-soft) !important;
+  transition: border-color 0.25s, background-color 0.25s;
+}
+
+.VPFeature:hover {
+  border-color: var(--vp-c-brand-1) !important;
+}
+
+.VPFooter {
+  border-top: 1px solid var(--vp-c-divider);
+  padding: 24px 32px;
+  background-color: var(--vp-c-bg);
+}
