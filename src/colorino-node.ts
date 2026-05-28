@@ -1,8 +1,19 @@
 import { AbstractColorino } from './abstract-colorino.js'
 import { ColorLevel } from './enums.js'
 import { ConsoleMethod } from './types.js'
-import { TypeValidator } from './type-validator.js'
-import { colorConverter } from './color-converter.js'
+import {
+  isAnsiColoredString,
+  isError,
+  isFormattableObject,
+  isStackLikeString,
+  isString,
+} from './type-validator.js'
+import {
+  hexGradient,
+  hexToRgb,
+  rgbToAnsi16,
+  rgbToAnsi256,
+} from './color-converter.js'
 import { Palette } from './types.js'
 import { ColorinoNodeInterface, ColorinoOptions } from './interfaces.js'
 import { InputValidator } from './input-validator.js'
@@ -31,11 +42,7 @@ export class ColorinoNode
     }
 
     const characters = [...text]
-    const rgbColors = colorConverter.hex.gradient(
-      startHex,
-      endHex,
-      characters.length
-    )
+    const rgbColors = hexGradient(startHex, endHex, characters.length)
 
     return (
       characters
@@ -46,7 +53,7 @@ export class ColorinoNode
             return `\x1b[38;2;${r};${g};${b}m${char}`
           }
 
-          const code = colorConverter.rgb.toAnsi256([r, g, b])
+          const code = rgbToAnsi256([r, g, b])
           return `\x1b[38;5;${code}m${char}`
         })
         .join('') + '\x1b[0m'
@@ -58,7 +65,7 @@ export class ColorinoNode
     args: unknown[]
   ): unknown[] {
     const hasErrorOrStack = args.some(
-      arg => TypeValidator.isError(arg) || TypeValidator.isStackLikeString(arg)
+      arg => isError(arg) || isStackLikeString(arg)
     )
 
     const argsToProcess =
@@ -73,7 +80,7 @@ export class ColorinoNode
     let previousWasObject = false
 
     for (const arg of argsToProcess) {
-      if (TypeValidator.isFormattableObject(arg)) {
+      if (isFormattableObject(arg)) {
         const jsonString = this.formatValue(arg)
         const spacedValue = previousWasObject ? jsonString : `\n${jsonString}`
         formattedArgs.push(spacedValue)
@@ -81,7 +88,7 @@ export class ColorinoNode
         continue
       }
 
-      if (TypeValidator.isError(arg)) {
+      if (isError(arg)) {
         const cleaned = this.cleanErrorStack(arg)
 
         if (
@@ -109,7 +116,7 @@ export class ColorinoNode
         continue
       }
 
-      if (TypeValidator.isStackLikeString(arg)) {
+      if (isStackLikeString(arg)) {
         const filtered = this.filterStack(arg)
 
         if (!filtered.trim()) continue
@@ -138,10 +145,8 @@ export class ColorinoNode
         continue
       }
 
-      if (TypeValidator.isString(arg)) {
-        const shouldColor =
-          !TypeValidator.isAnsiColoredString(arg) &&
-          !TypeValidator.isStackLikeString(arg)
+      if (isString(arg)) {
+        const shouldColor = !isAnsiColoredString(arg) && !isStackLikeString(arg)
 
         const spacedArg = previousWasObject ? `\n${arg}` : arg
 
@@ -175,16 +180,16 @@ export class ColorinoNode
 
     switch (this.colorLevel) {
       case ColorLevel.TRUECOLOR: {
-        const [r, g, b] = colorConverter.hex.toRgb(hex)
+        const [r, g, b] = hexToRgb(hex)
         return `\x1b[38;2;${r};${g};${b}m`
       }
       case ColorLevel.ANSI256: {
-        const code = colorConverter.hex.toAnsi256(hex)
+        const code = rgbToAnsi256(hexToRgb(hex))
         return `\x1b[38;5;${code}m`
       }
       case ColorLevel.ANSI:
       default: {
-        const code = colorConverter.hex.toAnsi16(hex)
+        const code = rgbToAnsi16(hexToRgb(hex))
         return `\x1b[${code}m`
       }
     }

@@ -1,14 +1,13 @@
 import { spawn } from 'node:child_process'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { TypeValidator } from '../../type-validator.js'
+import { isNullOrUndefined } from '../../type-validator.js'
 export function getFilteredEnv(
   overrides: Record<string, string> = {}
 ): Record<string, string> {
   const filtered = Object.fromEntries(
     Object.entries(process.env).filter(
-      (entry): entry is [string, string] =>
-        !TypeValidator.isNullOrUndefined(entry[1])
+      (entry): entry is [string, string] => !isNullOrUndefined(entry[1])
     )
   )
   return { ...filtered, ...overrides }
