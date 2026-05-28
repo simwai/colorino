@@ -8,8 +8,14 @@ import {
   ColorinoBrowserCss,
 } from './types.js'
 import { ColorinoBrowserInterface, ColorinoOptions } from './interfaces.js'
-import { TypeValidator } from './type-validator.js'
-import { InputValidator } from './input-validator.js'
+import {
+  isBrowserColorizedArg,
+  isBrowserCssArg,
+  isError,
+  isFormattableObject,
+  isStackLikeString,
+  isString,
+} from './type-validator.js'
 
 export class ColorinoBrowser
   extends AbstractColorino
@@ -18,11 +24,10 @@ export class ColorinoBrowser
   constructor(
     initialPalette: Palette,
     userPalette: Partial<Palette>,
-    validator: InputValidator,
     colorLevel: ColorLevel | 'UnknownEnv',
     options: ColorinoOptions = {}
   ) {
-    super(initialPalette, userPalette, validator, colorLevel, options)
+    super(initialPalette, userPalette, colorLevel, options)
   }
 
   public gradient(
@@ -68,7 +73,7 @@ export class ColorinoBrowser
     args: unknown[]
   ): unknown[] {
     const hasErrorOrStack = args.some(
-      arg => TypeValidator.isError(arg) || TypeValidator.isStackLikeString(arg)
+      arg => isError(arg) || isStackLikeString(arg)
     )
 
     const argsToProcess =
@@ -85,21 +90,21 @@ export class ColorinoBrowser
     let previousWasObject = false
 
     for (const arg of argsToProcess) {
-      if (TypeValidator.isBrowserColorizedArg(arg)) {
+      if (isBrowserColorizedArg(arg)) {
         formatParts.push(`%c${arg.text}`)
         formatArgs.push(`color:${arg.hex}`)
         previousWasObject = false
         continue
       }
 
-      if (TypeValidator.isBrowserCssArg(arg)) {
+      if (isBrowserCssArg(arg)) {
         formatParts.push(`%c${arg.text}`)
         formatArgs.push(arg.css)
         previousWasObject = false
         continue
       }
 
-      if (TypeValidator.isFormattableObject(arg)) {
+      if (isFormattableObject(arg)) {
         if (previousWasObject) {
           formatParts.push('%o')
         } else {
@@ -111,7 +116,7 @@ export class ColorinoBrowser
         continue
       }
 
-      if (TypeValidator.isError(arg)) {
+      if (isError(arg)) {
         const cleaned = this.cleanErrorStack(arg)
 
         if (
@@ -142,7 +147,7 @@ export class ColorinoBrowser
         continue
       }
 
-      if (TypeValidator.isStackLikeString(arg)) {
+      if (isStackLikeString(arg)) {
         const filtered = this.filterStack(arg)
 
         if (!filtered.trim()) {
@@ -155,7 +160,7 @@ export class ColorinoBrowser
         continue
       }
 
-      if (TypeValidator.isString(arg)) {
+      if (isString(arg)) {
         const spacedText = previousWasObject ? `\n${arg}` : arg
         formatParts.push(`%c${spacedText}`)
         formatArgs.push(`color:${paletteHex}`)
@@ -178,7 +183,7 @@ export class ColorinoBrowser
   }
 
   protected normalizeCssStyle(style: CssConsoleStyle): string {
-    if (TypeValidator.isString(style)) return style
+    if (isString(style)) return style
 
     const parts: string[] = []
 

@@ -21,9 +21,9 @@
 
 <!-- Table of contents is made with https://github.com/eugene-khyst/md-toc-cli -->
 
+```bash
 pnpm add colorino
-
-````
+```
 
 ## <a id="1"></a>Browser via CDN (unpkg)
 
@@ -42,7 +42,7 @@ pnpm add colorino
   </head>
   <body></body>
 </html>
-````
+```
 
 Non-minified (for debugging):
 

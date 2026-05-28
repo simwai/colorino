@@ -1,6 +1,7 @@
 import type { HslColor, RgbaColor, RgbColor } from './types.js'
 
-function hslToRgb(hsl: HslColor): RgbColor {
+// @__NO_SIDE_EFFECTS__
+export function hslToRgb(hsl: HslColor): RgbColor {
   const h = hsl[0] / 360
   const s = hsl[1] / 100
   const l = hsl[2] / 100
@@ -37,7 +38,8 @@ function hslToRgb(hsl: HslColor): RgbColor {
   return rgb
 }
 
-function hexToRgb(hex: string): RgbColor {
+// @__NO_SIDE_EFFECTS__
+export function hexToRgb(hex: string): RgbColor {
   const match = hex.toString().match(/[a-f0-9]{6}|[a-f0-9]{3}/i)
   if (!match) {
     return [0, 0, 0]
@@ -56,11 +58,13 @@ function hexToRgb(hex: string): RgbColor {
   return [r, g, b]
 }
 
-function rgbaToRgb(rgba: RgbaColor): RgbColor {
+// @__NO_SIDE_EFFECTS__
+export function rgbaToRgb(rgba: RgbaColor): RgbColor {
   return [rgba[0], rgba[1], rgba[2]]
 }
 
-function rgbToAnsi256(rgb: RgbColor): number {
+// @__NO_SIDE_EFFECTS__
+export function rgbToAnsi256(rgb: RgbColor): number {
   const [r, g, b] = rgb
   if (r === g && g === b) {
     if (r < 8) return 16
@@ -84,7 +88,8 @@ function rgbToHsvValue(rgb: RgbColor): number {
   return v * 100
 }
 
-function rgbToAnsi16(rgb: RgbColor): number {
+// @__NO_SIDE_EFFECTS__
+export function rgbToAnsi16(rgb: RgbColor): number {
   const [r, g, b] = rgb
   const value = rgbToHsvValue(rgb)
   const roundedValue = Math.round(value / 50)
@@ -106,7 +111,8 @@ function rgbToAnsi16(rgb: RgbColor): number {
   return ansi
 }
 
-function interpolateRgb(
+// @__NO_SIDE_EFFECTS__
+export function interpolateRgb(
   startRgb: RgbColor,
   endRgb: RgbColor,
   steps: number
@@ -127,7 +133,8 @@ function interpolateRgb(
   return colors
 }
 
-function hexGradient(
+// @__NO_SIDE_EFFECTS__
+export function hexGradient(
   startHex: string,
   endHex: string,
   steps: number
@@ -137,7 +144,8 @@ function hexGradient(
   return interpolateRgb(startRgb, endRgb, steps)
 }
 
-export const colorConverter = {
+/** @deprecated Use named exports instead */
+export const colorConverter = /* @__PURE__ */ (() => ({
   hex: {
     toRgb: hexToRgb,
     toAnsi16: (hex: string) => rgbToAnsi16(hexToRgb(hex)),
@@ -158,4 +166,4 @@ export const colorConverter = {
     toAnsi16: (hsl: HslColor) => rgbToAnsi16(hslToRgb(hsl)),
     toAnsi256: (hsl: HslColor) => rgbToAnsi256(hslToRgb(hsl)),
   },
-}
+}))()
