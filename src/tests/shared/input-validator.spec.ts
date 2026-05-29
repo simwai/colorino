@@ -1,52 +1,66 @@
 import { describe, it, expect } from 'vitest'
-import { validateHex, validatePalette } from '../../input-validator.js'
+import {
+  validateHex,
+  validatePalette,
+  InputValidator,
+} from '../../input-validator.js'
+import { InputValidationError } from '../../errors.js'
+import { createTestPalette } from '../helpers/palette.js'
+import { generateRandomString } from '../helpers/random.js'
 
-describe('InputValidator - Shared Environemnt - Unit Test', () => {
+describe('InputValidator - Node & Browser Environment - Unit Test', () => {
+  const validator = new InputValidator()
+
   describe('validateHex', () => {
-    it('should return ok for valid hex', () => {
-      const result = validateHex('#FF0000')
+    it('should return ok for a valid hex color', () => {
+      const result = validateHex('#AABBCC')
       expect(result.isOk()).toBe(true)
     })
 
-    it('should return error for invalid hex', () => {
-      const result = validateHex('invalid')
+    it('should trim whitespace and return ok', () => {
+      const result = validateHex('  #AABBCC  ')
+      expect(result.isOk()).toBe(true)
+    })
+
+    it('should return err for an invalid hex color', () => {
+      const result = validateHex('#123')
       expect(result.isErr()).toBe(true)
+      const err = result._unsafeUnwrapErr()
+      expect(err).toBeInstanceOf(InputValidationError)
+      expect(err.message).toBe("Invalid hex color: '#123'")
+    })
+
+    it('fuzzing: should return err for random non-hex strings', () => {
+      for (let i = 0; i < 100; i++) {
+        const randomString = generateRandomString(7)
+        // Ensure we don't accidentally generate a valid hex
+        if (!/^#[0-9A-F]{6}$/i.test(randomString)) {
+          const result = validateHex(randomString)
+          expect(result.isErr()).toBe(true)
+        }
+      }
     })
   })
 
   describe('validatePalette', () => {
-    it('should return ok for valid palette', () => {
-      const palette = {
-        log: '#FFFFFF',
-        info: '#0000FF',
-        warn: '#FFFF00',
-        error: '#FF0000',
-        debug: '#00FF00',
-        trace: '#808080',
-      }
+    it('should return ok for a valid palette', () => {
+      const palette = createTestPalette()
       const result = validatePalette(palette)
       expect(result.isOk()).toBe(true)
     })
 
-    it('should return error if a log method is invalid', () => {
-      const palette = {
-        invalid: '#FFFFFF',
-      } as any
+    it('should return err if a palette color is invalid', () => {
+      const palette = createTestPalette({ error: 'invalid-hex' })
       const result = validatePalette(palette)
       expect(result.isErr()).toBe(true)
+      const err = result._unsafeUnwrapErr()
+      expect(err).toBeInstanceOf(InputValidationError)
+      expect(err.message).toBe("Invalid hex color: 'invalid-hex'")
     })
 
-    it('should return error if a hex color is invalid', () => {
-      const palette = {
-        log: 'invalid',
-        info: '#0000FF',
-        warn: '#FFFF00',
-        error: '#FF0000',
-        debug: '#00FF00',
-        trace: '#808080',
-      }
-      const result = validatePalette(palette)
-      expect(result.isErr()).toBe(true)
+    it('deprecated: InputValidator class should still work', () => {
+      expect(validator.validateHex('#FF0000').isOk()).toBe(true)
+      expect(validator.validatePalette(createTestPalette()).isOk()).toBe(true)
     })
   })
 })

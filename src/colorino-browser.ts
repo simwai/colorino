@@ -6,6 +6,9 @@ import {
   BrowserCssArg,
   CssConsoleStyle,
   ColorinoBrowserCss,
+  LogLevel,
+  FormattedTag,
+  ColorinoBrowserColorized,
 } from './types.js'
 import { ColorinoBrowserInterface, ColorinoOptions } from './interfaces.js'
 import {
@@ -35,147 +38,132 @@ export class ColorinoBrowser
     startHex: string,
     endHex: string
   ): string | BrowserCssArg {
-    if (
+    const isNoColor =
       this.colorLevel === ColorLevel.NO_COLOR ||
       this.colorLevel === 'UnknownEnv'
-    ) {
+    if (isNoColor) {
       return text
     }
 
-    const css = `background: linear-gradient(to right, ${startHex}, ${endHex}); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;`
-
+    const gradientCss = `background: linear-gradient(to right, ${startHex}, ${endHex}); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;`
     return {
       [ColorinoBrowserCss]: true,
       text,
-      css,
-    }
+      css: gradientCss,
+    } as BrowserCssArg
   }
 
   public css(text: string, style: CssConsoleStyle): string | BrowserCssArg {
-    if (
+    const isNoColor =
       this.colorLevel === ColorLevel.NO_COLOR ||
       this.colorLevel === 'UnknownEnv'
-    ) {
+    if (isNoColor) {
       return text
     }
-
-    const css = this.normalizeCssStyle(style)
-
     return {
       [ColorinoBrowserCss]: true,
       text,
-      css,
-    }
+      css: this.normalizeCssStyle(style),
+    } as BrowserCssArg
+  }
+
+  protected writeToFile(): void {
+    // File logging is not supported in the browser environment
   }
 
   protected formatArgs(
-    consoleMethod: ConsoleMethod,
-    args: unknown[]
+    method: ConsoleMethod,
+    args: unknown[],
+    tags: FormattedTag[] = []
   ): unknown[] {
-    const hasErrorOrStack = args.some(
-      arg => isError(arg) || isStackLikeString(arg)
-    )
-
+    const hasError = args.some(arg => isError(arg) || isStackLikeString(arg))
     const argsToProcess =
-      consoleMethod === 'trace' && !hasErrorOrStack
+      method === 'trace' && !hasError
         ? (() => {
             const stack = this.buildCallerStack()
             return stack ? [...args, stack] : args
           })()
         : args
 
-    const paletteHex = this.palette[consoleMethod]
-    const formatParts: string[] = []
-    const formatArgs: unknown[] = []
-    let previousWasObject = false
+    const colorHex = this.palette[method] || '#ffffff'
+    const formatStringParts: string[] = []
+    const finalArguments: unknown[] = []
 
+    const { prefix, postfix } = this.partitionTags(tags)
+
+    // Prepend prefix tags
+    for (const tag of prefix) {
+      formatStringParts.push('%c%s')
+      finalArguments.push(`color:${colorHex}`, tag.text)
+    }
+
+    let lastWasObject = false
     for (const arg of argsToProcess) {
       if (isBrowserColorizedArg(arg)) {
-        formatParts.push(`%c${arg.text}`)
-        formatArgs.push(`color:${arg.hex}`)
-        previousWasObject = false
-        continue
-      }
-
-      if (isBrowserCssArg(arg)) {
-        formatParts.push(`%c${arg.text}`)
-        formatArgs.push(arg.css)
-        previousWasObject = false
-        continue
-      }
-
-      if (isFormattableObject(arg)) {
-        if (previousWasObject) {
-          formatParts.push('%o')
-        } else {
-          formatParts.push('\n%o')
-        }
-
-        formatArgs.push(arg)
-        previousWasObject = true
-        continue
-      }
-
-      if (isError(arg)) {
-        const cleaned = this.cleanErrorStack(arg)
-
+        formatStringParts.push(`%c${arg.text}`)
+        finalArguments.push(`color:${arg.hex}`)
+        lastWasObject = false
+      } else if (isBrowserCssArg(arg)) {
+        formatStringParts.push(`%c${arg.text}`)
+        finalArguments.push(arg.css)
+        lastWasObject = false
+      } else if (isFormattableObject(arg)) {
+        formatStringParts.push(lastWasObject ? '%o' : '\n%o')
+        finalArguments.push(arg)
+        lastWasObject = true
+      } else if (isError(arg)) {
+        const cleanedError = this.cleanErrorStack(arg)
         if (
-          !cleaned.name.trim() ||
-          !cleaned.message.trim() ||
-          !cleaned.stack?.trim()
+          !cleanedError.name.trim() ||
+          !cleanedError.message.trim() ||
+          !cleanedError.stack?.trim()
         ) {
           continue
         }
 
-        const errorHeader = `${cleaned.name}: ${cleaned.message}`
-        const stackFrames = cleaned.stack.split('\n').slice(1).join('\n')
+        const errorHeader = `${cleanedError.name}: ${cleanedError.message}`
+        const errorStack = cleanedError.stack.split('\n').slice(1).join('\n')
 
-        if (!previousWasObject) {
-          formatParts.push('\n%c%s')
-        } else {
-          formatParts.push('%c%s')
+        formatStringParts.push(lastWasObject ? '%c%s' : '\n%c%s')
+        finalArguments.push(`color:${colorHex}`, errorHeader)
+
+        if (errorStack) {
+          formatStringParts.push('\n%s')
+          finalArguments.push(errorStack)
         }
-
-        if (stackFrames) {
-          formatParts.push('\n%s')
-          formatArgs.push(`color:${paletteHex}`, errorHeader, stackFrames)
-        } else {
-          formatArgs.push(`color:${paletteHex}`, errorHeader)
-        }
-
-        previousWasObject = true
-        continue
-      }
-
-      if (isStackLikeString(arg)) {
-        const filtered = this.filterStack(arg)
-
-        if (!filtered.trim()) {
+        lastWasObject = true
+      } else if (isStackLikeString(arg)) {
+        const filteredStack = this.filterStack(arg)
+        if (!filteredStack.trim()) {
           continue
         }
 
-        formatParts.push('\n%s')
-        formatArgs.push(filtered)
-        previousWasObject = true
-        continue
+        formatStringParts.push('\n%s')
+        finalArguments.push(filteredStack)
+        lastWasObject = true
+      } else if (isString(arg)) {
+        const stringValue = lastWasObject ? `\n${arg}` : arg
+        formatStringParts.push(`%c${stringValue}`)
+        finalArguments.push(`color:${colorHex}`)
+        lastWasObject = false
+      } else {
+        formatStringParts.push('%o')
+        finalArguments.push(arg)
+        lastWasObject = false
       }
-
-      if (isString(arg)) {
-        const spacedText = previousWasObject ? `\n${arg}` : arg
-        formatParts.push(`%c${spacedText}`)
-        formatArgs.push(`color:${paletteHex}`)
-        previousWasObject = false
-        continue
-      }
-
-      formatParts.push('%o')
-      formatArgs.push(arg)
-      previousWasObject = false
     }
 
-    if (formatParts.length === 0) return argsToProcess
+    // Append postfix tags
+    for (const tag of postfix) {
+      formatStringParts.push('%c %s')
+      finalArguments.push(`color:${colorHex}`, tag.text)
+    }
 
-    return [formatParts.join(' '), ...formatArgs]
+    if (formatStringParts.length === 0) {
+      return argsToProcess
+    }
+
+    return [formatStringParts.join(' '), ...finalArguments]
   }
 
   protected isBrowser(): boolean {
@@ -183,21 +171,19 @@ export class ColorinoBrowser
   }
 
   protected normalizeCssStyle(style: CssConsoleStyle): string {
-    if (isString(style)) return style
-
-    const parts: string[] = []
-
-    for (const propertyName in style) {
-      if (!Object.prototype.hasOwnProperty.call(style, propertyName)) {
-        continue
-      }
-
-      const value = style[propertyName]
-      if (!value) continue
-
-      parts.push(`${propertyName}:${value}`)
+    if (isString(style)) {
+      return style
     }
 
-    return parts.join(';')
+    const styleParts = []
+    for (const property in style) {
+      if (
+        Object.prototype.hasOwnProperty.call(style, property) &&
+        style[property]
+      ) {
+        styleParts.push(`${property}:${style[property]}`)
+      }
+    }
+    return styleParts.join(';')
   }
 }

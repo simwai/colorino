@@ -5,6 +5,11 @@ import { getThemePalette, themePalettes } from './theme.js'
 import { LogLevel, Palette, TerminalTheme, ThemeName } from './types.js'
 import { ColorinoOptions, ColorinoNodeInterface } from './interfaces.js'
 
+/**
+ * Creates a new Colorino logger instance for Node.js.
+ * @param userPalette - Optional custom hex colors for log levels.
+ * @param options - Configuration for theme, filtering, metadata, and file logging.
+ */
 // @__NO_SIDE_EFFECTS__
 export function createColorino(
   userPalette: Partial<Palette> = {},
@@ -38,7 +43,9 @@ export function createColorino(
   return new ColorinoNode(finalPalette, userPalette, colorLevel, options)
 }
 
-export type { Palette, LogLevel, ThemeName }
+export type { Palette, LogLevel, ThemeName, TerminalTheme }
 export type { ColorinoOptions, ColorinoNodeInterface }
 export { themePalettes }
+
+/** Default Colorino logger instance for Node.js. */
 export const colorino = /* @__PURE__ */ createColorino()

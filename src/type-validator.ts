@@ -6,6 +6,7 @@ import {
   ColorinoBrowserCss,
   ColorinoBrowserObject,
   ConsoleMethod,
+  LogLevel,
 } from './types.js'
 
 // @__NO_SIDE_EFFECTS__
@@ -121,4 +122,30 @@ export function isStackLikeString(value: unknown): value is string {
 // @__NO_SIDE_EFFECTS__
 export function isConsoleMethod(level: string): level is ConsoleMethod {
   return ['log', 'info', 'warn', 'error', 'trace', 'debug'].includes(level)
+}
+
+// @__NO_SIDE_EFFECTS__
+export function isLogLevel(level: string): level is LogLevel {
+  return ['log', 'info', 'warn', 'error', 'trace', 'debug', 'fatal'].includes(
+    level
+  )
+}
+
+/** @deprecated Use standalone functions instead */
+export class TypeValidator {
+  static isNull = isNull
+  static isUndefined = isUndefined
+  static isNullOrUndefined = isNullOrUndefined
+  static isObject = isObject
+  static isString = isString
+  static isArray = isArray
+  static isError = isError
+  static isBrowserColorizedArg = isBrowserColorizedArg
+  static isBrowserCssArg = isBrowserCssArg
+  static isBrowserObjectArg = isBrowserObjectArg
+  static isAnsiColoredString = isAnsiColoredString
+  static isFormattableObject = isFormattableObject
+  static isStackLikeString = isStackLikeString
+  static isConsoleMethod = isConsoleMethod
+  static isLogLevel = isLogLevel
 }
