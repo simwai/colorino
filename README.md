@@ -14,27 +14,6 @@ A lightweight, high-performance TypeScript logger for Node.js and the Browser. S
 ```bash
 npm install colorino
 # <a id="0"></a>or
-pnpm add colorino
-```
-
-### <a id="2-2"></a>CDN (Browser Only)
-
-#### <a id="2-2-1"></a>ESM
-
-```html
-<script type="module">
-  import { colorino } from 'https://unpkg.com/colorino/dist/cdn.mjs'
-</script>
-```
-
-#### <a id="2-2-2"></a>UMD
-
-```html
-<script src="https://unpkg.com/colorino/dist/cdn.min.js"></script>
-<script>
-  colorino.info('Hello from the UMD bundle!')
-</script>
-```
 
 - [Table of Contents](#1)
 - [Installation](#2)
@@ -63,6 +42,27 @@ pnpm add colorino
 - [License](#6)
 
 <!-- Table of contents is made with https://github.com/eugene-khyst/md-toc-cli -->
+pnpm add colorino
+```
+
+### <a id="2-2"></a>CDN (Browser Only)
+
+#### <a id="2-2-1"></a>ESM
+
+```html
+<script type="module">
+  import { colorino } from 'https://unpkg.com/colorino/dist/cdn.mjs'
+</script>
+```
+
+#### <a id="2-2-2"></a>UMD
+
+```html
+<script src="https://unpkg.com/colorino/dist/cdn.min.js"></script>
+<script>
+  colorino.info('Hello from the UMD bundle!')
+</script>
+```
 
 ## <a id="3"></a>Usage
 
