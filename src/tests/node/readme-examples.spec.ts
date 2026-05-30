@@ -1,7 +1,12 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import type { Palette } from '../../types.js'
 import type { ColorinoOptions } from '../../interfaces.js'
+import { ColorinoNode } from '../../colorino-node.js'
 import { createColorino } from '../../node.js'
+import { NodeColorSupportDetector } from '../../node-color-support-detector.js'
+import { InputValidator } from '../../input-validator.js'
+import { determineBaseTheme } from '../../determine-base-theme.js'
+import { themePalettes } from '../../theme.js'
 
 function getCallerContext(): string {
   const err = new Error()
@@ -23,47 +28,65 @@ function getCallerContext(): string {
   return `${file}:${line}`
 }
 
-type FatalLogger = ReturnType<typeof createColorino> & {
-  fatal(...args: unknown[]): void
+function buildColorinoNode(
+  palette: Partial<Palette> = {},
+  options: ColorinoOptions = {}
+): ConstructorParameters<typeof ColorinoNode> {
+  const validator = new InputValidator()
+  const themeOpt = options.theme ?? 'auto'
+
+  let detectorThemeOverride: 'dark' | 'light' | 'unknown' | undefined
+  if (themeOpt === 'dark' || themeOpt === 'light') {
+    detectorThemeOverride = themeOpt
+  } else if (themeOpt !== 'auto') {
+    detectorThemeOverride = 'unknown'
+  }
+
+  const nodeDetector = new NodeColorSupportDetector(
+    process,
+    detectorThemeOverride,
+    options.isOsc11Enabled
+  )
+  const detectedTheme =
+    themeOpt === 'auto' ? nodeDetector.getTheme() : 'unknown'
+  const baseThemeName = determineBaseTheme(themeOpt, detectedTheme)
+  const basePalette = themePalettes[baseThemeName]
+  const finalPalette = { ...basePalette, ...palette }
+  const colorLevel = nodeDetector.isNodeEnv()
+    ? (nodeDetector.getColorLevel() ?? 'UnknownEnv')
+    : 'UnknownEnv'
+
+  return [finalPalette, palette, validator, colorLevel, options]
+}
+
+class FatalLogger extends ColorinoNode {
+  fatal(...args: unknown[]): void {
+    this.error(...args)
+  }
 }
 
 function createFatalLogger(
   palette?: Partial<Palette>,
   options?: ColorinoOptions
 ): FatalLogger {
-  const base = createColorino(palette, options)
-  const logger = Object.create(base) as FatalLogger
+  return new FatalLogger(...buildColorinoNode(palette, options))
+}
 
-  Object.assign(logger, {
-    fatal(...args: unknown[]) {
-      logger.error(...args)
-    },
-  })
+class ContextLogger extends ColorinoNode {
+  override info(...args: unknown[]): void {
+    super.info(`[${getCallerContext()}]`, ...args)
+  }
 
-  return logger
+  override error(...args: unknown[]): void {
+    super.error(`[${getCallerContext()}]`, ...args)
+  }
 }
 
 function createContextLogger(
   palette?: Partial<Palette>,
   options?: ColorinoOptions
-): ReturnType<typeof createColorino> {
-  const base = createColorino(palette, options)
-
-  // Inherit all default methods from the base logger...
-  const logger = Object.create(base) as ReturnType<typeof createColorino> // Object.create uses `base` as the prototype.
-
-  // ...and override only what you need.
-  Object.assign(logger, {
-    // Object.assign copies these methods onto `logger`.
-    info(...args: unknown[]) {
-      base.info(`[${getCallerContext()}]`, ...args)
-    },
-    error(...args: unknown[]) {
-      base.error(`[${getCallerContext()}]`, ...args)
-    },
-  })
-
-  return logger
+): ContextLogger {
+  return new ContextLogger(...buildColorinoNode(palette, options))
 }
 
 afterEach(() => {

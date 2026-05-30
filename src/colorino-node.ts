@@ -49,24 +49,23 @@ export class ColorinoNode
       return text
     }
 
-    const characters = Array.from(text)
-    const gradientColors = hexGradient(startHex, endHex, characters.length)
+    const characters = [...text]
+    const rgbColors = hexGradient(startHex, endHex, characters.length)
 
-    const coloredText = characters
-      .map((char, index) => {
-        const rgbColor = gradientColors[index] || [0, 0, 0]
-        const [red, green, blue] = rgbColor
+    return (
+      characters
+        .map((char, index) => {
+          const [r, g, b] = rgbColors[index] ?? [0, 0, 0]
 
-        if (this.colorLevel === ColorLevel.TRUECOLOR) {
-          return `\x1b[38;2;${red};${green};${blue}m${char}`
-        }
+          if (this.colorLevel === ColorLevel.TRUECOLOR) {
+            return `\x1b[38;2;${r};${g};${b}m${char}`
+          }
 
-        const ansi256Color = rgbToAnsi256(rgbColor)
-        return `\x1b[38;5;${ansi256Color}m${char}`
-      })
-      .join('')
-
-    return `${coloredText}\x1b[0m`
+          const code = rgbToAnsi256([r, g, b])
+          return `\x1b[38;5;${code}m${char}`
+        })
+        .join('') + '\x1b[0m'
+    )
   }
 
   protected writeToFile(
@@ -262,17 +261,20 @@ export class ColorinoNode
       return ''
     }
 
-    if (this.colorLevel === ColorLevel.TRUECOLOR) {
-      const [red, green, blue] = hexToRgb(hex)
-      return `\x1b[38;2;${red};${green};${blue}m`
+    switch (this.colorLevel) {
+      case ColorLevel.TRUECOLOR: {
+        const [r, g, b] = hexToRgb(hex)
+        return `\x1b[38;2;${r};${g};${b}m`
+      }
+      case ColorLevel.ANSI256: {
+        const code = rgbToAnsi256(hexToRgb(hex))
+        return `\x1b[38;5;${code}m`
+      }
+      case ColorLevel.ANSI:
+      default: {
+        const code = rgbToAnsi16(hexToRgb(hex))
+        return `\x1b[${code}m`
+      }
     }
-
-    if (this.colorLevel === ColorLevel.ANSI256) {
-      const ansi256ColorCode = rgbToAnsi256(hexToRgb(hex))
-      return `\x1b[38;5;${ansi256ColorCode}m`
-    }
-
-    const ansi16ColorCode = rgbToAnsi16(hexToRgb(hex))
-    return `\x1b[${ansi16ColorCode}m`
   }
 }
