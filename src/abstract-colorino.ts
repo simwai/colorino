@@ -67,7 +67,10 @@ export abstract class AbstractColorino {
   }
 
   public colorize(text: string, hex: string): string | BrowserColorizedArg {
-    if (this.colorLevel === ColorLevel.NO_COLOR || this.colorLevel === 'UnknownEnv') {
+    if (
+      this.colorLevel === ColorLevel.NO_COLOR ||
+      this.colorLevel === 'UnknownEnv'
+    ) {
       return text
     }
 
@@ -335,7 +338,7 @@ export abstract class AbstractColorino {
       if (depth >= maxDepth) return '[Object]'
 
       if (isArray(currentValue)) {
-        return currentValue.map((item) => transform(item, depth + 1))
+        return currentValue.map(item => transform(item, depth + 1))
       }
       const result: Record<string, unknown> = {}
       for (const key in currentValue) {
@@ -364,7 +367,7 @@ export abstract class AbstractColorino {
     const header = lines[0] || ''
     const isErrorHeader = !header.trim().startsWith('at ')
 
-    const frames = lines.slice(isErrorHeader ? 1 : 0).filter((line) => {
+    const frames = lines.slice(isErrorHeader ? 1 : 0).filter(line => {
       const lowerLine = line.toLowerCase()
       const isInternal =
         !areColorinoFramesVisible && lowerLine.includes('colorino')
