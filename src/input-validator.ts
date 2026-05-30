@@ -1,42 +1,47 @@
 import { ok, err, Result } from 'neverthrow'
-import { InputValidationError, ColorinoConfigError } from './errors.js'
-import type { Palette, LogLevel } from './types.js'
-import { TypeValidator } from './type-validator.js'
-import { ColorinoOptions } from './interfaces.js'
+import { InputValidationError } from './errors.js'
+import type { Palette } from './types.js'
+import { isConsoleMethod, isString } from './type-validator.js'
 
-export class InputValidator {
-  validateHex(hexColor: string): Result<boolean, InputValidationError> {
-    if (!TypeValidator.isString(hexColor)) {
-      return err(new InputValidationError(`Invalid hex color: '${hexColor}'`))
-    }
+// @__NO_SIDE_EFFECTS__
+export function validateHex(
+  hex: string
+): Result<boolean, InputValidationError> {
+  const inputValidationError = new InputValidationError(
+    `Invalid hex color: '${hex}'`
+  )
+  if (!isString(hex)) return err(inputValidationError)
 
-    const trimmedHex = hexColor.trim()
-    // Support #RRGGBB format
-    if (!/^#[0-9A-F]{6}$/i.test(trimmedHex)) {
-      return err(new InputValidationError(`Invalid hex color: '${hexColor}'`))
-    }
+  const trimmedHex = hex.trim()
+  const isHexValid = /^#[0-9A-F]{6}$/i.test(trimmedHex)
+  if (!isHexValid) return err(inputValidationError)
 
-    return ok(true)
+  return ok(true)
+}
+
+// @__NO_SIDE_EFFECTS__
+export function validatePalette(
+  palette: Palette
+): Result<boolean, InputValidationError> {
+  const inputValidationerror = new InputValidationError(`Invalid log method`)
+  for (const level in palette) {
+    if (!isConsoleMethod(level)) return err(inputValidationerror)
+
+    const hex = palette[level]
+    const result = validateHex(hex)
+    if (result.isErr()) return err(result.error)
   }
 
-  validatePalette(palette: Partial<Palette>): Result<boolean, InputValidationError> {
-    const logMethods = Object.keys(palette)
+  return ok(true)
+}
 
-    for (const logMethod of logMethods) {
-      if (!TypeValidator.isConsoleMethod(logMethod)) {
-        return err(new InputValidationError(`Invalid log method: ${logMethod}`))
-      }
-
-      const hexColor = palette[logMethod as keyof Palette]
-      if (hexColor) {
-        const validationResult = this.validateHex(hexColor)
-        if (validationResult.isErr()) {
-          return err(validationResult.error)
-        }
-      }
-    }
-
-    return ok(true)
+/** @deprecated Use standalone functions instead */
+export class InputValidator {
+  validateHex(hex: string) {
+    return validateHex(hex)
+  }
+  validatePalette(palette: Palette) {
+    return validatePalette(palette)
   }
 
   /** Validates ColorinoOptions at runtime. */

@@ -7,7 +7,14 @@ export type ConsoleMethod =
   | 'debug'
 
 /** Valid log levels for Colorino. */
-export type LogLevel = 'trace' | 'debug' | 'log' | 'info' | 'warn' | 'error' | 'fatal'
+export type LogLevel =
+  | 'trace'
+  | 'debug'
+  | 'log'
+  | 'info'
+  | 'warn'
+  | 'error'
+  | 'fatal'
 
 /** Priority mapping for log levels (higher is more important). */
 export const LOG_LEVEL_PRIORITY: Record<LogLevel, number> = {

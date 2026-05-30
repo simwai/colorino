@@ -124,7 +124,11 @@ interface Colorino {
    * Create a color gradient across text.
    * Returns a styled string (Node) or a CSS argument object (Browser).
    */
-  gradient(text: string, startHex: string, endHex: string): string | BrowserCssArg
+  gradient(
+    text: string,
+    startHex: string,
+    endHex: string
+  ): string | BrowserCssArg
 }
 
 /**

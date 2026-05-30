@@ -8,43 +8,59 @@ import {
   ColorinoBrowserCss,
   LogLevel,
   FormattedTag,
-  CallSiteInfo,
   ColorinoBrowserColorized,
 } from './types.js'
 import { ColorinoBrowserInterface, ColorinoOptions } from './interfaces.js'
-import { TypeValidator } from './type-validator.js'
-import { InputValidator } from './input-validator.js'
+import {
+  isBrowserColorizedArg,
+  isBrowserCssArg,
+  isError,
+  isFormattableObject,
+  isStackLikeString,
+  isString,
+} from './type-validator.js'
 
 export class ColorinoBrowser extends AbstractColorino implements ColorinoBrowserInterface {
   constructor(
     initialPalette: Palette,
     userPalette: Partial<Palette>,
-    validator: InputValidator,
     colorLevel: ColorLevel | 'UnknownEnv',
     options: ColorinoOptions = {}
   ) {
-    super(initialPalette, userPalette, validator, colorLevel, options)
+    super(initialPalette, userPalette, colorLevel, options)
   }
 
-  public gradient(text: string, startHex: string, endHex: string): string | BrowserCssArg {
-    const isNoColor = this.colorLevel === ColorLevel.NO_COLOR || this.colorLevel === 'UnknownEnv'
+  public gradient(
+    text: string,
+    startHex: string,
+    endHex: string
+  ): string | BrowserCssArg {
+    const isNoColor =
+      this.colorLevel === ColorLevel.NO_COLOR ||
+      this.colorLevel === 'UnknownEnv'
     if (isNoColor) {
       return text
     }
 
     const gradientCss = `background: linear-gradient(to right, ${startHex}, ${endHex}); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;`
-    return { [ColorinoBrowserCss]: true, text, css: gradientCss } as BrowserCssArg
+    return {
+      [ColorinoBrowserCss]: true,
+      text,
+      css: gradientCss,
+    } as BrowserCssArg
   }
 
   public css(text: string, style: CssConsoleStyle): string | BrowserCssArg {
-    const isNoColor = this.colorLevel === ColorLevel.NO_COLOR || this.colorLevel === 'UnknownEnv'
+    const isNoColor =
+      this.colorLevel === ColorLevel.NO_COLOR ||
+      this.colorLevel === 'UnknownEnv'
     if (isNoColor) {
       return text
     }
     return {
       [ColorinoBrowserCss]: true,
       text,
-      css: this.normalizeCssStyle(style)
+      css: this.normalizeCssStyle(style),
     } as BrowserCssArg
   }
 
@@ -52,14 +68,19 @@ export class ColorinoBrowser extends AbstractColorino implements ColorinoBrowser
     // File logging is not supported in the browser environment
   }
 
-  protected formatArgs(method: ConsoleMethod, args: unknown[], tags: FormattedTag[] = []): unknown[] {
-    const hasError = args.some(arg => TypeValidator.isError(arg) || TypeValidator.isStackLikeString(arg))
-    const argsToProcess = (method === 'trace' && !hasError)
-      ? (() => {
-          const stack = this.buildCallerStack()
-          return stack ? [...args, stack] : args
-        })()
-      : args
+  protected formatArgs(
+    method: ConsoleMethod,
+    args: unknown[],
+    tags: FormattedTag[] = []
+  ): unknown[] {
+    const hasError = args.some(arg => isError(arg) || isStackLikeString(arg))
+    const argsToProcess =
+      method === 'trace' && !hasError
+        ? (() => {
+            const stack = this.buildCallerStack()
+            return stack ? [...args, stack] : args
+          })()
+        : args
 
     const colorHex = this.palette[method] || '#ffffff'
     const formatStringParts: string[] = []
@@ -75,21 +96,25 @@ export class ColorinoBrowser extends AbstractColorino implements ColorinoBrowser
 
     let lastWasObject = false
     for (const arg of argsToProcess) {
-      if (TypeValidator.isBrowserColorizedArg(arg)) {
+      if (isBrowserColorizedArg(arg)) {
         formatStringParts.push(`%c${arg.text}`)
         finalArguments.push(`color:${arg.hex}`)
         lastWasObject = false
-      } else if (TypeValidator.isBrowserCssArg(arg)) {
+      } else if (isBrowserCssArg(arg)) {
         formatStringParts.push(`%c${arg.text}`)
         finalArguments.push(arg.css)
         lastWasObject = false
-      } else if (TypeValidator.isFormattableObject(arg)) {
+      } else if (isFormattableObject(arg)) {
         formatStringParts.push(lastWasObject ? '%o' : '\n%o')
         finalArguments.push(arg)
         lastWasObject = true
-      } else if (TypeValidator.isError(arg)) {
+      } else if (isError(arg)) {
         const cleanedError = this.cleanErrorStack(arg)
-        if (!cleanedError.name.trim() || !cleanedError.message.trim() || !cleanedError.stack?.trim()) {
+        if (
+          !cleanedError.name.trim() ||
+          !cleanedError.message.trim() ||
+          !cleanedError.stack?.trim()
+        ) {
           continue
         }
 
@@ -104,7 +129,7 @@ export class ColorinoBrowser extends AbstractColorino implements ColorinoBrowser
           finalArguments.push(errorStack)
         }
         lastWasObject = true
-      } else if (TypeValidator.isStackLikeString(arg)) {
+      } else if (isStackLikeString(arg)) {
         const filteredStack = this.filterStack(arg)
         if (!filteredStack.trim()) {
           continue
@@ -113,7 +138,7 @@ export class ColorinoBrowser extends AbstractColorino implements ColorinoBrowser
         formatStringParts.push('\n%s')
         finalArguments.push(filteredStack)
         lastWasObject = true
-      } else if (TypeValidator.isString(arg)) {
+      } else if (isString(arg)) {
         const stringValue = lastWasObject ? `\n${arg}` : arg
         formatStringParts.push(`%c${stringValue}`)
         finalArguments.push(`color:${colorHex}`)
@@ -143,15 +168,18 @@ export class ColorinoBrowser extends AbstractColorino implements ColorinoBrowser
   }
 
   protected normalizeCssStyle(style: CssConsoleStyle): string {
-    if (TypeValidator.isString(style)) {
+    if (isString(style)) {
       return style
     }
 
     const styleParts = []
     for (const property in style) {
-       if (Object.prototype.hasOwnProperty.call(style, property) && style[property]) {
-          styleParts.push(`${property}:${style[property]}`)
-       }
+      if (
+        Object.prototype.hasOwnProperty.call(style, property) &&
+        style[property]
+      ) {
+        styleParts.push(`${property}:${style[property]}`)
+      }
     }
     return styleParts.join(';')
   }

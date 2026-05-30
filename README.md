@@ -326,13 +326,16 @@ Requires ANSI-256 or Truecolor support (most modern terminals).
 Control which messages are emitted based on importance. Colorino follows the Bunyan/Pino standard: `trace` (10), `debug` (20), `info`/`log` (30), `warn` (40), `error` (50).
 
 ```typescript
-const logger = createColorino({}, {
-  logLevel: {
-    min: "info",
-    allow: ["error", "warn"],
-    deny: ["debug"]
+const logger = createColorino(
+  {},
+  {
+    logLevel: {
+      min: 'info',
+      allow: ['error', 'warn'],
+      deny: ['debug'],
+    },
   }
-})
+)
 ```
 
 ### <a id="5-10"></a>Call-site Metadata
@@ -340,16 +343,19 @@ const logger = createColorino({}, {
 Automatically attach caller information to logs.
 
 ```typescript
-const logger = createColorino({}, {
-  metadata: {
-    callSite: {
-      isEnabled: true,
-      isCallerFunctionVisible: true
-    }
+const logger = createColorino(
+  {},
+  {
+    metadata: {
+      callSite: {
+        isEnabled: true,
+        isCallerFunctionVisible: true,
+      },
+    },
   }
-})
+)
 
-logger.info("Order processed") // [processOrder@orderService.ts:42:5] Order processed
+logger.info('Order processed') // [processOrder@orderService.ts:42:5] Order processed
 ```
 
 ### <a id="5-11"></a>File Logging (Node.js only)
@@ -357,12 +363,15 @@ logger.info("Order processed") // [processOrder@orderService.ts:42:5] Order proc
 Persist logs to a file with automatic directory creation.
 
 ```typescript
-const logger = createColorino({}, {
-  fileLogging: {
-    isEnabled: true,
-    path: "./logs/app.log"
+const logger = createColorino(
+  {},
+  {
+    fileLogging: {
+      isEnabled: true,
+      path: './logs/app.log',
+    },
   }
-})
+)
 ```
 
 ### <a id="5-12"></a>Configuration Validation

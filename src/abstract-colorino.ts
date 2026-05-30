@@ -10,9 +10,15 @@ import {
   FormattedTag,
 } from './types.js'
 import { type ColorinoOptions, CallSiteConfig } from './interfaces.js'
-import { InputValidator } from './input-validator.js'
+import { validatePalette } from './input-validator.js'
 import { ColorLevel } from './enums.js'
-import { TypeValidator } from './type-validator.js'
+import {
+  isArray,
+  isError,
+  isNullOrUndefined,
+  isObject,
+  isStackLikeString,
+} from './type-validator.js'
 
 export abstract class AbstractColorino {
   protected colorLevel: ColorLevel | 'UnknownEnv'
@@ -21,34 +27,44 @@ export abstract class AbstractColorino {
   protected constructor(
     initialPalette: Palette,
     protected readonly userPalette: Partial<Palette>,
-    protected readonly validator: InputValidator,
     colorLevel: ColorLevel | 'UnknownEnv',
     protected readonly options: ColorinoOptions = {}
   ) {
     this.palette = { ...initialPalette, ...userPalette }
 
-    const paletteValidation = this.validator.validatePalette(this.palette)
-    if (paletteValidation.isErr()) {
-      throw paletteValidation.error
-    }
-
-    const optionsValidation = this.validator.validateOptions(this.options)
-    if (optionsValidation.isErr()) {
-      throw optionsValidation.error
-    }
+    const validatePaletteResult = validatePalette(this.palette)
+    if (validatePaletteResult.isErr()) throw validatePaletteResult.error
 
     this.colorLevel = colorLevel
   }
 
-  public log(...args: unknown[]): void { this.logInternal('log', args) }
-  public info(...args: unknown[]): void { this.logInternal('info', args) }
-  public warn(...args: unknown[]): void { this.logInternal('warn', args) }
-  public error(...args: unknown[]): void { this.logInternal('error', args) }
-  public trace(...args: unknown[]): void { this.logInternal('trace', args) }
-  public debug(...args: unknown[]): void { this.logInternal('debug', args) }
-  public fatal(...args: unknown[]): void { this.logInternal('fatal', args) }
+  log(...args: unknown[]): void {
+    this.logInternal('log', args)
+  }
 
-  public abstract gradient(text: string, startHex: string, endHex: string): string | BrowserCssArg
+  info(...args: unknown[]): void {
+    this.logInternal('info', args)
+  }
+
+  warn(...args: unknown[]): void {
+    this.logInternal('warn', args)
+  }
+
+  error(...args: unknown[]): void {
+    this.logInternal('error', args)
+  }
+
+  trace(...args: unknown[]): void {
+    this.logInternal('trace', args)
+  }
+
+  debug(...args: unknown[]): void {
+    this.logInternal('debug', args)
+  }
+
+  fatal(...args: unknown[]): void {
+    this.logInternal('fatal', args)
+  }
 
   public colorize(text: string, hex: string): string | BrowserColorizedArg {
     if (this.colorLevel === ColorLevel.NO_COLOR || this.colorLevel === 'UnknownEnv') {
@@ -59,7 +75,7 @@ export abstract class AbstractColorino {
       return {
         [ColorinoBrowserColorized]: true,
         text,
-        hex
+        hex,
       } as BrowserColorizedArg
     }
 
@@ -92,17 +108,23 @@ export abstract class AbstractColorino {
     return 'log'
   }
 
-  protected abstract writeToFile(level: LogLevel, args: unknown[], caller?: CallSiteInfo): void
+  protected abstract writeToFile(
+    level: LogLevel,
+    args: unknown[],
+    caller?: CallSiteInfo
+  ): void
 
   private isLevelEnabled(level: LogLevel): boolean {
     const logLevelConfig = this.options.logLevel
     if (!logLevelConfig) return true
 
-    const allowedLevels = logLevelConfig.allow ?? (Object.keys(LOG_LEVEL_PRIORITY) as LogLevel[])
+    const allowedLevels =
+      logLevelConfig.allow ?? (Object.keys(LOG_LEVEL_PRIORITY) as LogLevel[])
     if (!allowedLevels.includes(level)) return false
 
     const minimumLevel = logLevelConfig.min ?? 'trace'
-    if (LOG_LEVEL_PRIORITY[level] < LOG_LEVEL_PRIORITY[minimumLevel]) return false
+    if (LOG_LEVEL_PRIORITY[level] < LOG_LEVEL_PRIORITY[minimumLevel])
+      return false
 
     if (logLevelConfig.deny?.includes(level)) return false
 
@@ -124,7 +146,10 @@ export abstract class AbstractColorino {
       const line = stackLines[index]
       if (!line) continue
       const lowerLine = line.toLowerCase()
-      const isInternal = lowerLine.includes('colorino') || lowerLine.includes('loginternal') || lowerLine.includes('capturecaller')
+      const isInternal =
+        lowerLine.includes('colorino') ||
+        lowerLine.includes('loginternal') ||
+        lowerLine.includes('capturecaller')
       if (!isInternal) {
         frameLine = line
         break
@@ -145,9 +170,15 @@ export abstract class AbstractColorino {
     if (lastColonIndex === -1) return undefined
     const columnNumber = parseInt(locationString.slice(lastColonIndex + 1), 10)
 
-    const secondLastColonIndex = locationString.lastIndexOf(':', lastColonIndex - 1)
+    const secondLastColonIndex = locationString.lastIndexOf(
+      ':',
+      lastColonIndex - 1
+    )
     if (secondLastColonIndex === -1) return undefined
-    const lineNumber = parseInt(locationString.slice(secondLastColonIndex + 1, lastColonIndex), 10)
+    const lineNumber = parseInt(
+      locationString.slice(secondLastColonIndex + 1, lastColonIndex),
+      10
+    )
 
     const rawPath = locationString.slice(0, secondLastColonIndex)
     if (!rawPath) return undefined
@@ -162,7 +193,7 @@ export abstract class AbstractColorino {
       relativePath: this.extractRelativePath(rawPath),
       line: lineNumber,
       column: columnNumber,
-      functionName
+      functionName,
     }
 
     if (this.options.metadata?.callSite?.resolve) {
@@ -170,14 +201,14 @@ export abstract class AbstractColorino {
         file: info.filename,
         line: info.line,
         column: info.column,
-        functionName: info.functionName
+        functionName: info.functionName,
       })
       return {
         ...info,
         filename: resolved.file,
         line: resolved.line,
         column: resolved.column,
-        functionName: resolved.functionName
+        functionName: resolved.functionName,
       }
     }
 
@@ -185,7 +216,9 @@ export abstract class AbstractColorino {
   }
 
   private extractFilename(filePath: string): string {
-    const pathSegments = filePath.replace(/^(?:https?|file):\/\//, '').split(/[/\\]/)
+    const pathSegments = filePath
+      .replace(/^(?:https?|file):\/\//, '')
+      .split(/[/\\]/)
     const lastSegment = pathSegments[pathSegments.length - 1] || ''
     return lastSegment.split(/[?#]/)[0] || ''
   }
@@ -197,11 +230,121 @@ export abstract class AbstractColorino {
         const currentWorkingDirectory = process.cwd()
         const normalizedPath = filePath.replace(/^(?:file):\/\//, '')
         if (normalizedPath.startsWith(currentWorkingDirectory)) {
-          return normalizedPath.slice(currentWorkingDirectory.length).replace(/^[/\\]/, '').replace(/\\/g, '/')
+          return normalizedPath
+            .slice(currentWorkingDirectory.length)
+            .replace(/^[/\\]/, '')
+            .replace(/\\/g, '/')
         }
       }
     } catch {}
     return this.extractFilename(filePath)
+  }
+
+  private buildMetadataTags(
+    _level: LogLevel,
+    callerInfo?: CallSiteInfo
+  ): FormattedTag[] {
+    const callSiteConfig = this.options.metadata?.callSite
+    if ((callSiteConfig?.isEnabled ?? false) && callerInfo) {
+      const tag = this.formatCallSiteTag(callerInfo, callSiteConfig || {})
+      return tag ? [tag] : []
+    }
+    return []
+  }
+
+  private formatCallSiteTag(
+    caller: CallSiteInfo,
+    config: CallSiteConfig
+  ): FormattedTag | null {
+    const isFileVisible = config.isCallerFileVisible ?? true
+    const isFunctionVisible = config.isCallerFunctionVisible ?? false
+    const isLineVisible = config.isCallerLineVisible ?? true
+    const isColumnVisible = config.isCallerColumnVisible ?? true
+    const isPathRelative = config.isCallerPathRelative ?? false
+
+    const filePart = isFileVisible
+      ? isPathRelative
+        ? caller.relativePath
+        : caller.filename
+      : ''
+    const linePart = isLineVisible
+      ? isColumnVisible
+        ? `${caller.line}:${caller.column}`
+        : `${caller.line}`
+      : ''
+    const location =
+      filePart && linePart ? `${filePart}:${linePart}` : filePart || linePart
+
+    let tagText = ''
+    if (isFunctionVisible && caller.functionName) {
+      tagText = location
+        ? `[${caller.functionName}@${location}]`
+        : `[${caller.functionName}]`
+    } else if (location) {
+      tagText = `[${location}]`
+    }
+
+    return tagText
+      ? { text: tagText, position: config.position ?? 'postfix' }
+      : null
+  }
+
+  protected partitionTags(tags: FormattedTag[]): {
+    prefix: FormattedTag[]
+    postfix: FormattedTag[]
+  } {
+    const prefixTags: FormattedTag[] = [],
+      postfixTags: FormattedTag[] = []
+    for (const tag of tags) {
+      if (tag.position === 'prefix') prefixTags.push(tag)
+      else postfixTags.push(tag)
+    }
+    return { prefix: prefixTags, postfix: postfixTags }
+  }
+
+  protected abstract formatArgs(
+    consoleMethod: ConsoleMethod,
+    args: unknown[],
+    tags: FormattedTag[]
+  ): unknown[]
+
+    const callerInfo = this.captureCaller()
+    const metadataTags = this.buildMetadataTags(level, callerInfo)
+
+    const method = this.mapLevelToConsoleMethod(level)
+    const formattedArgs = this.formatArgs(method, args, metadataTags)
+
+    const consoleTarget = method === 'trace' ? 'log' : method
+    console[consoleTarget](...formattedArgs)
+
+  protected formatValue(
+    value: unknown,
+    maxDepth = this.options.maxDepth ?? 5
+  ): string {
+    const visited = new WeakSet<object>()
+    const transform = (currentValue: unknown, depth: number): unknown => {
+      if (isNullOrUndefined(currentValue) || !isObject(currentValue)) {
+        if (typeof currentValue === 'bigint')
+          return `${currentValue.toString()}n`
+        return currentValue
+      }
+      if (visited.has(currentValue)) return '[Circular]'
+      visited.add(currentValue)
+      if (depth >= maxDepth) return '[Object]'
+
+      if (isArray(currentValue)) {
+        return currentValue.map(item => transform(item, depth + 1))
+      }
+      const result: Record<string, unknown> = {}
+      for (const key in currentValue) {
+        if (Object.prototype.hasOwnProperty.call(currentValue, key)) {
+          result[key] = transform(currentValue[key], depth + 1)
+        }
+      }
+      visited.delete(currentValue)
+      return result
+    }
+    return JSON.stringify(transform(value, 0), null, 2)
   }
 
   private buildMetadataTags(_level: LogLevel, callerInfo?: CallSiteInfo): FormattedTag[] {
@@ -213,23 +356,12 @@ export abstract class AbstractColorino {
     return []
   }
 
-  private formatCallSiteTag(caller: CallSiteInfo, config: CallSiteConfig): FormattedTag | null {
-    const isFileVisible = config.isCallerFileVisible ?? true
-    const isFunctionVisible = config.isCallerFunctionVisible ?? false
-    const isLineVisible = config.isCallerLineVisible ?? true
-    const isColumnVisible = config.isCallerColumnVisible ?? true
-    const isPathRelative = config.isCallerPathRelative ?? false
-
-    const filePart = isFileVisible ? (isPathRelative ? caller.relativePath : caller.filename) : ''
-    const linePart = isLineVisible ? (isColumnVisible ? `${caller.line}:${caller.column}` : `${caller.line}`) : ''
-    const location = filePart && linePart ? `${filePart}:${linePart}` : (filePart || linePart)
-
-    let tagText = ''
-    if (isFunctionVisible && caller.functionName) {
-      tagText = location ? `[${caller.functionName}@${location}]` : `[${caller.functionName}]`
-    } else if (location) {
-      tagText = `[${location}]`
-    }
+    const stack = isError(inputStack)
+      ? inputStack.stack
+      : isStackLikeString(inputStack)
+        ? inputStack
+        : ''
+    if (!stack) return ''
 
     return tagText ? { text: tagText, position: config.position ?? 'postfix' } : null
   }
@@ -311,6 +443,8 @@ export abstract class AbstractColorino {
         break
       }
     }
-    return this.filterStack(stackLines.slice(startIndex).join('\n')) || undefined
+    return (
+      this.filterStack(stackLines.slice(startIndex).join('\n')) || undefined
+    )
   }
 }

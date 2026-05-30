@@ -2,13 +2,17 @@ import { describe, expect, vi, test as baseTest } from 'vitest'
 import { createColorino } from '../../browser.js'
 
 interface BrowserFixtures {
-  mocks: any
+  mocks: {
+    log: ReturnType<typeof vi.spyOn>
+    warn: ReturnType<typeof vi.spyOn>
+  }
 }
 
 const test = baseTest.extend<BrowserFixtures>({
-  mocks: async ({}, use) => {
+  mocks: async ({ task: _ }, use) => {
     const spies = {
       log: vi.spyOn(console, 'log').mockImplementation(() => {}),
+      warn: vi.spyOn(console, 'warn').mockImplementation(() => {}),
     }
     await use(spies)
     vi.restoreAllMocks()
@@ -16,11 +20,22 @@ const test = baseTest.extend<BrowserFixtures>({
 })
 
 describe('Colorino - Browser Extensions', () => {
-  test('injects metadata tags in browser formatted output', ({ mocks }) => {
-    const logger = createColorino({}, { metadata: { callSite: { isEnabled: true } } })
-    logger.log('browser meta')
-    const call = mocks.log.mock.calls[0]
-    expect(call[0]).toContain('%c %s')
-    expect(call[call.length - 1]).toMatch(/\[.+:\d+:\d+\]/)
+  test('Log-level Filtering: respects min log level', ({ mocks }) => {
+    const logger = createColorino(
+      {},
+      {
+        logLevel: { min: 'warn' },
+      }
+    )
+
+    logger.info('no info')
+    logger.warn('yes warn')
+
+    expect(mocks.log).not.toHaveBeenCalled()
+    // In browser, warn goes to console.warn
+    expect(mocks.warn).toHaveBeenCalledWith(
+      expect.stringContaining('yes warn'),
+      expect.anything()
+    )
   })
 })
