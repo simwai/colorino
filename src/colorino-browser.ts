@@ -20,10 +20,7 @@ import {
   isString,
 } from './type-validator.js'
 
-export class ColorinoBrowser
-  extends AbstractColorino
-  implements ColorinoBrowserInterface
-{
+export class ColorinoBrowser extends AbstractColorino implements ColorinoBrowserInterface {
   constructor(
     initialPalette: Palette,
     userPalette: Partial<Palette>,

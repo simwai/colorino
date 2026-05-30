@@ -30,7 +30,7 @@ export abstract class AbstractColorino {
     colorLevel: ColorLevel | 'UnknownEnv',
     protected readonly options: ColorinoOptions = {}
   ) {
-    this.palette = initialPalette
+    this.palette = { ...initialPalette, ...userPalette }
 
     const validatePaletteResult = validatePalette(this.palette)
     if (validatePaletteResult.isErr()) throw validatePaletteResult.error
@@ -66,11 +66,8 @@ export abstract class AbstractColorino {
     this.logInternal('fatal', args)
   }
 
-  colorize(text: string, hex: string): string | BrowserColorizedArg {
-    if (
-      this.colorLevel === ColorLevel.NO_COLOR ||
-      this.colorLevel === 'UnknownEnv'
-    ) {
+  public colorize(text: string, hex: string): string | BrowserColorizedArg {
+    if (this.colorLevel === ColorLevel.NO_COLOR || this.colorLevel === 'UnknownEnv') {
       return text
     }
 
@@ -83,9 +80,7 @@ export abstract class AbstractColorino {
     }
 
     const ansiPrefix = this.toAnsiPrefix(hex)
-    if (!ansiPrefix) return text
-
-    return `${ansiPrefix}${text}\x1b[0m`
+    return ansiPrefix ? `${ansiPrefix}${text}\x1b[0m` : text
   }
 
   protected logInternal(level: LogLevel, args: unknown[]): void {
@@ -313,17 +308,14 @@ export abstract class AbstractColorino {
     tags: FormattedTag[]
   ): unknown[]
 
-  protected abstract isBrowser(): boolean
+    const callerInfo = this.captureCaller()
+    const metadataTags = this.buildMetadataTags(level, callerInfo)
 
-  protected abstract gradient(
-    text: string,
-    startHex: string,
-    endHex: string
-  ): string | BrowserCssArg
+    const method = this.mapLevelToConsoleMethod(level)
+    const formattedArgs = this.formatArgs(method, args, metadataTags)
 
-  protected toAnsiPrefix(_hex: string): string {
-    return ''
-  }
+    const consoleTarget = method === 'trace' ? 'log' : method
+    console[consoleTarget](...formattedArgs)
 
   protected formatValue(
     value: unknown,
@@ -355,10 +347,14 @@ export abstract class AbstractColorino {
     return JSON.stringify(transform(value, 0), null, 2)
   }
 
-  protected filterStack(inputStack: string | Error | undefined): string {
-    const areNodeFramesShown = this.options.areNodeFramesVisible ?? true
-    const areColorinoFramesShown =
-      this.options.areColorinoFramesVisible ?? false
+  private buildMetadataTags(_level: LogLevel, callerInfo?: CallSiteInfo): FormattedTag[] {
+    const callSiteConfig = this.options.metadata?.callSite
+    if ((callSiteConfig?.isEnabled ?? false) && callerInfo) {
+      const tag = this.formatCallSiteTag(callerInfo, callSiteConfig || {})
+      return tag ? [tag] : []
+    }
+    return []
+  }
 
     const stack = isError(inputStack)
       ? inputStack.stack
@@ -367,36 +363,71 @@ export abstract class AbstractColorino {
         : ''
     if (!stack) return ''
 
-    const lines = stack.split('\n')
-    const firstLine = lines[0] || ''
+    return tagText ? { text: tagText, position: config.position ?? 'postfix' } : null
+  }
 
-    const isErrorHeader = !firstLine.trim().startsWith('at ')
-    const startIndex = isErrorHeader ? 1 : 0
+  protected partitionTags(tags: FormattedTag[]): { prefix: FormattedTag[]; postfix: FormattedTag[] } {
+    const prefixTags: FormattedTag[] = [], postfixTags: FormattedTag[] = []
+    for (const tag of tags) {
+      if (tag.position === 'prefix') prefixTags.push(tag)
+      else postfixTags.push(tag)
+    }
+    return { prefix: prefixTags, postfix: postfixTags }
+  }
 
-    const filtered = lines.slice(startIndex).filter(line => {
-      const lower = line.toLowerCase()
+  protected abstract formatArgs(method: ConsoleMethod, args: unknown[], tags: FormattedTag[]): unknown[]
+  protected abstract isBrowser(): boolean
+  protected abstract gradient(text: string, start: string, end: string): string | BrowserCssArg
+  protected toAnsiPrefix(_hex: string): string { return '' }
 
-      if (
-        (!areColorinoFramesShown && lower.includes('colorino')) ||
-        (!areNodeFramesShown && lower.includes('node:'))
-      ) {
-        return false
+  protected formatValue(value: unknown, maxDepth = this.options.maxDepth ?? 5): string {
+    const visited = new WeakSet<object>()
+    const transform = (currentValue: unknown, depth: number): unknown => {
+      if (TypeValidator.isNullOrUndefined(currentValue) || !TypeValidator.isObject(currentValue)) {
+        if (typeof currentValue === 'bigint') return `${currentValue.toString()}n`
+        return currentValue
       }
+      if (visited.has(currentValue)) return '[Circular]'
+      visited.add(currentValue)
+      if (depth >= maxDepth) return '[Object]'
 
-      return true
+      if (TypeValidator.isArray(currentValue)) {
+        return currentValue.map(item => transform(item, depth + 1))
+      }
+      const result: Record<string, unknown> = {}
+      for (const key in currentValue) {
+        if (Object.prototype.hasOwnProperty.call(currentValue, key)) {
+          result[key] = transform(currentValue[key], depth + 1)
+        }
+      }
+      visited.delete(currentValue)
+      return result
+    }
+    return JSON.stringify(transform(value, 0), null, 2)
+  }
+
+  protected filterStack(input: string | Error | undefined): string {
+    const areNodeFramesVisible = this.options.areNodeFramesVisible ?? true
+    const areColorinoFramesVisible = this.options.areColorinoFramesVisible ?? false
+    const stackString = TypeValidator.isError(input) ? input.stack : (TypeValidator.isStackLikeString(input) ? input : '')
+    if (!stackString) return ''
+
+    const lines = stackString.split('\n')
+    const header = lines[0] || ''
+    const isErrorHeader = !header.trim().startsWith('at ')
+
+    const frames = lines.slice(isErrorHeader ? 1 : 0).filter(line => {
+      const lowerLine = line.toLowerCase()
+      const isInternal = !areColorinoFramesVisible && lowerLine.includes('colorino')
+      const isNodeInternal = !areNodeFramesVisible && lowerLine.includes('node:')
+      return !(isInternal || isNodeInternal)
     })
 
-    return isErrorHeader
-      ? [firstLine, ...filtered].join('\n')
-      : filtered.join('\n')
+    return isErrorHeader ? [header, ...frames].join('\n') : frames.join('\n')
   }
 
   protected cleanErrorStack(error: Error): Error {
-    if (!error.stack) return error
-
-    const cleanStack = this.filterStack(error.stack)
-    error.stack = cleanStack
-
+    if (error.stack) error.stack = this.filterStack(error.stack)
     return error
   }
 
