@@ -6,7 +6,7 @@
 
 | Field                   | Value                                                                     |
 | ----------------------- | ------------------------------------------------------------------------- |
-| **Last session**        | 2025-04-07 — Replaced agents.md with XML-wrapped prose-based instructions |
+| **Last session**        | 2025-06-03 — Converted md links to full URLs and added FEATURE_COMPARISON |
 | **Current sprint goal** | Establish agent workflow and repository documentation                     |
 | **Sync status**         | Verified                                                                  |
 
@@ -25,6 +25,10 @@
 ---
 
 ## ✅ Done
+
+- [x] Convert relative Markdown links to full URLs in README.md — completed: 2025-06-03 — note: Replaced [MIT](LICENSE.md) with full GitHub URL.
+- [x] Add FEATURE_COMPARISON.md — completed: 2025-06-03 — note: Created detailed comparison with Pino, Winston, and Consola.
+- [x] Link FEATURE_COMPARISON.md from README.md — completed: 2025-06-03 — note: Added links in TOC and a dedicated section.
 
 - [x] Add `ignore = dirty` to `agent-resources` submodule in `.gitmodules` — completed: 2025-05-22 — note: Prevents parent repo from being dirty due to submodule changes.
 

@@ -6,6 +6,7 @@
 A lightweight, high-performance TypeScript logger for Node.js and the Browser. Supports auto-detected themes, hex-to-ANSI mapping, gradients, and custom palettes.
 
 ## <a id="1"></a>Table of Contents
+- [Feature Comparison](https://github.com/simwai/colorino/blob/main/FEATURE_COMPARISON.md)
 
 ## <a id="2"></a>Installation
 
@@ -39,10 +40,12 @@ npm install colorino
   - [1. `colorino` (default instance)](#4-1)
   - [2. `createColorino(palette?, options?)`](#4-2)
 - [Extending Colorino](#5)
-- [License](#6)
+- [Feature Comparison](#6)
+- [License](#7)
 
 <!-- Table of contents is made with https://github.com/eugene-khyst/md-toc-cli -->
-pnpm add colorino
+
+
 ```
 
 ### <a id="2-2"></a>CDN (Browser Only)
@@ -285,6 +288,10 @@ class MyLogger extends ColorinoNode {
 }
 ```
 
-## <a id="6"></a>License
+## <a id="6"></a>Feature Comparison
 
-[MIT](LICENSE.md)
+See our [detailed feature comparison](https://github.com/simwai/colorino/blob/main/FEATURE_COMPARISON.md) to see how Colorino stacks up against other popular loggers.
+
+## <a id="7"></a>License
+
+[MIT](https://github.com/simwai/colorino/blob/main/LICENSE.MD)
