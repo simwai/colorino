@@ -1,21 +1,5 @@
 # <a id="0"></a>Colorino 🎨
 
-[![NPM Version](https://img.shields.io/npm/v/colorino)](https://www.npmjs.com/package/colorino)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-
-A lightweight, high-performance TypeScript logger for Node.js and the Browser. Supports auto-detected themes, hex-to-ANSI mapping, gradients, and custom palettes.
-
-## <a id="1"></a>Table of Contents
-- [Feature Comparison](https://github.com/simwai/colorino/blob/main/FEATURE_COMPARISON.md)
-
-## <a id="2"></a>Installation
-
-### <a id="2-1"></a>NPM / PNPM / Yarn
-
-```bash
-npm install colorino
-# <a id="0"></a>or
-
 - [Table of Contents](#1)
 - [Installation](#2)
   - [NPM / PNPM / Yarn](#2-1)
@@ -45,7 +29,22 @@ npm install colorino
 
 <!-- Table of contents is made with https://github.com/eugene-khyst/md-toc-cli -->
 
+[![NPM Version](https://img.shields.io/npm/v/colorino)](https://www.npmjs.com/package/colorino)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
+A lightweight, high-performance TypeScript logger for Node.js and the Browser. Supports auto-detected themes, hex-to-ANSI mapping, gradients, and custom palettes.
+
+## <a id="1"></a>Table of Contents
+- [Feature Comparison](https://github.com/simwai/colorino/blob/main/FEATURE_COMPARISON.md)
+
+## <a id="2"></a>Installation
+
+### <a id="2-1"></a>NPM / PNPM / Yarn
+
+```bash
+npm install colorino
+pnpm add colorino
+yarn add colorino
 ```
 
 ### <a id="2-2"></a>CDN (Browser Only)
@@ -175,7 +174,7 @@ const logger = createColorino(
   }
 )
 
-// Output: [main.ts:10:5@someFunction] Your message...
+// Output: [someFunction@main.ts:10:5] Your message...
 ```
 
 **CallSiteConfig properties:**
@@ -187,6 +186,7 @@ const logger = createColorino(
 - `isCallerLineVisible`: (`boolean`) Show line number. Default `true`.
 - `isCallerColumnVisible`: (`boolean`) Show column number. Default `true`.
 - `isCallerPathRelative`: (`boolean`) Show path relative to `cwd()` (Node only). Default `false`.
+- `resolve`: (`Function`) Optional hook to transform captured frame data (file, line, column, functionName).
 
 #### <a id="3-3-5"></a>File Logging (Node.js Only)
 
@@ -272,7 +272,7 @@ colorino.log(rainbow)
 Returns a new logger instance.
 
 - `palette` (`Partial<Palette>`): Per-level hex color overrides.
-- `options` (`ColorinoOptions`): See [Options & Theme Overrides](#2-3).
+- `options` (`ColorinoOptions`): See [Options & Theme Overrides](#options--theme-overrides).
 
 ## <a id="5"></a>Extending Colorino
 
