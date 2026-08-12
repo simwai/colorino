@@ -32,31 +32,37 @@ export abstract class AbstractColorino {
   log(...args: unknown[]): void {
     const formatted = this.formatArgs('log', args)
     console.log(...formatted)
+    this.writeToFile('log', formatted)
   }
 
   info(...args: unknown[]): void {
     const formatted = this.formatArgs('info', args)
     console.info(...formatted)
+    this.writeToFile('info', formatted)
   }
 
   warn(...args: unknown[]): void {
     const formatted = this.formatArgs('warn', args)
     console.warn(...formatted)
+    this.writeToFile('warn', formatted)
   }
 
   error(...args: unknown[]): void {
     const formatted = this.formatArgs('error', args)
     console.error(...formatted)
+    this.writeToFile('error', formatted)
   }
 
   trace(...args: unknown[]): void {
     const formatted = this.formatArgs('trace', args)
     console.log(...formatted)
+    this.writeToFile('trace', formatted)
   }
 
   debug(...args: unknown[]): void {
     const formatted = this.formatArgs('debug', args)
     console.debug(...formatted)
+    this.writeToFile('debug', formatted)
   }
 
   colorize(text: string, hex: string): string | BrowserColorizedArg {
@@ -86,6 +92,8 @@ export abstract class AbstractColorino {
     args: unknown[]
   ): unknown[]
 
+  protected writeToFile(_level: ConsoleMethod, _args: unknown[]): void {}
+
   protected abstract isBrowser(): boolean
 
   protected abstract gradient(
@@ -103,6 +111,19 @@ export abstract class AbstractColorino {
     maxDepth = this.options.maxDepth ?? 5
   ): string {
     const seen = new WeakSet<object>()
+    const sanitization = this.options.sanitization
+    const sensitiveKeys = new Set(
+      sanitization?.keys ?? [
+        'apiKey',
+        'authorization',
+        'cookie',
+        'password',
+        'privateKey',
+        'secret',
+        'token',
+      ]
+    )
+    const replacement = sanitization?.replacement ?? '[REDACTED]'
 
     const sanitizeArray = (items: unknown[], depth: number): unknown[] => {
       return items.map(item => sanitize(item, depth))
@@ -114,18 +135,35 @@ export abstract class AbstractColorino {
     ): Record<string, unknown> => {
       const result: Record<string, unknown> = {}
       for (const key in obj) {
-        result[key] = sanitize(obj[key], depth)
+        if (
+          (sanitization?.enabled ?? true) &&
+          [...sensitiveKeys].some(
+            sensitiveKey => sensitiveKey.toLowerCase() === key.toLowerCase()
+          )
+        ) {
+          result[key] = replacement
+          continue
+        }
+
+        try {
+          result[key] = sanitize(obj[key], depth)
+        } catch {
+          result[key] = '[Unreadable]'
+        }
       }
       return result
     }
 
     const sanitize = (val: unknown, currentDepth: number): unknown => {
-      if (
-        TypeValidator.isNullOrUndefined(val) ||
-        !TypeValidator.isObject(val)
-      ) {
+      if (TypeValidator.isNullOrUndefined(val)) {
         return val
       }
+
+      if (typeof val === 'bigint') return `${val}n`
+      if (typeof val === 'symbol') return val.toString()
+      if (typeof val === 'function')
+        return `[Function: ${val.name || 'anonymous'}]`
+      if (!TypeValidator.isObject(val)) return val
 
       if (seen.has(val)) return '[Circular]'
       seen.add(val)
@@ -134,14 +172,33 @@ export abstract class AbstractColorino {
 
       const nextDepth = currentDepth + 1
 
+      if (val instanceof Date) {
+        try {
+          return val.toISOString()
+        } catch {
+          return '[Invalid Date]'
+        }
+      }
+      if (val instanceof RegExp) return val.toString()
+
+      if (val instanceof Map) {
+        return sanitizeObject(Object.fromEntries(val), nextDepth)
+      }
+
+      if (val instanceof Set) return sanitizeArray([...val], nextDepth)
+
       if (TypeValidator.isArray(val)) {
         return sanitizeArray(val as unknown[], nextDepth)
       }
 
-      return sanitizeObject(val as Record<string, unknown>, nextDepth)
+      return sanitizeObject(val, nextDepth)
     }
 
-    return JSON.stringify(sanitize(value, 0), null, 2)
+    try {
+      return JSON.stringify(sanitize(value, 0), null, 2) ?? 'undefined'
+    } catch {
+      return '[Unserializable]'
+    }
   }
 
   protected filterStack(inputStack: string | Error | undefined): string {

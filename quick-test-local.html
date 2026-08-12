@@ -1,0 +1,33 @@
+<!doctype html>
+<html>
+  <head>
+    <script type="module">
+      import { createColorino } from './dist/cdn.mjs'
+
+      const colorino = createColorino()
+
+      colorino.info('Hello from the local browser bundle!')
+      colorino.log(colorino.gradient('Hello!', '#ff0000', '#0000ff'))
+
+      const title = colorino.gradient('COLORINO', '#ffd700', '#ff1493')
+      colorino.info('Welcome to', title, 'the local browser build')
+
+      const badge = colorino.colorize('local', '#00ff00')
+      colorino.log('Bundle:', badge)
+
+      console.log('\n--- Enhanced Details Tests ---')
+      const details = { password: 'do-not-share', count: 1n }
+      details.self = details
+      colorino.info('Readable details in DevTools:', details)
+      colorino.info('File logging is available from the Node build only.')
+
+      console.log('\n--- Trace Tests ---')
+      colorino.trace('trace from the local browser bundle')
+      colorino.trace('trace details', {
+        source: 'local',
+        token: 'redacted in Node output',
+      })
+    </script>
+  </head>
+  <body></body>
+</html>

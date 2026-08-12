@@ -6,11 +6,14 @@ import { colorConverter } from './color-converter.js'
 import { Palette } from './types.js'
 import { ColorinoNodeInterface, ColorinoOptions } from './interfaces.js'
 import { InputValidator } from './input-validator.js'
+import { ColorinoFileLogger } from './file-logger.js'
 
 export class ColorinoNode
   extends AbstractColorino
   implements ColorinoNodeInterface
 {
+  private readonly fileLogger: ColorinoFileLogger | undefined
+
   constructor(
     initialPalette: Palette,
     userPalette: Partial<Palette>,
@@ -19,6 +22,9 @@ export class ColorinoNode
     options: ColorinoOptions = {}
   ) {
     super(initialPalette, userPalette, validator, colorLevel, options)
+    this.fileLogger = options.fileLogging
+      ? new ColorinoFileLogger(options.fileLogging)
+      : undefined
   }
 
   public gradient(text: string, startHex: string, endHex: string): string {
@@ -159,6 +165,16 @@ export class ColorinoNode
     }
 
     return formattedArgs
+  }
+
+  protected override writeToFile(level: ConsoleMethod, args: unknown[]): void {
+    if (!this.fileLogger) return
+
+    try {
+      this.fileLogger.write(level, args, value => this.formatValue(value))
+    } catch {
+      return
+    }
   }
 
   protected isBrowser(): boolean {

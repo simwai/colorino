@@ -1,7 +1,7 @@
 # <a id="0"></a>🎨 Colorino
 
 [![npm](https://img.shields.io/npm/v/colorino?color=8B5CF6&logo=npm&logoColor=white)](https://www.npmjs.com/package/colorino)
-[![License](https://img.shields.io/npm/l/colorino?color=8B5CF6)](https://github.com/simwai/colorino/blob/master/LICENSE.MD)
+[![License](https://img.shields.io/npm/l/colorino?color=8B5CF6)](https://gitlab.com/simwai/colorino/-/blob/master/LICENSE.MD)
 [![npm downloads](https://img.shields.io/npm/dm/colorino?color=8B5CF6&logo=npm&logoColor=white)](https://www.npmjs.com/package/colorino)
 [![Vitest](https://img.shields.io/badge/Test-Vitest-8B5CF6?logo=vitest&logoColor=white)](https://vitest.dev/)
 
@@ -9,8 +9,8 @@
 
 Colorino automatically adapts its palette to your terminal or browser DevTools theme, and degrades colors gracefully so your logs stay readable and on‑brand even in limited environments
 
-![Demo](https://github.com/simwai/colorino/blob/master/screenshots/demo-ps.png?raw=true)
-![Demo 2](https://github.com/simwai/colorino/blob/master/screenshots/demo-ps-2.png?raw=true)
+![Demo](https://gitlab.com/simwai/colorino/-/raw/master/screenshots/demo-ps.png)
+![Demo 2](https://gitlab.com/simwai/colorino/-/raw/master/screenshots/demo-ps-2.png)
 
 # <a id="0"></a><a id="0"></a>
 
@@ -156,19 +156,66 @@ myLogger.info('Rebranded info!')
 
 `createColorino(palette?, options?)` accepts:
 
-| Option                     | Type                      | Default  | Description                                                                                                                                  |
-| -------------------------- | ------------------------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| `theme`                    | `ThemeOption` (see below) | `'auto'` | Control the active color theme or force a specific mode.                                                                                     |
-| `maxDepth`                 | `number`                  | `5`      | Maximum depth when pretty-printing objects in log output.                                                                                    |
-| `areNodeFramesVisible`     | `boolean`                 | `true`   | Show Node.js internal frames (e.g., `node:internal/...`) in stack traces.                                                                    |
-| `areColorinoFramesVisible` | `boolean`                 | `false`  | Show Colorino internal frames in stack traces (useful for debugging Colorino).                                                               |
-| `isOsc11Enabled`           | `boolean`                 | `true`   | Enables auto light/dark theme detection, but can eventually lead to crashes/unwanted behaviour. Then, just set this env variable to `false`. |
+| Option                     | Type                          | Default     | Description                                                                                                                                  |
+| -------------------------- | ----------------------------- | ----------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `theme`                    | `ThemeOption` (see below)     | `'auto'`    | Control the active color theme or force a specific mode.                                                                                     |
+| `maxDepth`                 | `number`                      | `5`         | Maximum depth when pretty-printing objects in log output.                                                                                    |
+| `areNodeFramesVisible`     | `boolean`                     | `true`      | Show Node.js internal frames (e.g., `node:internal/...`) in stack traces.                                                                    |
+| `areColorinoFramesVisible` | `boolean`                     | `false`     | Show Colorino internal frames in stack traces (useful for debugging Colorino).                                                               |
+| `isOsc11Enabled`           | `boolean`                     | `true`      | Enables auto light/dark theme detection, but can eventually lead to crashes/unwanted behaviour. Then, just set this env variable to `false`. |
+| `fileLogging`              | `ColorinoFileLoggingOptions`  | `undefined` | Node.js file logging with ANSI stripping, timestamps, and size-based rotation.                                                               |
+| `sanitization`             | `ColorinoSanitizationOptions` | enabled     | Redacts sensitive object keys before formatting log details.                                                                                 |
 
 **`theme` accepts three types of values:**
 
 1. **`'auto'`** (Default): Automatically detects your terminal or browser theme (dark/light) and applies the matching default preset. (Pls use Terminal on Windows if you wanna use this.)
 2. **`'dark' | 'light'`**: Forces the logger into a specific mode using the default preset for that mode.
 3. **`ThemeName`**: Forces a specific built-in palette (e.g., `'dracula'`).
+
+File logging is available in the Node.js build:
+
+```typescript
+const logger = createColorino(
+  {},
+  {
+    fileLogging: {
+      path: './logs/application.log',
+      maxBytes: 10 * 1024 * 1024,
+      maxFiles: 5,
+      stripAnsi: true,
+      timezone: 'Europe/Berlin',
+    },
+  }
+)
+```
+
+Sensitive keys such as `password`, `token`, `secret`, `apiKey`, `authorization`,
+and `cookie` are redacted by default. Configure `sanitization.keys` and
+`sanitization.replacement` when needed.
+
+File logging appends entries across process runs. When the active file exceeds
+`maxBytes`, it is moved to `.1`, existing rotated files are shifted, and files
+older than `maxFiles` are removed. File output is ANSI-free by default and uses
+local time unless `timezone` is specified with an IANA timezone such as `UTC`
+or `Europe/Berlin`.
+
+Decorate Node.js class methods with `@log` to track calls, return values, and
+errors. `logLevel` uses the standard Colorino levels and defaults to `debug`.
+
+```typescript
+import { colorino, log } from 'colorino'
+
+class UserService {
+  @log(colorino, { logLevel: 'info' })
+  async loadUser(id: string) {
+    return { id }
+  }
+}
+```
+
+The browser library build (`dist/browser.mjs`) is intended for bundlers because
+its dependencies remain external. For direct browser loading in the manual
+verification pages, use the self-contained `dist/cdn.mjs` bundle instead.
 
 #### <a id="5-3-1"></a>Available Theme Presets
 

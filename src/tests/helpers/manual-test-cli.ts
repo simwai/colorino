@@ -1,9 +1,30 @@
 import readline from 'node:readline'
 import { getTerminalThemeSync } from '../../osc-theme-sync.js'
+import { createColorino, log } from '../../node.js'
+
+const logger = createColorino(
+  {},
+  {
+    fileLogging: {
+      path: './tmp/colorino-manual-cli.log',
+      stripAnsi: true,
+      timezone: 'local',
+    },
+  }
+)
+
+class ManualCli {
+  @log(logger, { logLevel: 'debug' })
+  echo(line: string): string {
+    return `Echo: ${line}`
+  }
+}
+
+const manualCli = new ManualCli()
 
 function main() {
   const theme = getTerminalThemeSync()
-  console.log(`utils-cli$ (theme: ${theme})`)
+  logger.info(`utils-cli$ (theme: ${theme})`)
 
   const rl = readline.createInterface({
     input: process.stdin,
@@ -11,7 +32,7 @@ function main() {
   })
 
   const printPrompt = () => {
-    console.log('utils-cli$')
+    logger.info('utils-cli$')
   }
 
   printPrompt()
@@ -22,7 +43,7 @@ function main() {
       return
     }
 
-    console.log(`Echo: ${line}`)
+    logger.log(manualCli.echo(line))
     printPrompt()
   })
 

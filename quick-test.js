@@ -1,4 +1,4 @@
-import { createColorino } from './dist/node.mjs'
+import { createColorino, log } from './dist/node.mjs'
 
 const colorino = createColorino()
 
@@ -64,3 +64,36 @@ const colorino4 = createColorino(
 colorino4.trace('test', new Error('TestoErroro'))
 colorino4.trace('test', new Error('TestoErroro').stack)
 colorino4.trace('test', { testo: 'objecto' })
+
+console.log('\n--- Enhanced Logging Tests ---')
+const enhancedLogger = createColorino(
+  {},
+  {
+    fileLogging: {
+      path: './tmp/colorino-manual.log',
+      maxBytes: 4096,
+      maxFiles: 2,
+      stripAnsi: true,
+      timezone: 'UTC',
+    },
+  }
+)
+
+const details = { password: 'do-not-write-me', count: 1n }
+details.self = details
+enhancedLogger.info('Readable details:', details)
+
+class ManualService {
+  load(value) {
+    return value.toUpperCase()
+  }
+}
+
+ManualService.prototype.load = log(enhancedLogger, { logLevel: 'info' })(
+  ManualService.prototype.load,
+  { name: 'load' }
+)
+
+const service = new ManualService()
+enhancedLogger.log('Decorated result:', service.load('colorino'))
+console.log('File output: ./tmp/colorino-manual.log')

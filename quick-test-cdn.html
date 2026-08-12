@@ -78,6 +78,12 @@
       colorino4.trace('test', new Error('TestoErroro'))
       colorino4.trace('test', new Error('TestoErroro').stack)
       colorino4.trace('test', { testo: 'objecto' })
+
+      console.log('\n--- Enhanced Details Tests ---')
+      const details = { password: 'do-not-share', count: 1n }
+      details.self = details
+      colorino.info('Readable details in DevTools:', details)
+      colorino.info('Sanitization options are available in the Node build.')
     </script>
      
   </head>

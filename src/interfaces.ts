@@ -1,10 +1,25 @@
 import { ColorLevel } from './enums.js'
 import {
   BrowserCssArg,
+  ConsoleMethod,
   CssConsoleStyle,
   TerminalTheme,
   ThemeName,
 } from './types.js'
+
+export interface ColorinoFileLoggingOptions {
+  path: string
+  maxBytes?: number
+  maxFiles?: number
+  stripAnsi?: boolean
+  timezone?: string
+}
+
+export interface ColorinoSanitizationOptions {
+  enabled?: boolean
+  keys?: string[]
+  replacement?: string
+}
 
 export interface ColorinoOptions {
   theme?: TerminalTheme | ThemeName | 'auto'
@@ -12,6 +27,14 @@ export interface ColorinoOptions {
   areNodeFramesVisible?: boolean // Default: true
   areColorinoFramesVisible?: boolean // Default: false
   isOsc11Enabled?: boolean // Default: true
+  fileLogging?: ColorinoFileLoggingOptions
+  sanitization?: ColorinoSanitizationOptions
+}
+
+export interface LogDecoratorOptions {
+  logLevel?: ConsoleMethod
+  logArguments?: boolean
+  logReturnValue?: boolean
 }
 
 interface Colorino {

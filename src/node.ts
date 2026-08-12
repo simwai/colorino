@@ -5,6 +5,7 @@ import { NodeColorSupportDetector } from './node-color-support-detector.js'
 import { themePalettes } from './theme.js'
 import { LogLevel, Palette, TerminalTheme, ThemeName } from './types.js'
 import { ColorinoOptions, ColorinoNodeInterface } from './interfaces.js'
+export { log } from './log-decorator.js'
 
 export function createColorino(
   userPalette: Partial<Palette> = {},
@@ -48,5 +49,10 @@ export function createColorino(
 
 export type { Palette, LogLevel, ThemeName }
 export type { ColorinoOptions, ColorinoNodeInterface }
+export type {
+  ColorinoFileLoggingOptions,
+  ColorinoSanitizationOptions,
+  LogDecoratorOptions,
+} from './interfaces.js'
 export { themePalettes }
 export const colorino = createColorino()
