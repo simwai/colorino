@@ -3,6 +3,7 @@ import {
   BrowserCssArg,
   ConsoleMethod,
   CssConsoleStyle,
+  LogLevel,
   TerminalTheme,
   ThemeName,
 } from './types.js'
@@ -23,6 +24,7 @@ export interface ColorinoSanitizationOptions {
 
 export interface ColorinoOptions {
   theme?: TerminalTheme | ThemeName | 'auto'
+  level?: LogLevel
   maxDepth?: number
   areNodeFramesVisible?: boolean // Default: true
   areColorinoFramesVisible?: boolean // Default: false
@@ -44,6 +46,8 @@ interface Colorino {
   error(...args: unknown[]): void
   debug(...args: unknown[]): void
   trace(...args: unknown[]): void
+  setLevel(level: LogLevel): void
+  getLevel(): LogLevel
   colorize(text: string, hex: string): void
   gradient(text: string, startHex: string, endHex: string): void
 }

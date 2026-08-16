@@ -4,6 +4,7 @@ import { generateRandomString } from '../helpers/random.js'
 import { createTestPalette } from '../helpers/palette.js'
 import { test } from '../helpers/console-spy.js'
 import { ANSI } from '../helpers/ansi-codes.js'
+import { InputValidationError } from '../../errors.js'
 
 test.beforeEach(({ env }) => {
   for (const [key, value] of Object.entries(env)) {
@@ -655,6 +656,107 @@ describe('Colorino - Node Environment - Unit Test', () => {
           expect(output).toContain('\x1b[38;2;') // Truecolor
         })
       })
+    })
+  })
+
+  describe('Log Level Threshold', () => {
+    describe('with NO_COLOR=1', () => {
+      test.scoped({ env: { NO_COLOR: '1' } })
+
+      test('default threshold logs every level', ({ stdoutSpy, stderrSpy }) => {
+        const logger = createColorino(createTestPalette(), {})
+
+        logger.trace('trace')
+        logger.debug('debug')
+        logger.log('log')
+        logger.info('info')
+        logger.warn('warn')
+        logger.error('error')
+
+        const stdout = stdoutSpy.getOutput()
+        const stderr = stderrSpy.getOutput()
+
+        expect(stdout).toContain('trace')
+        expect(stdout).toContain('debug')
+        expect(stdout).toContain('log')
+        expect(stdout).toContain('info')
+        expect(stderr).toContain('warn')
+        expect(stderr).toContain('error')
+      })
+
+      test('warn threshold suppresses trace, debug, log, and info', ({
+        stdoutSpy,
+        stderrSpy,
+      }) => {
+        const logger = createColorino(createTestPalette(), { level: 'warn' })
+
+        logger.trace('trace')
+        logger.debug('debug')
+        logger.log('log')
+        logger.info('info')
+        logger.warn('warn')
+        logger.error('error')
+
+        expect(stdoutSpy.getOutput()).toBe('')
+        expect(stderrSpy.getOutput()).toContain('warn')
+        expect(stderrSpy.getOutput()).toContain('error')
+      })
+
+      test('error threshold silences everything but error', ({
+        stdoutSpy,
+        stderrSpy,
+      }) => {
+        const logger = createColorino(createTestPalette(), { level: 'error' })
+
+        logger.warn('warn')
+        logger.error('error')
+
+        expect(stdoutSpy.getOutput()).toBe('')
+        expect(stderrSpy.getOutput()).toBe('error\n')
+      })
+
+      test('setLevel tightens and restores the gate at runtime', ({
+        stdoutSpy,
+        stderrSpy,
+      }) => {
+        const logger = createColorino(createTestPalette(), {})
+
+        logger.setLevel('warn')
+        logger.info('hidden')
+        logger.warn('visible')
+
+        expect(stdoutSpy.getOutput()).toBe('')
+        expect(stderrSpy.getOutput()).toContain('visible')
+
+        logger.setLevel('trace')
+        logger.info('back')
+
+        expect(stdoutSpy.getOutput()).toContain('back')
+      })
+
+      test('getLevel reflects the configured threshold', () => {
+        const logger = createColorino(createTestPalette(), { level: 'error' })
+
+        expect(logger.getLevel()).toBe('error')
+
+        logger.setLevel('info')
+
+        expect(logger.getLevel()).toBe('info')
+      })
+    })
+
+    test('invalid level throws InputValidationError at creation', () => {
+      expect(() =>
+        createColorino(createTestPalette(), { level: 'fatal' as never })
+      ).toThrow(InputValidationError)
+    })
+
+    test('invalid level throws InputValidationError on setLevel', () => {
+      const logger = createColorino(createTestPalette(), {})
+
+      expect(() => logger.setLevel('fatal' as never)).toThrow(
+        InputValidationError
+      )
     })
   })
 })

@@ -159,6 +159,7 @@ myLogger.info('Rebranded info!')
 | Option                     | Type                          | Default     | Description                                                                                                                                  |
 | -------------------------- | ----------------------------- | ----------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
 | `theme`                    | `ThemeOption` (see below)     | `'auto'`    | Control the active color theme or force a specific mode.                                                                                     |
+| `level`                    | `LogLevel`                    | `'trace'`   | Minimum severity threshold: levels at or above this value are logged; everything below is suppressed.                                        |
 | `maxDepth`                 | `number`                      | `5`         | Maximum depth when pretty-printing objects in log output.                                                                                    |
 | `areNodeFramesVisible`     | `boolean`                     | `true`      | Show Node.js internal frames (e.g., `node:internal/...`) in stack traces.                                                                    |
 | `areColorinoFramesVisible` | `boolean`                     | `false`     | Show Colorino internal frames in stack traces (useful for debugging Colorino).                                                               |
@@ -187,6 +188,20 @@ const logger = createColorino(
     },
   }
 )
+```
+
+Log levels follow a strict severity order (`trace < debug < log < info < warn < error`). Set the `level` option to a minimum threshold and everything below it is suppressed, in both the console and the file logger. Change the threshold at runtime with `setLevel()` and read it back with `getLevel()`:
+
+```typescript
+const logger = createColorino({}, { level: 'warn' })
+
+logger.debug('hidden') // suppressed
+logger.info('hidden') // suppressed
+logger.warn('visible') // printed
+logger.error('visible') // printed
+
+logger.setLevel('info')
+logger.info('now visible') // printed
 ```
 
 Sensitive keys such as `password`, `token`, `secret`, `apiKey`, `authorization`,
@@ -392,6 +407,8 @@ A pre-configured, zero-setup logger instance. Just import and use.
 - `.error(...args)`
 - `.debug(...args)`
 - `.trace(...args)`
+- `.setLevel(level)`
+- `.getLevel()`
 
 ### <a id="7-2"></a>2. `createColorino(palette?, options?)` (factory)
 
@@ -400,6 +417,7 @@ A factory function to create your own customized logger instances.
 - `palette` (`Partial<Palette>`): An object to override default colors for specific log levels (e.g., `{ error: '#ff007b' }`).
 - `options` (`ColorinoOptions`): An object to control behavior:
   - `theme: 'dark' | 'light'` (default `auto`): Force a specific theme instead of auto-detecting.
+  - `level: LogLevel` (default `'trace'`): Minimum severity threshold; levels below it are suppressed. Read it with `.getLevel()` and change it at runtime with `.setLevel(level)`.
 
 ## <a id="8"></a>Extending Colorino
 

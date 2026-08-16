@@ -100,4 +100,41 @@ describe('enhanced Node logging', () => {
     expect(output).toContain('getAsyncValue() called')
     expect(output).toContain('getAsyncValue() returned')
   })
+
+  test('writes only enabled levels to the file logger', () => {
+    const directory = mkdtempSync(join(tmpdir(), 'colorino-'))
+    const path = join(directory, 'application.log')
+    const logger = createColorino({}, { level: 'warn', fileLogging: { path } })
+
+    logger.info('info-hidden')
+    logger.warn('warn-visible')
+    logger.error('error-visible')
+
+    const output = readFileSync(path, 'utf8')
+    expect(output).not.toContain('info-hidden')
+    expect(output).toContain('WARN warn-visible')
+    expect(output).toContain('ERROR error-visible')
+
+    rmSync(directory, { recursive: true, force: true })
+  })
+
+  test('decorator respects the logger threshold', ({
+    stdoutSpy,
+    stderrSpy,
+  }) => {
+    vi.stubEnv('NO_COLOR', '1')
+    const logger = createColorino({}, { level: 'warn' })
+
+    class Service {
+      @log(logger, { logLevel: 'info' })
+      getValue(value: string): string {
+        return value.toUpperCase()
+      }
+    }
+
+    expect(new Service().getValue('sync')).toBe('SYNC')
+
+    const output = `${stdoutSpy.getOutput()}${stderrSpy.getOutput()}`
+    expect(output).not.toContain('getValue()')
+  })
 })

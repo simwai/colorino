@@ -1,18 +1,20 @@
 import {
   type Palette,
   ConsoleMethod,
+  LogLevel,
   ColorinoBrowserColorized,
   BrowserColorizedArg,
   BrowserCssArg,
 } from './types.js'
 import { type ColorinoOptions } from './interfaces.js'
 import { InputValidator } from './input-validator.js'
-import { ColorLevel } from './enums.js'
+import { ColorLevel, logSeverity } from './enums.js'
 import { TypeValidator } from './type-validator.js'
 
 export abstract class AbstractColorino {
   protected colorLevel: ColorLevel | 'UnknownEnv'
   protected palette: Palette
+  protected logLevel: LogLevel
 
   protected constructor(
     initialPalette: Palette,
@@ -27,42 +29,63 @@ export abstract class AbstractColorino {
     if (validatePaletteResult.isErr()) throw validatePaletteResult.error
 
     this.colorLevel = colorLevel
+    this.logLevel = this.resolveLogLevel(options.level)
   }
 
   log(...args: unknown[]): void {
+    if (!this.isEnabled('log')) return
+
     const formatted = this.formatArgs('log', args)
     console.log(...formatted)
     this.writeToFile('log', formatted)
   }
 
   info(...args: unknown[]): void {
+    if (!this.isEnabled('info')) return
+
     const formatted = this.formatArgs('info', args)
     console.info(...formatted)
     this.writeToFile('info', formatted)
   }
 
   warn(...args: unknown[]): void {
+    if (!this.isEnabled('warn')) return
+
     const formatted = this.formatArgs('warn', args)
     console.warn(...formatted)
     this.writeToFile('warn', formatted)
   }
 
   error(...args: unknown[]): void {
+    if (!this.isEnabled('error')) return
+
     const formatted = this.formatArgs('error', args)
     console.error(...formatted)
     this.writeToFile('error', formatted)
   }
 
   trace(...args: unknown[]): void {
+    if (!this.isEnabled('trace')) return
+
     const formatted = this.formatArgs('trace', args)
     console.log(...formatted)
     this.writeToFile('trace', formatted)
   }
 
   debug(...args: unknown[]): void {
+    if (!this.isEnabled('debug')) return
+
     const formatted = this.formatArgs('debug', args)
     console.debug(...formatted)
     this.writeToFile('debug', formatted)
+  }
+
+  setLevel(level: LogLevel): void {
+    this.logLevel = this.resolveLogLevel(level)
+  }
+
+  getLevel(): LogLevel {
+    return this.logLevel
   }
 
   colorize(text: string, hex: string): string | BrowserColorizedArg {
@@ -93,6 +116,18 @@ export abstract class AbstractColorino {
   ): unknown[]
 
   protected writeToFile(_level: ConsoleMethod, _args: unknown[]): void {}
+
+  protected isEnabled(level: ConsoleMethod): boolean {
+    return logSeverity[level] >= logSeverity[this.logLevel]
+  }
+
+  private resolveLogLevel(level: LogLevel | undefined): LogLevel {
+    const resolved = level ?? 'trace'
+    const validateLogLevelResult = this.validator.validateLogLevel(resolved)
+    if (validateLogLevelResult.isErr()) throw validateLogLevelResult.error
+
+    return resolved
+  }
 
   protected abstract isBrowser(): boolean
 

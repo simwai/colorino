@@ -94,3 +94,7 @@ dist
 dist-ssr
 out
 *.old
+
+# Baba session state (never committed)
+SESSION_STATE-*.md
+SESSION_STATE.md

@@ -30,4 +30,13 @@ export class InputValidator {
 
     return ok(true)
   }
+
+  validateLogLevel(level: string): Result<boolean, InputValidationError> {
+    const inputValidationError = new InputValidationError(
+      `Invalid log level: '${level}'`
+    )
+    if (!TypeValidator.isLogLevel(level)) return err(inputValidationError)
+
+    return ok(true)
+  }
 }

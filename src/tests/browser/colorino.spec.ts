@@ -81,6 +81,35 @@ describe('Colorino - Real Browser - Unit Test', () => {
     expect(mocks.log).toHaveBeenCalled()
   })
 
+  test('threshold suppresses lower levels', ({ mocks }) => {
+    const logger = createColorino(createTestPalette(), { level: 'warn' })
+
+    logger.log('log')
+    logger.info('info')
+    logger.debug('debug')
+    logger.trace('trace')
+    logger.warn('warn')
+    logger.error('error')
+
+    expect(mocks.log).not.toHaveBeenCalled()
+    expect(mocks.info).not.toHaveBeenCalled()
+    expect(mocks.debug).not.toHaveBeenCalled()
+    expect(mocks.trace).not.toHaveBeenCalled()
+    expect(mocks.warn).toHaveBeenCalled()
+    expect(mocks.error).toHaveBeenCalled()
+  })
+
+  test('setLevel changes the threshold at runtime', ({ mocks }) => {
+    const logger = createColorino(createTestPalette(), { level: 'error' })
+
+    logger.info('hidden')
+    expect(mocks.info).not.toHaveBeenCalled()
+
+    logger.setLevel('trace')
+    logger.info('visible')
+    expect(mocks.info).toHaveBeenCalled()
+  })
+
   test('allows per-call color override via colorize()', ({ mocks }) => {
     const logger = createColorino(createTestPalette({ log: '#ffffff' }))
 

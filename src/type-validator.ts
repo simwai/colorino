@@ -6,6 +6,7 @@ import {
   ColorinoBrowserCss,
   ColorinoBrowserObject,
   ConsoleMethod,
+  LogLevel,
 } from './types.js'
 
 export class TypeValidator {
@@ -104,5 +105,9 @@ export class TypeValidator {
 
   static isConsoleMethod(level: string): level is ConsoleMethod {
     return ['log', 'info', 'warn', 'error', 'trace', 'debug'].includes(level)
+  }
+
+  static isLogLevel(value: unknown): value is LogLevel {
+    return TypeValidator.isString(value) && TypeValidator.isConsoleMethod(value)
   }
 }
