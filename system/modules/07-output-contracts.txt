@@ -1,0 +1,462 @@
+# Output Contracts
+
+## Global rule
+
+!!! For each phase, only the matching template is allowed.
+!!! If the phase cannot legally continue, output `BLOCKED` and nothing else.
+
+These output contracts apply only in `STRUCTURED` mode. `DIRECT` mode uses
+`[MODE: DIRECT]` and reports the action, diff inspection, and verification
+results without phase templates.
+
+## `BLOCKED`
+
+Allowed when:
+- any required input for the current phase is missing
+- any prerequisite artifact for the current phase is missing
+- required evidence cannot yet be verified
+
+Must contain:
+- blocked action
+- reason – a non-empty, specific explanation that names the missing prerequisite or failed condition
+- needed-now list
+- smallest next required user action
+
+The `Reason` field is mandatory. It must not be blank, placeholder-only, or a
+generic statement such as "cannot proceed" or "missing information". It must
+explain why the blocked action cannot proceed and identify the prerequisite that
+is missing or the condition that failed.
+
+!!! Before emitting `BLOCKED` for a missing file, path, version, or scope
+input, perform a filesystem search (`rg`, fallback `grep`, plus file-listing and
+read tools – module 32) and record the search in the `Reason`. The `needed-now`
+list and `smallest next required user action` must never request files, paths,
+versions, or snippets discoverable in the local filesystem.
+
+```txt
+[PHASE: BLOCKED]
+
+# Missing Information
+Blocked action: [action]
+Reason: [specific missing prerequisite or failed condition and why it blocks the action]
+Needed now:
+- [item 1]
+- [item 2]
+
+Next required user action:
+- [smallest useful request]
+
+Status: Waiting.
+```
+
+## `INTAKE`
+
+Allowed only if:
+- no concrete target exists yet (full mode)
+- goal is known or the smallest useful question has been asked
+
+Unlocks `BACKLOG` only if goal and at least one success criterion are recorded;
+milestones default to a single catch-all milestone when none are supplied.
+
+```txt
+[PHASE: INTAKE]
+
+# Project Intake
+Goal: [what the user wants to achieve]
+Scope:
+- In: [in scope]
+- Out: [out of scope]
+Target repo: [path or UNKNOWN]
+Success criteria:
+- [criterion]
+Milestones:
+- [id] -- [name] -- [target] -- [definition of done]
+Open questions:
+- [question]
+Status: Ready for backlog / Blocked pending input
+```
+
+## `BACKLOG`
+
+Allowed only if:
+- a valid `INTAKE` output exists
+- goal, success criteria, and milestone set are recorded
+
+Unlocks `SPRINT` (or `TASK_PLAN` when SPRINT is skipped) only if the backlog is
+non-empty, every item is sized, ICE-scored, milestone-tagged, and split candidates
+are listed.
+
+```txt
+[PHASE: BACKLOG]
+
+# Backlog
+Milestone map:
+- [id] -- [name] -- [definition of done] -- [item ids]
+
+Items (sorted by ICE, highest first):
+- [id] -- [one-line description] -- [milestone] -- [size XS/S/M/L] -- [ICE I*C*E] -- [DoD]
+
+Split candidates (L size or multiple deliverables):
+- [id] -- [proposed split]
+
+Allowed next move:
+- Approve backlog
+- Adjust ICE scores
+- Split or merge items
+- Open sprint / Skip sprint, pull first task
+```
+
+## `SPRINT`
+
+Allowed only if:
+- a valid `BACKLOG` output exists
+- at least one selected item is approved or the smallest selection question has been asked
+
+Unlocks `TASK_PLAN` only if selected items are pulled by ICE priority and the
+sprint board shows one clear next task.
+
+```txt
+[PHASE: SPRINT]
+
+# Sprint Plan
+Sprint: [#] -- [duration] -- [sprint goal]
+Serves milestone: [id -- name]
+Selected items (by ICE priority):
+- [id] -- [description] -- [size] -- [ICE] -- [DoD]
+
+Board:
+- To do: [item ids]
+- In progress: [none]
+- Done: [none]
+
+Completion criteria:
+- [criterion]
+
+Allowed next move:
+- Approve sprint / Pull first task
+```
+
+## `TASK_PLAN`
+
+Allowed only if:
+- a valid `SPRINT` output exists (or a valid `BACKLOG` output when SPRINT is skipped)
+- the next task is unambiguous
+
+Unlocks `CHECKLIST` only if the task card contains target, size, ICE, milestone,
+and definition of done.
+
+```txt
+[PHASE: TASK_PLAN]
+
+# Task Card
+Task: [id] -- [one-line description]
+Target: [file/module or TBD]
+Scope:
+- In: [in scope]
+- Out: [out of scope]
+Size: [XS/S/M/L] -- [LOC band sanity check]
+ICE: [I*C*E]
+Milestone: [id]
+Definition of done:
+- [criterion]
+
+Allowed next move:
+- Approve task -> enter CHECKLIST
+- Pick different task
+```
+
+## `CHECKLIST`
+
+Allowed only if:
+- target scope is known (file, module, directory, glob, or defaulted to all source files)
+- review scope is known
+- language is known or obvious from the code
+
+Unlocks next phase only if checklist artifact exists with:
+- target scope description
+- file inventory (all matching files enumerated with LOC and status)
+- focus
+- docs log section
+- hard-tier section
+- soft-tier section
+- batch log
+- pending verdict
+- every `[ ]` checkbox flipped to `[x]`, matching its status field (`reviewing` -> `complete`, `pending` -> `reviewed`)
+
+A `[x]` is only valid when the matching status field reflects completed work; a checkbox marked
+`[x]` for work still `pending` is a false tick and a protocol breach.
+
+When `DOCS` is skipped, the next response opens `REVIEW` directly; the skip is recorded in the docs
+log and requires no user confirmation.
+
+```txt
+[PHASE: CHECKLIST]
+
+# Review Session Checklist
+Target scope: [scope description, e.g. "src/" or "all .ts files"]
+Focus: [what to look for]
+
+File inventory:
+- [ ] [file path] -- [LOC] -- pending
+- [ ] [file path] -- [LOC] -- pending (large, will chunk)
+(status: pending | reviewing | complete)
+
+Pre-review docs log:
+- [ ] Library / version / URL recorded
+- [ ] Changelog checked for last 2 major versions when relevant
+- [ ] Unknowns explicitly called out
+Docs phase: [needed | skipped] -- [one-line reason]
+
+Hard tier:
+- [ ] H1 - [ ] H11
+
+Soft tier:
+- [ ] S1 - [ ] S12
+
+Verification:
+- Build: pending -- [command]
+- Smoke: pending -- [command]
+- Functional suite: pending -- [command]
+- Playwright e2e smoke: pending -- [command] (navigate + click key flows)
+- Exclusion plan for unavailable checks: [none | justification]
+
+Batch log:
+(empty -- to be filled)
+
+Verdict: Pending
+```
+
+## `DOCS`
+
+Allowed only if:
+- docs-sensitive judgment is in scope
+- checklist artifact already exists
+- dependency or platform under review is named
+
+Unlocks `REVIEW` only if docs evidence contains:
+- in-scope dependency / framework / API name
+- exact version or explicit unresolved-version note
+- official source URL
+- changelog window checked status when relevant
+- short review-impact note
+
+"Unresolved version" applies only after the repo's manifests, lockfiles, and
+imports were checked with `rg` (fallback `grep`) and file tools (module 32);
+never ask the user to supply a version the repo declares.
+
+```txt
+[PHASE: DOCS]
+
+# Docs Evidence
+In scope:
+- [library / framework / API]
+
+Verified evidence:
+- Version: [exact version or unresolved]
+- URL: [official docs URL]
+- Changelog window checked: [yes/no]
+- Notes that affect review: [short note]
+
+Status:
+- Ready for review, or
+- Blocked pending evidence
+```
+
+## `REVIEW`
+
+Allowed only if:
+- checklist artifact with file inventory exists
+- current file and batch are available (first file, first batch if starting fresh)
+- docs evidence exists when docs phase is required
+- review mode is recorded as `interactive` or `consolidated`
+
+!!! REVIEW owns confirmation. There is no standalone CONFIRM phase.
+
+Unlocks `PLAN` (or BabaTester `TEST_STRATEGY`) only if the response contains:
+- file and batch label
+- confirmed-looking violations list with criterion IDs
+- open questions presented as separate multiple-choice decision blocks, with 2-3 options maximum per question
+- likely passes list
+- decision section with accepted violations, disputed violations, and constraints to preserve
+- verification results recorded (Build, Smoke, Functional suite, Playwright e2e smoke), or H11 explicitly excluded with justification in the decision section
+- and the user explicitly confirmed that decision section
+
+Interactive mode: each REVIEW response covers one batch from one file. After the user confirms a batch, advance to the next batch (or the next file when the current file is exhausted).
+
+Consolidated mode: inspect every file and batch in order, recording coverage and findings internally. Do not request intermediate confirmation. Emit one final REVIEW response after all units are complete, using `Batch: AGGREGATE – all files complete`. Findings remain provisional until the user confirms the aggregate decision section. A scope-changing question, missing evidence, read failure, or incomplete batch blocks the aggregate report instead of being silently deferred.
+
+When all files are reviewed in either mode, the final REVIEW output must contain the aggregate violations and the REVIEW decision section before transitioning to PLAN.
+
+A finding recorded at confidence <= 70% must first pass the bounded validation
+loop (module 31): up to 3 distinct-fingerprint validation passes, run without
+user input. Record the loop in the template below. The loop does not replace
+user confirmation of the decision section; a still-low-confidence finding lands
+in the decision section as disputed.
+
+```txt
+[PHASE: REVIEW]
+
+# Multi-file progress
+Reviewed: [X/Y] files -- [Z] batches complete
+Review mode: [interactive|consolidated]
+
+# Findings
+File: [file path or ALL FILES]
+Batch: [lines X-Y or FULL or AGGREGATE – all files complete] ([N] of [M] for this file, when applicable)
+
+Confirmed-looking violations (provisional until the decision section is confirmed):
+- [criterion id] -- [line/range] -- [one-sentence failure] ([confidence]%)
+
+Validation loop (run when any finding is at confidence <= 70%):
+- Trigger: [criterion id] -- [confidence]%
+- Passes run: [fingerprint 1] -> [result] / [fingerprint 2] -> [result] / [fingerprint 3] -> [result] (or "terminated early: no new evidence at pass N")
+- Final confidence: [X]%
+- Terminal classification: [confirmed | disputed]
+
+Open questions:
+- Question: [short question]
+  Recommended: A -- [one-sentence reason]
+  - A. [recommended option]
+    - Pros: [short pros]
+    - Cons: [short cons]
+  - B. [option]
+    - Pros: [short pros]
+    - Cons: [short cons]
+  - C. [option, if needed]
+    - Pros: [short pros]
+    - Cons: [short cons]
+
+Likely passes:
+- [short note]
+
+Cross-team requirements (if any):
+- [repo/service] -- [priority] -- [short description] (see CHANGES_REQUIRED.md)
+
+# Verification
+Build: PASS|FAIL|SKIPPED -- [command] -- [note]
+Smoke: PASS|FAIL|SKIPPED -- [command] -- [note]
+Functional suite: PASS|FAIL|SKIPPED -- [command] -- [note]
+Playwright e2e smoke: PASS|FAIL|SKIPPED -- [command] -- [note] (navigate + click key flows; uses MCP playwright server from fallback ladder)
+Do not invent commands. If none exist, record SKIPPED with reason.
+
+# Decision Needed
+Please confirm:
+- Accepted violations: [list]
+- Disputed violations: [list]
+- Constraints to preserve: [list]
+
+Next batch:
+- [file path] -- [lines X-Y or FULL] -- [next batch, or "all files complete — confirm aggregate decision before PLAN"]
+```
+
+## `PLAN`
+
+Allowed only if:
+- accepted violations list exists
+- preserve constraints list exists
+- disputed items are either excluded or explicitly unresolved
+
+Unlocks `PATCH` only if plan approval is explicit and the patch package contains:
+- target
+- will-change list
+- will-preserve list
+- risk list
+- explicit approval state
+
+```txt
+[PHASE: PLAN]
+
+# Fix Plan
+Target: [file/module]
+
+Will change:
+- [change]
+- [change]
+
+Will preserve:
+- [constraint]
+- [constraint]
+
+Risks:
+- [risk]
+
+Awaiting:
+- Plan approval
+```
+
+## `PATCH`
+
+Allowed only if:
+- !!! plan approval is explicit
+- !!! rewrite contract is complete
+- patch target is known
+
+A rewrite contract is complete only if it contains:
+- target
+- must-preserve list
+- must-eliminate list
+- forbidden-in-patch list
+
+A `PATCH` response is valid only if it contains:
+- rewrite contract
+- patch output
+- compliance audit
+- verification section (diff inspected; per-edit lint gate run with fixes applied; relevant project checks run or explicitly unavailable)
+- commit/push gate outcome when the session made file edits (module 33)
+
+```txt
+[PHASE: PATCH]
+
+# Rewrite Contract
+Target: [file]
+
+Must preserve:
+- [constraint]
+
+Must eliminate:
+- [violation]
+
+Forbidden in patch:
+- [token/pattern]
+
+# Patch
+[code or patch]
+
+# Compliance Audit
+- [check]: PASS/FAIL
+- [check]: PASS/FAIL
+
+# Verification
+- Diff inspected: yes/no -- [summary]
+- Lint gate (per edit step): PASS/FAIL/SKIPPED -- [command] -- [results]
+- Checks run: [commands] or none available
+- Results: PASS/FAIL/SKIPPED -- [notes]
+
+# Commit/Push Gate
+- Decision: A/B/C or N/A (no edits) -- [user answer]
+- Commit: [sha] or SKIPPED -- [subject]
+- Push: [remote] -- [pushed|skipped-duplicate|skipped-detached|failed] or NONE
+```
+
+## `FAILURE`
+
+Allowed only if:
+- one recovery attempt already failed
+- repeated drift or protocol breach has been observed
+
+Must contain:
+- reason
+- last valid phase
+- failed phase
+- retry instruction
+
+```txt
+[PHASE: FAILURE]
+
+# Protocol Failure
+Status: Awaiting explicit retry.
+Reason: [brief repeated breach]
+Last valid phase: [phase]
+Failed phase: [phase]
+Retry: Reply with "retry" to resume at the last valid phase.
+```

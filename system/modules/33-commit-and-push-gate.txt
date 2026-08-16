@@ -1,0 +1,130 @@
+# Commit and Push Gate
+
+Use this module at the end of PATCH (after the Verification gate in
+`06-fix-and-patch-protocol.txt`) and at the end of DIRECT work, whenever the
+session made file edits. It defines the only legal way for a session to commit
+and push: ask first, stage the session's own files only, and report per remote.
+
+---
+
+## Trigger
+
+- The gate applies only when the session's own state file (module 19) has a
+  non-empty `## Edited Files` section — one path per edit step, appended by the
+  per-edit lint-gate recording points in modules 06 and 30.
+- No edits recorded -> the gate is skipped; state "no edits to commit" and ask nothing.
+
+---
+
+## Staging scope
+
+- !!! Stage explicit paths from the session's `Edited Files` set only.
+- !!! Never use `git add -A`, `git add -u`, `git add .`, or `git add -f`.
+- !!! Never stage any path outside the edited-file set, even a "related" one
+  (H9: silent clobbering of another session's work).
+- !!! Never stage `SESSION_STATE-*.md` — they are gitignored; `git add -f`
+  would force them in, so `-f` is forbidden outright.
+- Staging is self-verifying: `git status --short` must show exactly the
+  session's edited files staged and nothing else before committing.
+
+---
+
+## The ask
+
+No commit or push happens without asking first. Ask exactly once, using the
+decision format from modules 08/10 (embedded inline because those modules are
+not loaded in PATCH):
+
+```txt
+# Decision Needed
+Question: Commit and push this session's edits to origin and all mirror remotes?
+Recommended: A -- keeps the repo and its mirrors in sync without sweeping in unrelated work
+
+- A. Commit and push to origin + all `*-mirror` remotes
+  - Pros: one step, repo and mirrors in sync
+  - Cons: none
+- B. Commit only (no push)
+  - Pros: keeps changes local
+  - Cons: mirrors stay behind
+- C. Skip (leave edits uncommitted)
+  - Pros: full control
+  - Cons: session's work is not persisted
+
+Reply with: A, B, or C
+```
+
+In STRUCTURED mode the ask carries the `[PHASE: PATCH]` header; in DIRECT mode
+it carries `[MODE: DIRECT]`.
+
+---
+
+## Commit
+
+- Compose the message from the session scope in the repository's existing
+  commit-message conventions (modules 14 and 25 own the conventions; do not
+  redefine them here).
+- !!! Pass the message as a single `-m` argument — one `-m`, no `-a`, no
+  `-F`/`--file`, no editor, no shell concatenation (H2: injection-safe).
+- !!! Never put a remote URL or credential inside the message.
+- Record the resulting commit sha and subject in the state file's
+  `## Commit/Push Gate` section (module 19).
+
+---
+
+## Remote discovery
+
+- Current branch: `git branch --show-current`. Detached HEAD -> report
+  `SKIPPED: detached HEAD` and do not push.
+- List remotes with `git remote` (names only). !!! Never run `git remote -v`
+  without sanitizing its output — this repo's remote URLs embed live
+  credentials and would leak them into the transcript (H1). When a full URL
+  listing is truly needed, run it through a sanitizer that redacts the
+  credential-bearing parts (scheme-to-host userinfo, embedded tokens), e.g.
+  `git remote -v | sed -E 's#(://)[^/@]*@#\1<redacted>@#'` (PowerShell:
+  `git remote -v | ForEach-Object { $_ -replace '://[^/@]*@', '://<redacted>@' }`),
+  then verify no credential material survives before any output enters the
+  transcript. In this gate, names-only via `git remote` remains the practice.
+- Push order: `origin` first, then every remote whose name ends with `-mirror`
+  (case-insensitive), sorted for determinism.
+- Dedup: compare `git remote get-url <name>` internally against URLs already
+  pushed; an exact match is skipped. The URL is never printed or recorded.
+  (On this repo `gitlab-mirror` duplicates `origin` and is skipped.)
+
+---
+
+## Push policy
+
+- Push with `git push <remote> <branch>` only.
+- !!! Never force-push (`--force`, `--force-with-lease`), never `--mirror`,
+  `--all`, or `--tags`, never push by URL.
+- At most one retry per failed remote, then continue to the next remote and
+  report each outcome (remote name + result only, never raw push output — git
+  prints `To <url>` lines that embed credentials).
+- Mirror push failures are reported, not protocol failures; by uniform
+  extension, origin push failures are also reported and never FAILURE. PATCH
+  conclusion does not depend on push success.
+
+---
+
+## Recording
+
+- Write the gate outcome to the session's own state file (module 19)
+  `## Commit/Push Gate` section: decision, commit_sha, message_subject,
+  per-remote push results, gate_checked_at.
+- Emit the `# Commit/Push Gate` block in the PATCH template (module 07) with
+  sanitized output only.
+
+---
+
+## Hard rules
+
+- !!! No commit or push without the module-33 ask when edits were made (breach
+  per module 09).
+- !!! Never stage files outside the session's edited-file set (H9).
+- !!! Never print or log remote URLs unless sanitized (credentials redacted
+  and verified absent); remote names only (H1).
+- !!! Never force-push (H3: destructive ops).
+- !!! Never run `git clean`, `git reset --hard`, `git checkout --`, `git
+  restore`, or `git stash` (H9: destroys work).
+- The gate is not a phase: it runs inside PATCH after verification and inside
+  DIRECT before completion. Modules 02 and 11 are untouched.

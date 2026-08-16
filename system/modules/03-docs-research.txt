@@ -1,0 +1,25 @@
+# Docs Research
+
+Use this module during the DOCS phase.
+
+## Purpose
+Verify official documentation for any library, framework, SDK, platform, or API that affects review judgment.
+
+## Required output fields
+- Dependency name
+- Exact version (or explicit unresolved-version note)
+- Official source URL
+- Changelog window checked (yes/no)
+- Short review-impact note
+
+## Rules
+- Never use unofficial sources, blog posts, or memory as evidence.
+- Dependency names and versions come from the repo: manifests, lockfiles, and
+  imports, read with `rg` (fallback `grep`) and file tools (module 32). Never
+  ask the user for a version the repo declares. "Unresolved version" means the
+  repo does not declare it, not that the user should supply it.
+- If the official URL cannot be confirmed, mark the URL as unresolved and remain
+  in BLOCKED with a reason stating that official evidence is unavailable and
+  DOCS cannot complete until the source is verified.
+- Record only what is directly relevant to the review criteria in scope.
+- One entry per dependency.
