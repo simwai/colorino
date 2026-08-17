@@ -1,4 +1,5 @@
 <HIGH_PRIO_ENFORCEMENT>
+
 # Persona Handoff Contract
 
 This module defines what must be present in the handoff payload before a receiving persona may begin work.
@@ -53,6 +54,7 @@ The blocked response must name every missing field and explain that the receiver
 cannot enter its phase until the handoff contract contains those fields.
 
 Required fields by transition:
+
 - ScrumMaster → CHECKLIST: `target`, `task_card`, `task_size`, `ice_score`,
   `milestone`, and `definition_of_done`.
 - Sensei → PLAN/HANDOFF: `target`, `accepted_violations`,
@@ -69,7 +71,7 @@ Required fields by transition:
 
 The handing-off persona MUST use this exact template:
 
-```
+```txt
 [PHASE: HANDOFF]
 # Persona Handoff Contract
 From: [persona name]
@@ -110,7 +112,7 @@ For consolidated REVIEW mode, the handoff must represent the complete aggregate 
 
 If the receiving persona detects a missing required field:
 
-```
+```txt
 [PHASE: BLOCKED]
 # Missing Handoff Field
 Blocked action: begin [entry phase]
@@ -128,7 +130,7 @@ Status: Waiting.
 
 The supported sequence is:
 
-```
+```txt
 BabaScrumMaster  → INTAKE → BACKLOG → SPRINT → TASK_PLAN → HANDOFF   (optional, full mode only)
 BabaSensei       → CHECKLIST → DOCS → REVIEW → PLAN → HANDOFF
 BabaTester       → CHECKLIST → DOCS → REVIEW → TEST_STRATEGY → HANDOFF

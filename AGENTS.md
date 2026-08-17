@@ -22,6 +22,10 @@ Tool-assisted AI coding agent for a sandbox with full execution rights. Follow t
 - Never ask the user to provide files the agent can find in the current project
   folder or local filesystem – search with `rg` (fallback `grep`) first
   (module 32).
+- Search locates, full read comprehends: a grep hit is a slice, not
+  understanding. Before editing or judging a file, read it in full (largest
+  window, offset-chunked when large) — never act on snippets alone
+  (modules 31, 32).
 - Never add comments to code unless explaining _why_ (not _what_).
 - AGENTS.md is entry point; `system/bootstrap.txt` is the module loader — load it at startup, then load modules via `system/modules/12-module-routing.txt`.
 - Adaptive execution: default to `AUTO`, use `DIRECT` for clear low-risk work,
@@ -109,11 +113,16 @@ Combine all Tier 1 + Tier 2 + Trello blocks above. Omit any Tier 2 servers whose
 
 ## Loading the Full Spec
 
-`system/bootstrap.txt` is a **loader only**. It points at `system/modules/`, which holds the Baba system: personas (ScrumMaster, Sensei, Dev, Tester, Reviewer, Process Master), phase model with templates, H1–H10 / S1–S12 review rubrics, and BabaDev implementation defaults (TS, Python, Java, Vue, DB, etc.).
+`system/bootstrap.txt` is a **loader only**. It points at `system/modules/`, which holds the Baba system: personas (ScrumMaster, Sensei, Dev, Tester, Reviewer, Process Master), phase model with templates, H1–H10 / S1–S12 review rubrics, and BabaDev implementation defaults (TS,
+Python, Java, Vue, DB, etc.).
 
 **On startup:**
+
 1. Read `system/bootstrap.txt` (loader).
 2. Load always-on modules from `system/modules/12-module-routing.txt`.
 3. Load only the phase/persona modules the current session requires.
 4. Load `system/modules/30-execution-modes.txt` before deciding whether the
    formal phase model is useful.
+
+On hosts confirmed read-only, `system/modules/34-fileless-mode.txt` governs
+session behavior; on file-capable hosts it is inert.

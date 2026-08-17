@@ -1,4 +1,5 @@
 <HIGH_PRIO_ENFORCEMENT>
+
 # Decision and Intake Layer
 
 Use this module to block invalid progress until the inputs needed for the current phase are available.
@@ -21,6 +22,7 @@ blocked action cannot proceed. A blank, placeholder-only, or generic reason is
 invalid.
 
 The model must not additionally:
+
 - review code
 - guess missing facts
 - propose fixes
@@ -58,6 +60,7 @@ The following technologies are **not AI-manageable** in a standard code session
      running or available in their environment.
 
 2. Compatibility notice format:
+
    ```txt
    [PHASE: BLOCKED]
 
@@ -87,6 +90,7 @@ The following technologies are **not AI-manageable** in a standard code session
 
 This check applies to *infrastructure and storage technologies* only.
 It does not apply to:
+
 - programming languages
 - frameworks and libraries
 - build tools and package managers
@@ -122,7 +126,9 @@ optional upstream planning pipeline". It does not mean execution `DIRECT` and
 does not bypass `CHECKLIST`, `REVIEW`, or `PLAN`.
 
 ### `INTAKE`
+
 Required inputs:
+
 - goal or feature request (full mode only)
 - target repo if known
 
@@ -130,7 +136,9 @@ Unblock rule:
 `BLOCKED -> INTAKE` is allowed only when the user supplied a goal or project spec without a concrete target.
 
 ### `BACKLOG`
+
 Required inputs:
+
 - valid `INTAKE` output with goal and at least one success criterion
 - milestone set (defaults to a single catch-all milestone)
 
@@ -138,7 +146,9 @@ Unblock rule:
 `BLOCKED -> BACKLOG` is allowed only when goal, success criteria, and milestone set are recorded.
 
 ### `SPRINT`
+
 Required inputs:
+
 - valid `BACKLOG` output
 - at least one selected item or the smallest selection question answered
 
@@ -146,7 +156,9 @@ Unblock rule:
 `BLOCKED -> SPRINT` is allowed only when the backlog is non-empty, sized, ICE-scored, and milestone-tagged.
 
 ### `TASK_PLAN`
+
 Required inputs:
+
 - valid `SPRINT` output (or valid `BACKLOG` output when SPRINT is skipped)
 - next task is unambiguous
 
@@ -154,7 +166,9 @@ Unblock rule:
 `BLOCKED -> TASK_PLAN` is allowed only when the next task is unambiguous and its size/ICE/milestone/DoD are known or explicitly left as user follow-up.
 
 ### `CHECKLIST`
+
 Required inputs:
+
 - target: file, module, directory scope, glob pattern, or code snippet
   - default for a bare "review" request: all source files under the repo
 - review scope
@@ -167,7 +181,9 @@ Before emitting `BLOCKED` for a missing target, search the filesystem with `rg`
 (fallback `grep`) and file-listing tools (module 32).
 
 ### `DOCS`
+
 Required inputs:
+
 - library, framework, SDK, runtime, platform, or API names in scope
 - version information when the judgment depends on version
 - direct evidence source when the protocol requires it
@@ -180,7 +196,9 @@ and imports (module 32). "Unresolved" means the repo does not declare the fact,
 never an invitation to ask the user for it.
 
 ### `REVIEW`
+
 Required inputs:
+
 - current chunk or review unit
 - prior checklist artifact
 - docs evidence if docs are in scope
@@ -191,10 +209,13 @@ Unblock rule:
 
 REVIEW also owns the confirmation decision. Before leaving REVIEW, the response must include accepted violations, disputed violations, and preservation constraints with enough specificity for the user to confirm.
 
-In `consolidated` mode, intermediate user prompts are suppressed, not intermediate evidence collection. Every file and batch must be recorded, including units with no findings. Questions that change scope, invalidate evidence, or affect the remaining scan must block immediately; other open questions may be collected for the final report. No finding is accepted before the aggregate decision section is explicitly confirmed.
+In `consolidated` mode, intermediate user prompts are suppressed, not intermediate evidence collection. Every file and batch must be recorded, including units with no findings. Questions that change scope, invalidate evidence, or affect the remaining scan
+must block immediately; other open questions may be collected for the final report. No finding is accepted before the aggregate decision section is explicitly confirmed.
 
 ### `PLAN`
+
 Required inputs:
+
 - user-confirmed violations from REVIEW
 - preservation constraints
 
@@ -202,7 +223,9 @@ Unblock rule:
 `BLOCKED -> PLAN` is allowed only when the user confirmed the REVIEW decision section and accepted violations plus preservation constraints are both explicit lists.
 
 ### `PATCH`
+
 Required inputs:
+
 - approved plan
 - complete rewrite contract
 
@@ -248,6 +271,7 @@ Never request a file, function, version, or dependency list that exists on disk;
 request only what only the user knows.
 
 Decision rules:
+
 - Offer no more than three options.
 - Put the recommended option first, as option A.
 - Recommend the option with the most meaningful pros and fewest meaningful cons.

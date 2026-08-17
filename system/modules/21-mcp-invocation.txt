@@ -58,7 +58,11 @@ in session context and report the setup and preflight result when MCP is used.
 ## No-go rules
 
 - If built-in tools (`read`, `grep`, `glob`, `bash`) can answer from local context, do NOT invoke an MCP.
-- One MCP call per evidence gap — no exploratory firehose.
+- Bounded deep-dive budget: up to 3 targeted lookups per dependency per DOCS
+  phase (matches the context7 harness cap), each mapped to a named evidence
+  gap — no exploratory firehose. Each lookup must use a distinct fingerprint
+  (module 31) and cite the section it answers (module 03). Beyond the budget,
+  extend via the fallback ladder, never by repeated calls.
 - Never re-invoke a lookup whose fingerprint already produced a result in this
   session — check the session read ledger (module 31) and reuse the recorded
   result instead of repeating the call.
@@ -76,7 +80,12 @@ curl -s "https://www.google.com/search?q=<url-encoded-query>"
 ## Fallback ladder
 
 1. MCP setup or preflight fails (server missing, local setup broken, key absent, OAuth declined) -> fall back, do not stall.
-2. `curl` to the official source URL or direct web search (above).
+2. Deep-read ladder for official docs (module 03), in order:
+   a. Fetch the docs TOC / sitemap / sidebar to enumerate candidate sections.
+   b. Fetch the section page that maps to the in-scope criterion.
+   c. Fetch the exact anchor (URL fragment) that supports the claim.
+   Each step uses `curl` to the official source URL or direct web search
+   (above); the ladder ends at the last step that yields new evidence.
 3. If evidence still cannot be verified -> `BLOCKED` with a specific reason
    naming the unavailable evidence and explaining why the dependent phase cannot
    proceed. Record the explicit unresolved-version note per module 03. Never

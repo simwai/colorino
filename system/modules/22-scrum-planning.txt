@@ -49,6 +49,7 @@ or TASK_PLAN. Undersized items (XS) may be merged but are never forced to be.
 ## Milestones
 
 Milestones are project-level checkpoints declared at `INTAKE`. Each has:
+
 - `id` -- short machine-readable tag
 - `name`
 - `target` -- date or deliverable
@@ -61,6 +62,7 @@ milestone in the milestone map.
 ## INTAKE
 
 Allowed only if:
+
 - no concrete target exists yet (full mode)
 - goal is known or the smallest useful question has been asked
 
@@ -90,6 +92,7 @@ Status: Ready for backlog / Blocked pending input
 ## BACKLOG
 
 Allowed only if:
+
 - a valid `INTAKE` output exists
 - goal, success criteria, and milestone set are recorded
 
@@ -120,6 +123,7 @@ Allowed next move:
 ## SPRINT
 
 Allowed only if:
+
 - a valid `BACKLOG` output exists
 - at least one selected item is approved or the smallest selection question has been asked
 
@@ -150,6 +154,7 @@ Allowed next move:
 ## TASK_PLAN
 
 Allowed only if:
+
 - a valid `SPRINT` output exists (or a valid `BACKLOG` output when SPRINT is skipped)
 - the next task is unambiguous
 

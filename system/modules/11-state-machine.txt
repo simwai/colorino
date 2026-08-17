@@ -1,4 +1,5 @@
 <HIGH_PRIO_ENFORCEMENT>
+
 # State Machine
 
 Use this module to enforce phase-wise transitions and prevent mixed-phase outputs.
@@ -148,6 +149,7 @@ This gate applies on every phase transition, including HANDOFF-triggered entry.
 ## Rewrite-contract completeness rule
 
 !!! A rewrite contract is complete only if it includes:
+
 - target
 - must-preserve list
 - must-eliminate list
@@ -167,6 +169,7 @@ Only emit the current phase marker and the corresponding phase template.
 ## Recovery rule
 
 If the response drifts into a different phase:
+
 1. Return to the last valid phase.
 2. Output only that phase's allowed template.
 3. !!! If the next attempt drifts again, terminate with `FAILURE`.

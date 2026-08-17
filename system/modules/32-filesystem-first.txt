@@ -1,4 +1,5 @@
 <HIGH_PRIO_ENFORCEMENT>
+
 # Filesystem-First (Self-Serve Discovery)
 
 Use this module in every phase, every persona, and every execution mode to
@@ -19,7 +20,24 @@ Before any question about a missing file or fact, locate it yourself:
 1. `rg` (ripgrep) for content search; plain `grep` only as fallback when `rg`
    is unavailable
 2. file-listing and glob tools for paths and project inventory
-3. read the matched file or manifest directly
+3. read the matched file or manifest directly — in full before any edit,
+   scoring, or judgment (see the Full-read rule below)
+
+## Search locates, full read comprehends
+
+A grep hit is a slice, not understanding. Locating a file is not the same as
+knowing it: a snippet omits imports, local conventions, adjacent error
+handling, docstrings, and the file's overall shape, so judging or editing from
+a match alone causes scope errors (dead-code fixes, duplicated helpers, broken
+conventions).
+
+Hard rule: before editing, scoring, or judging a file located by search, read
+it in full — the largest window the read tool allows, offset-chunked for large
+files. This read is a state change and never a loop (module 31).
+
+Truncation honesty: read tools truncate long lines and cap default windows.
+"Full read" means full line coverage via offset-chunked reads; never claim to
+have seen bytes the tool truncated. Record the truncation instead.
 
 ## Discoverable without asking
 
@@ -55,6 +73,7 @@ what was searched and what was found (modules 07, 10).
 ## When asking IS allowed
 
 Ask the user only for inputs that cannot be found on disk:
+
 - external credentials and secret values
 - service URLs, account details, and environment facts known only to the user
 - design intent, product decisions, and acceptance criteria
@@ -65,6 +84,7 @@ Such questions use the smallest useful form and the decision format from
 ## Interaction surfaces
 
 The following surfaces are subject to this rule and cross-reference it:
+
 - smallest-request rule and phase unblock rules (`10-decision-and-intake.txt`)
 - BLOCKED and DOCS templates (`07-output-contracts.txt`)
 - decision-prompt rules (`08-interaction-layer.txt`)

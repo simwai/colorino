@@ -17,11 +17,13 @@ Artifacts must never be committed.
 Categories and canonical examples:
 
 ### OS and editor artifacts
+
 - `.DS_Store`, `._*`, `.Spotlight-V100`, `.Trashes` (macOS)
 - `Thumbs.db`, `ehthumbs.db`, `desktop.ini` (Windows)
 - `.vscode/`, `.idea/`, `*.swp`, `*.swo`, `*~` (editors)
 
 ### Secrets and credentials
+
 - `.env`, `.env.*` (allow `.env.example`)
 - `*.pem`, `*.key`, `*.p12`, `*.pfx`
 - Any file in `secrets/` or `.secrets/`
@@ -31,15 +33,18 @@ Categories and canonical examples:
   read-file tool, only shell output with values redacted.
 
 ### Dependency directories
+
 - `node_modules/`, `.npm/`, `.yarn/`
 - `.venv/`, `venv/`, `env/`, `__pycache__/`, `*.pyc`, `*.pyo`
 - `dist/`, `build/`, `out/`, `.cache/`
 
 ### Test and coverage output
+
 - `coverage/`, `.coverage`, `*.lcov`, `htmlcov/`
 - `junit.xml`, `test-results/`
 
 ### AI session artifacts
+
 - `sessions/`, `chat-export/`
 - `*.session.txt`, `*.session.md`, `*.session.json`
 - Raw session dumps, exported conversation files, prompt-drafting scratch files
@@ -47,11 +52,13 @@ Categories and canonical examples:
   Sessions are ephemeral context, not source of truth.
 
 ### Tooling caches
+
 - `.pre-commit-cache/`
 - `.mypy_cache/`, `.ruff_cache/`, `.pytest_cache/`
 - `.turbo/`, `.next/`, `.nuxt/`, `.svelte-kit/`
 
 ### Scratch and WIP files
+
 - `*.tmp`, `*.bak`, `*.orig`
 - `scratch/`, `todo.md`, `WIP.md` at repo root
 
@@ -60,6 +67,7 @@ Categories and canonical examples:
 ## Review rule
 
 During REVIEW, flag any of the following as a soft-tier finding (S-artifact):
+
 - A tracked file that belongs to one of the artifact categories above
 - A missing or incomplete `.gitignore` that fails to exclude known artifact categories
 - A `.gitignore` that uses overly broad patterns like `*` or `**` that may silently exclude source files
@@ -72,6 +80,7 @@ Flag any committed credential file as a hard-tier H1 violation. Treat it as a bl
 
 When a fix plan touches build config, tooling, or environment setup,
 the plan must include a `.gitignore` audit step:
+
 - Verify all artifact categories for the project's stack are excluded
 - Verify `.env.example` exists if any `.env.*` files are gitignored
 - Verify `node_modules/` or equivalent is excluded if a package manager is in use
@@ -81,6 +90,7 @@ the plan must include a `.gitignore` audit step:
 ## PATCH rule
 
 When emitting a patch that adds or modifies tooling, scripts, or build config:
+
 - Include `.gitignore` additions for any new artifact type the change introduces
 - Do not add `*.log` blindly — only add if the project actually produces log files
 - Do not add lock files to `.gitignore` — lock files (`package-lock.json`,
@@ -91,6 +101,7 @@ When emitting a patch that adds or modifies tooling, scripts, or build config:
 ## .gitignore authoring defaults
 
 When writing or reviewing a `.gitignore`:
+
 - Group by category with a comment header per group
 - OS artifacts first, editor artifacts second, secrets third,
   dependencies fourth, test output fifth, build output last
@@ -105,6 +116,7 @@ When writing or reviewing a `.gitignore`:
 The house preference is LF line endings for every repository, including on Windows.
 
 When writing or reviewing a `.gitattributes`:
+
 - Place the file at the repo root
 - Default content: `* text=auto eol=lf` — normalize all text files to LF on commit and checkout
 - Add explicit `binary` entries (`*.png binary`, `*.jpg binary`, `*.zip binary`, ...) for
@@ -114,6 +126,7 @@ When writing or reviewing a `.gitattributes`:
 ## .gitattributes review rule
 
 During REVIEW, when repo hygiene is in scope:
+
 - A missing `.gitattributes` where files could carry mixed or platform-native line
   endings is a soft-tier finding (S-gitattributes); recommend `* text=auto eol=lf`
 - A `.gitattributes` that forces CRLF or omits a line-ending policy is a soft-tier finding
@@ -121,5 +134,6 @@ During REVIEW, when repo hygiene is in scope:
 ## .gitattributes spawn rule
 
 When a plan or patch sets up a new repo or touches repo hygiene:
+
 - Spawn `.gitattributes` with `* text=auto eol=lf` when the repo lacks one
 - Extend the existing file in the same patch that normalizes line endings

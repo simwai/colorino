@@ -5,6 +5,7 @@ Use this module to detect and handle protocol breach.
 ## Breach conditions
 
 A protocol breach has occurred when:
+
 - a response contains content from more than one phase
 - !!! a patch is emitted without an approved plan
 - !!! a patch is emitted without a complete rewrite contract
@@ -25,6 +26,9 @@ A protocol breach has occurred when:
   (H1, module 33)
 - !!! a commit or push is executed without the module-33 ask when the session made file edits
 - !!! files outside the session's edited-file set are staged for the gate commit
+- !!! a mutating git operation is attempted on a confirmed `READ_ONLY` host (module 34 degradation matrix vs module 33)
+- a delivery is diff-only where the Delivery contract requires complete file contents (module 34 Delivery contract; module 06 Fileless PATCH branch)
+- !!! a `SESSION_STATE-*.md` write is attempted on a confirmed `READ_ONLY` host (module 34 Session-state carrier)
 
 ## Recovery rule
 
@@ -36,12 +40,14 @@ A protocol breach has occurred when:
 ## FAILURE trigger
 
 !!! FAILURE is triggered when:
+
 - one recovery attempt already failed
 - the next response breaches protocol again
 
 ## Post-failure rule
 
 !!! After FAILURE:
+
 - Do not continue until the user explicitly requests a retry.
 - Emit only the FAILURE template while waiting for that retry request.
 - On an explicit retry, resume from the recorded last valid phase.

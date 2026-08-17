@@ -13,6 +13,7 @@ Only one phase may be active at a time.
 Review may use an `interactive` or `consolidated` cadence inside the REVIEW phase; cadence does not create a new phase or skip review units.
 
 Active phases:
+
 1. `BLOCKED`
 2. `INTAKE` (optional, BabaScrumMaster only)
 3. `BACKLOG` (optional, BabaScrumMaster only)
@@ -61,6 +62,7 @@ Optional upstream order (BabaScrumMaster only, skipped by default):
 `INTAKE -> BACKLOG -> SPRINT -> TASK_PLAN -> CHECKLIST`
 
 Conditional order:
+
 - Use `BLOCKED` whenever required inputs or required evidence are missing.
 - Skip `DOCS` only if no dependency, framework, SDK, platform, or version-sensitive judgment is involved.
 - Skip the upstream pipeline `INTAKE -> BACKLOG -> SPRINT -> TASK_PLAN` whenever a concrete target
@@ -69,7 +71,9 @@ Conditional order:
 - Skip `SPRINT` on explicit user request; the pipeline then runs `INTAKE -> BACKLOG -> TASK_PLAN`.
 - A phase skipped by model judgment (e.g., `DOCS` when no docs-sensitive judgment is in scope, or the
   upstream pipeline when it does not apply) needs no user confirmation: record the skip and its
-  one-line reason in the phase artifact and the session's own state file (module 19), then open the next phase directly.
+  one-line reason in the phase artifact and the session's own state carrier (modules 19/34; the
+  state file on `FILE_CAPABLE` hosts, the in-conversation carrier on confirmed `READ_ONLY` hosts),
+  then open the next phase directly.
   Never emit a decision prompt for a skip the model can decide.
 - Use `FAILURE` only after repeated protocol breach.
 
@@ -79,6 +83,7 @@ In `DIRECT` mode, do not force the request through `CHECKLIST`, `REVIEW`, or
 ## Drift control
 
 Before every response, validate:
+
 1. What is the current phase?
 2. What output template is allowed in this phase?
 3. Are all prerequisites satisfied?

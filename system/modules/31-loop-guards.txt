@@ -1,4 +1,5 @@
 <HIGH_PRIO_ENFORCEMENT>
+
 # Loop Guards
 
 Use this module in every phase, every persona, and every execution mode to
@@ -33,6 +34,24 @@ breach instead of a silent credit drain.
 - !!! In `DIRECT` mode the same rule applies without phase templates: every read
   must add new information or target a changed file; an identical repeat without
   state change is a loop and must stop. Do not continue reading.
+
+## Comprehension reads are not loops
+
+A full-file comprehension read — the largest window the read tool allows,
+offset-chunked when the file exceeds the window — is a state change, never a
+doom loop, even when it follows a search hit on the same file (module 32).
+
+- Each chunk of a comprehension read is a distinct fingerprint (different
+  offset), so the chunk sequence can never trip the identical-fingerprint rule.
+- A comprehension read always adds new information: imports, conventions,
+  adjacent error handling, and structure that a snippet omitted. It therefore
+  satisfies the "every read must add new information" rule by construction.
+- Reading a file in full is the required precondition for editing, scoring, or
+  judging it (module 32). Skipping it to save budget is not compliant — it is
+  the failure mode this carve-out exists to prevent.
+- The loop guards still apply to everything else: repeated snippet reads of the
+  same range, or a re-read of an already-comprehended file without a state
+  change, remain loops.
 
 ## Read ledger
 

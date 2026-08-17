@@ -19,5 +19,6 @@ S11 -- Type safety: missing type annotations or unsafe casts
 S12 -- Performance: obvious inefficiencies with measurable impact
 
 ## Usage
+
 - Flag all applicable items in the REVIEW phase.
 - Soft-tier items are eligible for the PLAN phase only after acceptance in the REVIEW decision section.

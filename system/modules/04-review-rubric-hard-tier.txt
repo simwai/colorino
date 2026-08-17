@@ -25,8 +25,16 @@ H11 -- Runnable artifact (verdict-gate criterion): the project must build/compil
   with justification recorded in the REVIEW decision section (e.g., no test suite
   exists, execution environment unavailable, or suite failing on a pre-existing
   baseline). Do not invent commands. If none exist, record SKIPPED with reason.
+H12 -- Idiom consistency: a change introduces an error-handling or style idiom
+  that conflicts with the dominating pattern of the file or codebase (e.g.,
+  `try/catch` in an exit-code-guard script, Result-wrapping in an
+  exception-style codebase, a new failure idiom for an operation the file
+  already handles). Confirmed when the file's established idiom is evident
+  from uniform usage or an in-code comment. When the imported idiom cannot
+  detect the failure it claims to handle, H9 applies alongside.
 
 ## Usage
+
 - Apply all items to every chunk unless explicitly excluded in the checklist.
-  H11 is the sole aggregate-level criterion; H1–H10 still apply per chunk.
+  H11 is the sole aggregate-level criterion; H1–H10 and H12 still apply per chunk.
 - A confirmed H-tier violation blocks the PLAN phase until accepted or excluded with justification in the REVIEW decision section.

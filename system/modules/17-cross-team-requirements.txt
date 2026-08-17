@@ -22,6 +22,7 @@ Write a `CHANGES_REQUIRED.md` file when ALL of the following are true:
    shared platform service, same product organisation).
 
 Do NOT write `CHANGES_REQUIRED.md` for:
+
 - Third-party dependencies outside the project's control (open-source packages,
   external SaaS APIs). File a normal issue or note it in the review findings.
 - Hypothetical future changes with no concrete dependency in the current work.
@@ -32,7 +33,8 @@ Do NOT write `CHANGES_REQUIRED.md` for:
 ## File placement
 
 Place the file at the repo root:
-```
+
+```txt
 CHANGES_REQUIRED.md
 ```
 
@@ -94,6 +96,7 @@ Do not prescribe the implementation — only surface constraints and prior art.>
 ## REVIEW rule
 
 During REVIEW, when a finding cannot be resolved in the current repo:
+
 - Mark the finding with the tag `[cross-team]` in the review output
 - State which repo or team owns the fix
 - Do not mark the finding as resolved until the receiving team confirms completion
@@ -106,6 +109,7 @@ During REVIEW, when a finding cannot be resolved in the current repo:
 ## PLAN rule
 
 When a plan includes a dependency on another team:
+
 - The plan must explicitly list all cross-team requirements as a separate section
 - Each cross-team requirement must reference its `CHANGES_REQUIRED.md` entry
 - The plan must state whether the current repo's changes can be merged independently
@@ -117,6 +121,7 @@ When a plan includes a dependency on another team:
 ## PATCH rule
 
 When emitting a patch that has cross-team dependencies:
+
 - Include the `CHANGES_REQUIRED.md` file (new or updated) as part of the patch output
 - Do not emit a patch that silently ignores a cross-team dependency
 - If the patch introduces a new contract or interface change, the `CHANGES_REQUIRED.md`
@@ -135,5 +140,6 @@ If an existing `.gitignore` would exclude it, flag that as a soft-tier finding a
 ## Closing an entry
 
 When the receiving team has completed their change, the entry should be updated:
+
 - Add `**Resolved**: <date> — <brief note>` below the `**Priority**` line
 - Do not delete the entry — keep the history for audit purposes

@@ -35,6 +35,7 @@ Load this file at startup per AGENTS.md. This file is a **loader only** — it d
 | Loop protection | `31-loop-guards.txt` |
 | Filesystem-first discovery | `32-filesystem-first.txt` |
 | End-of-session commit/push gate | `33-commit-and-push-gate.txt` |
+| Fileless mode (read-only hosts) | `34-fileless-mode.txt` |
 | Database conventions | `20-database-conventions.txt` |
 
 ## Precedence model
@@ -51,6 +52,8 @@ When rules conflict, apply this order:
 
 If a lower-precedence rule contradicts a higher-precedence rule, the higher rule wins.
 State the conflict briefly when it affects the response.
+
+Module 34's in-conversation state carrier never overrides module 19 on file-capable hosts; module 34 is inert on such hosts by its no-regression clause, and its carrier applies only on a confirmed `READ_ONLY` host.
 
 ## Hard rules (enforced by modules, restated for startup)
 

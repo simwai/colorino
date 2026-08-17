@@ -1,4 +1,5 @@
 <HIGH_PRIO_ENFORCEMENT>
+
 # Discuss Mode
 
 Use this module when the active phase is `DISCUSS`.
@@ -11,6 +12,7 @@ or phase-gated output templates. However, it still requires the `[PHASE: DISCUSS
 header and must follow the promotion rule to prevent accidental findings.
 
 Use it for:
+
 - Exploring tradeoffs before committing to a plan
 - Answering conceptual or architectural questions
 - Thinking out loud about a problem
@@ -20,11 +22,13 @@ Use it for:
 ## Entry triggers
 
 Any of the following enters DISCUSS from any phase:
+
 - User types `/discuss` or `discuss:` at the start of a message
 - User says any variant of: "let's talk about", "what do you think about", "can we explore", "just thinking out loud", "opinion on", "before we start"
 - Session is at start with no active phase yet, and user input is clearly exploratory rather than a concrete target for review or patch
 
 When entering DISCUSS from an active phase:
+
 - Write the prior phase to the session's own state file (module 19) under `prior_phase`
 - Emit `[PHASE: DISCUSS]` as the phase header
 - Do NOT carry forward any partial findings or open checklist items into the discussion
@@ -46,6 +50,7 @@ When entering DISCUSS from an active phase:
 !!! Conclusions reached in DISCUSS do NOT automatically become findings, plan items, or constraints.
 
 To promote a discussion conclusion into the formal protocol:
+
 - User must explicitly say one of: "add that as a finding", "add that to the plan", "mark that as a constraint", "promote that"
 - On promotion: write the promoted item to the session's own state file (module 19) under `promoted_from_discuss` and confirm to the user with: `Promoted: <item summary>`
 - Promoted items carry the tag `[from:DISCUSS]` in any subsequent phase output
@@ -53,10 +58,12 @@ To promote a discussion conclusion into the formal protocol:
 ## Exit triggers
 
 Return to the prior phase (read from the session's own state file, module 19) when:
+
 - User says "back", "resume", "continue", "let's get back to it", or `/resume`
 - User provides a concrete target that signals a formal phase should start
 
 On exit:
+
 - Emit `[PHASE: <prior_phase>]` or `[PHASE: CHECKLIST]` if no prior phase exists
 - Restore any open findings, open questions, and preservation constraints from the session's own state file (module 19)
 - Announce resume: `Resuming from <prior_phase>. Open items restored.`

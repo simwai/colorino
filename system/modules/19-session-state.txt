@@ -1,4 +1,5 @@
 <HIGH_PRIO_ENFORCEMENT>
+
 # Session State
 
 Use this module in any multi-persona session or whenever a mid-session mode switch occurs.
@@ -8,6 +9,7 @@ Use this module in any multi-persona session or whenever a mid-session mode swit
 Session state is a temporary, machine-readable file written and read by the
 active persona at every phase transition and mode switch. It preserves context
 across:
+
 - Phase transitions within a session
 - DISCUSS mode entry and exit
 - Mid-session persona switches
@@ -18,6 +20,23 @@ never share a file, so one session cannot clobber, delete, or inherit another
 session's phase, findings, plan approval, or rewrite contract.
 
 !!! `SESSION_STATE*.md` files must be listed in `.gitignore`. They are never committed.
+
+## Dual-carrier model
+
+Session state has two carriers. On `FILE_CAPABLE` hosts the carrier is the
+state file `SESSION_STATE-<session_id>.md`, written and read exactly as this
+module specifies. On a confirmed `READ_ONLY` host (module 34 capability
+detection) the carrier is the conversation itself: the same field set is
+carried in session context and updated at every trigger point below, and no
+`SESSION_STATE-<session_id>.md` file is created or written.
+
+Module 19 remains the single canonical source for session identity, state
+fields, freshness, GC, and cleanup semantics on both carriers. Module 34 owns
+host capability detection, the `SKIPPED-with-reason` standard, and the
+read-only mechanics. The in-conversation carrier never overrides module 19 on
+`FILE_CAPABLE` hosts (bootstrap precedence; module 34 no-regression clause);
+module 34's Session-state carrier section describes the read-only behavior and
+is referenced, never re-described here.
 
 ## Session identity
 
@@ -38,10 +57,15 @@ Module 19 is the single canonical source for these resolution rules. No other
 surface re-describes them; every other surface resolves its file per this
 module.
 
+On both carriers the resolution order is identical. On a `READ_ONLY` host the
+id is carried in conversation and never becomes a filename (module 34); the
+sanitizer applies on both carriers.
+
 ## Surface inventory
 
 The following surfaces resolve the session's own state file per this module and
 must be kept in sync:
+
 - `10-decision-and-intake.txt` — fresh-session validity
 - `11-state-machine.txt` — DISCUSS prior-phase persistence
 - `18-discuss-mode.txt` — DISCUSS entry/exit and promotion
@@ -53,6 +77,7 @@ must be kept in sync:
 - `06-fix-and-patch-protocol.txt` — lint and verification recording
 - `32-filesystem-first.txt` — SESSION_STATE recovery cross-reference
 - `33-commit-and-push-gate.txt` — edited-file staging source and gate outcome writes
+- `34-fileless-mode.txt` — carrier selection (`FILE_CAPABLE`/`READ_ONLY`)
 - `.opencode/commands/` — approve-plan, resume, handoff, phase, verify, baba
 - `.opencode/agents/` — build, plan
 - `docs/AGENTS-usage.md`, `docs/conformance-checklist.md`
@@ -75,6 +100,9 @@ Always at repo root: `SESSION_STATE-<session_id>.md`, where `<session_id>` is
 resolved per the Session identity section. A session reads and writes only its
 own file. The legacy bare `SESSION_STATE.md` exists only as a migration source
 (see Legacy adoption) and is never a live read/write path.
+
+The repo-root location rule applies to the file carrier. On a `READ_ONLY` host
+the state is carried in conversation and no file exists (module 34).
 
 ## Initialization
 
@@ -111,6 +139,12 @@ init claims it:
 No surface may read the bare `SESSION_STATE.md` as live state after the rename;
 the file no longer exists, which also removes the zombie read path.
 
+On a `READ_ONLY` host, the file-creation and `.gitignore` steps are
+`SKIPPED: file-edit` per module 34's SKIPPED-with-reason standard; the
+conversation carrier is initialized with the template's default field set; no
+`SESSION_STATE-<session_id>.md` is ever written, and there is no bare file to
+adopt on a read-only host.
+
 ## Stale-file GC
 
 Run the GC check automatically at fresh-session init only. A candidate
@@ -127,10 +161,15 @@ age is the liveness proxy; a paused-but-live session older than the TTL may be
 GC'd by another session's fresh init, which is accepted because deletions are
 named and auditable.
 
+GC applies to the file carrier. On a `READ_ONLY` host there are no files to GC,
+delete, or name; module 34 applies the freshness semantics to the conversation
+carrier.
+
 ## Write rules
 
 The active persona writes or overwrites its own `SESSION_STATE-<session_id>.md`
 at every:
+
 - Phase transition
 - DISCUSS entry or exit
 - Persona switch
@@ -138,6 +177,9 @@ at every:
 
 If the file does not exist, create it from scratch using the template below.
 Never write another session's file.
+
+The trigger points are identical on both carriers. On a `READ_ONLY` host the
+write updates the conversation carrier, never a file (module 34).
 
 ## Read rules
 
@@ -150,6 +192,10 @@ Never write another session's file.
   context where unambiguous; otherwise go BLOCKED on the missing field.
 - Any `BLOCKED` response caused by missing session state must identify the
   exact missing file or field and explain why phase restoration cannot proceed.
+
+On a `READ_ONLY` host the in-conversation carrier is the live state; the
+missing-file BLOCKED rule is overridden per module 34, and BLOCKED applies only
+when the conversation carrier is also absent.
 
 ## Template
 
@@ -286,6 +332,9 @@ gate_checked_at: <ISO timestamp or NONE>
 - <ISO timestamp>: <from_persona> -> <to_persona> at phase <phase>
 ```
 
+The template defines the field set for both carriers. On a `READ_ONLY` host the
+same fields are carried in conversation and never written to a file (module 34).
+
 ## Mid-session persona switch protocol
 
 When the user explicitly requests a persona switch mid-session (e.g. "switch to
@@ -303,12 +352,20 @@ BabaTester", "let BabaSensei look at this"):
 !!! A persona switch does not clear findings, constraints, or open questions.
 !!! If incoming persona cannot satisfy a hard constraint of the current phase, it goes BLOCKED.
 
+Steps 1 and 3 operate on the active carrier: the state file on `FILE_CAPABLE`
+hosts, the conversation on `READ_ONLY` hosts (module 34). The log entry and the
+`[PERSONA SWITCH:]` emission are unchanged on both.
+
 ## Cleanup rule
 
 Delete only the session's own `SESSION_STATE-<session_id>.md` when:
+
 - Session concludes with a successful PATCH or explicit user close
 - User says "close session", "end session", or "clean up"
 
 Never delete another session's file, never glob-delete `SESSION_STATE-*`, and
 do not delete on FAILURE — preserve for post-mortem.
+
+File deletion applies on `FILE_CAPABLE` hosts. On a `READ_ONLY` host the rule
+becomes "state remains in conversation until the session closes" (module 34).
 </HIGH_PRIO_ENFORCEMENT>

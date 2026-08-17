@@ -27,6 +27,7 @@ A project with no test suite should not have a failing test hook.
 Use judgment — flag absence only when the missing check has real risk.
 
 ### Formatter vs linter distinction
+
 - The formatter **must run first** and must auto-fix (not just report).
   If the formatter exits non-zero, the linter must not run.
 - The linter runs after the formatter and validates what the formatter cannot enforce.
@@ -40,6 +41,7 @@ Use judgment — flag absence only when the missing check has real risk.
   - Rust: `cargo fmt`
 
 ### Type checking (`tsc --noEmit`)
+
 - For TypeScript projects, always use `tsc --noEmit` explicitly.
   Do not use a generic `typecheck` script unless it is verified to call `tsc --noEmit` internally.
 - Run with the project's existing `tsconfig.json`. Do not invent flags.
@@ -103,6 +105,7 @@ During REVIEW, flag the following:
 ## PLAN rule
 
 When a plan includes tooling or script changes:
+
 - State which hooks will be added, removed, or modified
 - State the expected runtime of the hook set (target: under 30s)
 - Explicitly separate `pre-commit` hooks (fast: format, lint, tsc, fast unit tests)
@@ -117,24 +120,28 @@ When a plan includes tooling or script changes:
 When patching or creating hook configuration:
 
 ### For `.pre-commit-config.yaml` (pre-commit framework)
+
 - Always pin hook versions (`rev: vX.Y.Z`) — never use `latest` or a branch ref
 - Order: file hygiene → secret scanner → formatter → linter → type check → tests
 - Set `pass_filenames: false` on hooks that operate on the whole project
 - Set `always_run: true` only when the hook must run even on non-matching files
 
 ### For `package.json` with `lint-staged` + `husky`
+
 - `lint-staged` patterns must be specific — never `**/*` as the only pattern
 - The `pre-commit` husky hook must call `npx lint-staged`
 - In `lint-staged` config: formatter runs first, linter second, on staged files only
 - `tsc --noEmit` and test runner must operate on the whole project —
   run them as a separate `pre-push` hook if they are slow
 - Example lint-staged entry for TypeScript:
+
   ```json
   "*.{ts,tsx}": ["prettier --write", "eslint --fix"],
   "*.{ts,tsx,js,jsx}": ["bash -c 'tsc --noEmit'"]
   ```
 
 ### For Python projects
+
 - Prefer `.pre-commit-config.yaml` with local hooks over custom shell scripts
 - Formatter: `ruff format` (runs first)
 - Linter: `ruff check --fix` (runs second)
@@ -142,6 +149,7 @@ When patching or creating hook configuration:
 - Tests: `pytest -x -q` — fail fast, minimal output
 
 ### Script opt-in marker
+
 If any `.sh` or `.ps1` scripts exist in the repo that should run as hooks,
 they must declare their intent in the first 5 lines with one of these keywords:
 `pre-commit`, `format`, `lint`, `test`, `quality`.
