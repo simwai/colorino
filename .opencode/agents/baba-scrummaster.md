@@ -1,5 +1,5 @@
 ---
-description: "PLAN mode only. Turns fuzzy goals into scoped, prioritized, sprint-ready task cards."
+description: 'PLAN mode only. Turns fuzzy goals into scoped, prioritized, sprint-ready task cards.'
 mode: subagent
 permission:
   edit: deny

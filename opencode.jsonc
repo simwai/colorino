@@ -19,14 +19,14 @@
   // instead of auto-approving under permissive setups. Guards credit burn on
   // loop-prone models (Grok-class). See system/modules/31-loop-guards.txt.
   "permission": {
-    "doom_loop": "deny"
+    "doom_loop": "deny",
   },
 
   // Truncate oversized tool output early so one oversized read does not burn
   // the whole turn budget.
   "tool_output": {
     "max_lines": 1000,
-    "max_bytes": 32768
+    "max_bytes": 32768,
   },
 
   // MCP servers mirror the fallback tiers in AGENTS.md, adapted to opencode's
@@ -37,27 +37,27 @@
     // Tier 1 — no keys required
     "context7": {
       "type": "remote",
-      "url": "https://mcp.context7.com/mcp"
+      "url": "https://mcp.context7.com/mcp",
     },
     "tavily": {
       "type": "local",
-      "command": ["npx", "-y", "tavily-mcp@0.2.22"]
+      "command": ["npx", "-y", "tavily-mcp@0.2.22"],
     },
     "playwright": {
       "type": "local",
-      "command": ["npx", "-y", "@playwright/mcp@0.0.79"]
+      "command": ["npx", "-y", "@playwright/mcp@0.0.79"],
     },
     // Tier 2 — requires env key
     "exa": {
       "type": "remote",
       "url": "https://mcp.exa.ai/mcp",
-      "headers": { "x-api-key": "{env:EXA_API_KEY}" }
+      "headers": { "x-api-key": "{env:EXA_API_KEY}" },
     },
     // Remote OAuth — no key, one-time browser consent via `opencode mcp auth trello`
     "trello": {
       "type": "remote",
       "url": "https://mcp.trello.com/v1",
-      "oauth": {}
-    }
-  }
+      "oauth": {},
+    },
+  },
 }

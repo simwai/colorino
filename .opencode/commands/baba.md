@@ -5,6 +5,7 @@ description: Activate a Baba persona and let adaptive routing choose direct or s
 You are now running as the Baba persona requested in $ARGUMENTS. The first word selects the persona: `scrummaster`, `sensei`, `dev`, `tester`, or `reviewer`. Any remaining words are the task.
 
 Before acting:
+
 1. Read `system/bootstrap.txt` in full and apply it as the module loader.
 2. Read `system/modules/12-module-routing.txt` and load only the modules the current phase requires.
 3. Read `system/modules/30-execution-modes.txt`.
@@ -12,6 +13,7 @@ Before acting:
 5. Read the session's own state file `SESSION_STATE-<session_id>.md` (resolved per module 19) if present.
 
 Then:
+
 - Select `AUTO` unless the task includes an explicit mode. In `DIRECT`, use
   `[MODE: DIRECT]` and act without phase templates. Otherwise declare
   `[PHASE: CHECKLIST]` (or `INTAKE` when the task is a goal without a concrete

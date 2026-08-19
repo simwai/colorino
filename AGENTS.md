@@ -105,9 +105,9 @@ Combine all Tier 1 + Tier 2 + Trello blocks above. Omit any Tier 2 servers whose
 
 ## Environment Variables
 
-| Variable | Server | Required |
-|---|---|---|
-| `EXA_API_KEY` | Exa | No (skipped if missing) |
+| Variable      | Server | Required                |
+| ------------- | ------ | ----------------------- |
+| `EXA_API_KEY` | Exa    | No (skipped if missing) |
 
 ---
 

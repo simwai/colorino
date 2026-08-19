@@ -1,7 +1,6 @@
 {
   "recommendations": [
     "oxc.oxc-vscode",
-    "vivaxy.vscode-conventional-commits",
     "vitest.explorer",
     "davidanson.vscode-markdownlint",
     "editorconfig.editorconfig"

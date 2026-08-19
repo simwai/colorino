@@ -11,15 +11,15 @@
     "logger",
     "terminal"
   ],
-  "homepage": "https://github.com/simwai/colorino",
+  "homepage": "https://gitlab.com/simwai/colorino",
   "bugs": {
-    "url": "https://github.com/simwai/colorino/issues"
+    "url": "https://gitlab.com/simwai/colorino/-/issues"
   },
   "license": "MIT",
   "author": "simwai",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/simwai/colorino.git"
+    "url": "git+https://gitlab.com/simwai/colorino.git"
   },
   "files": [
     "dist",
