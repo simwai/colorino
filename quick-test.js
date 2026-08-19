@@ -97,3 +97,19 @@ ManualService.prototype.load = log(enhancedLogger, { logLevel: 'info' })(
 const service = new ManualService()
 enhancedLogger.log('Decorated result:', service.load('colorino'))
 console.log('File output: ./tmp/colorino-manual.log')
+
+console.log('\n--- Log Level Threshold Tests ---')
+const thresholdLogger = createColorino({}, { level: 'warn' })
+
+thresholdLogger.trace('hidden below warn') // below threshold
+thresholdLogger.debug('hidden below warn') // below threshold
+thresholdLogger.log('hidden below warn') // below threshold
+thresholdLogger.info('hidden below warn') // below threshold
+thresholdLogger.warn('visible at threshold') // at threshold
+thresholdLogger.error('visible at threshold') // at threshold
+
+console.log('Current threshold:', thresholdLogger.getLevel())
+thresholdLogger.setLevel('info')
+console.log('New threshold:', thresholdLogger.getLevel())
+thresholdLogger.info('now visible after setLevel') // at threshold
+thresholdLogger.log('still hidden') // below threshold

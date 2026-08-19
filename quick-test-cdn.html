@@ -84,6 +84,15 @@
       details.self = details
       colorino.info('Readable details in DevTools:', details)
       colorino.info('Sanitization options are available in the Node build.')
+
+      console.log('\n--- Log Level Threshold Tests ---')
+      const thresholdLogger = createColorino({}, { level: 'warn' })
+      thresholdLogger.trace('hidden below warn') // below threshold
+      thresholdLogger.info('hidden below warn') // below threshold
+      thresholdLogger.warn('visible at threshold') // at threshold
+      thresholdLogger.error('visible at threshold') // at threshold
+      thresholdLogger.setLevel('info')
+      thresholdLogger.info('now visible after setLevel') // at threshold
     </script>
      
   </head>
