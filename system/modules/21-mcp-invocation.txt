@@ -40,15 +40,15 @@ in session context and report the setup and preflight result when MCP is used.
 | Signal | Tool | Setup |
 |---|---|---|
 | Official/versioned library, framework, SDK, or API docs needed | `context7` | remote, no key |
-| Current web info beyond docs (news, RFCs, pricing, ecosystem landscape) | `tavily` | no key |
-| Unknown dependency/API name or version discovery | `tavily` / `exa` / direct `curl` | no key / env key / no key |
+| Current web info beyond docs (news, RFCs, pricing, ecosystem landscape) | `exa` / direct `curl` | env key / no key |
+| Unknown dependency/API name or version discovery | `exa` / direct `curl` | env key / no key |
 | Work tracking: cards, boards, lists, tasks, PR/issue/CI status | `trello` | remote OAuth |
 | Live browser: navigate, click, fill, screenshot, UI verification, e2e walk-through | `playwright` | local, no key |
 
 ## Phase pairing
 
 - `CHECKLIST`: no MCP unless the task references Trello cards/boards.
-- `DOCS`: `context7` primary (official source, exact version); `tavily`/`exa`/`curl` for discovery. MCP output is evidence input only — the DOCS template fields (name, version, URL, changelog window) must still be recorded per module 03.
+- `DOCS`: `context7` primary (official source, exact version); `exa`/`curl` for discovery. MCP output is evidence input only — the DOCS template fields (name, version, URL, changelog window) must still be recorded per module 03.
 - `REVIEW`: `playwright` when the target is a web app needing live UI checks; `trello` when review scope references tracked work.
 - `TEST_STRATEGY`: `playwright` for e2e/UI exploration and verification.
 - `PLAN` / `PATCH`: `trello` for tracked-task status updates; `playwright` for verification; otherwise built-in tools.
@@ -66,7 +66,7 @@ in session context and report the setup and preflight result when MCP is used.
 - Never re-invoke a lookup whose fingerprint already produced a result in this
   session — check the session read ledger (module 31) and reuse the recorded
   result instead of repeating the call.
-- Never send secrets, tokens, or proprietary code through remote endpoints (`context7`, `tavily`, `exa`, `trello`) — H1 guard.
+- Never send secrets, tokens, or proprietary code through remote endpoints (`context7`, `exa`, `trello`) — H1 guard.
 - `playwright` `browser_run_code_unsafe` is RCE-equivalent — trusted sessions only, never run untrusted code.
 
 ## Web search without keys

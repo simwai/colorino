@@ -6,13 +6,11 @@ agent: build
 Run BabaDev verification after a patch or before finishing implementation work. This command is intentionally Build-scoped and is not a read-only inspection boundary. Optional focus: $ARGUMENTS.
 
 Before acting:
-
 1. Read the session's own state file `SESSION_STATE-<session_id>.md` (resolved per module 19) if present.
 2. Inspect `git status` and `git diff`.
 3. Detect available project checks from package scripts, Makefile, pyproject, or docs (lint, typecheck, test).
 
 Then:
-
 - Summarize the diff at a high level.
 - Run the smallest relevant check set. Do not invent commands.
 - If no checks exist, say so explicitly.

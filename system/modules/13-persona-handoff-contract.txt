@@ -67,12 +67,27 @@ Required fields by transition:
 
 ---
 
+## Dual-section handoff
+
+A handoff may open with a `# For the human` digest above the payload fields
+(module 07 dual-section rule). Receiving-persona validation reads the agent
+section only: the required-fields check above applies to the payload fields,
+never to the human-section narrative. The human section is excluded from
+validation and is not part of the machine-readable contract.
+
+---
+
 ## HANDOFF Template
 
 The handing-off persona MUST use this exact template:
 
 ```txt
 [PHASE: HANDOFF]
+# For the human
+[2-4 plain-language sentences: what is being handed off, to whom, and what the
+receiver will do next]
+
+# For the agent
 # Persona Handoff Contract
 From: [persona name]
 To:   [receiving persona name]

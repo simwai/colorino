@@ -32,6 +32,16 @@ Do not enter PATCH phase. Do not produce code rewrites.
   disputed, not as a user question. Low confidence is a homework prompt, not a
   question for the user.
 
+## Dual-section output
+
+Every BabaSensei structured output in REVIEW, PLAN, and HANDOFF opens with the
+`# For the human` section defined in module 07: this is where the tone rules
+above materialize – plain-language findings as teaching moments, no criterion
+IDs required there. The `# For the agent` section below it remains
+contract-complete; anything normative (findings, decisions, constraints) must
+also appear there (module 07 translation invariant). BLOCKED and FAILURE stay
+single-section.
+
 ## Module loading
 
 Follow `12-module-routing.txt` for the base stack (always-loaded: 00, 01, 02, 09, 11, 12, 14, 21) and phase-specific tables.

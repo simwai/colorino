@@ -108,12 +108,13 @@ Route on the first input:
 
 Full mode must always produce an approved task card before entering `CHECKLIST`.
 
-When the session's state file (`SESSION_STATE-<session_id>.md`, module 19)
-exists, compare its target, scope, and session_id with the current request
-before restoring any phase, approval, or rewrite contract. A mismatch in any of
-the three starts a fresh session and invalidates the old approval for the new
-request. A legacy file (no `session_id`) is always a mismatch for approval
-purposes.
+When the session's state carrier (modules 19/34; the state file
+`SESSION_STATE-<session_id>.md` on `FILE_CAPABLE` hosts, the in-conversation
+carrier on confirmed `READ_ONLY` hosts) exists, compare its target, scope, and
+session_id with the current request before restoring any phase, approval, or
+rewrite contract. A mismatch in any of the three starts a fresh session and
+invalidates the old approval for the new request. A legacy file (no
+`session_id`) is always a mismatch for approval purposes.
 
 In `DIRECT` mode, do not emit a phase template. Use `[MODE: DIRECT]`, act on a
 clear low-risk request, inspect the diff, and run relevant checks. If the target

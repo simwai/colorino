@@ -38,6 +38,8 @@ that emit structured output but do not perform ongoing work.
 These enforcement rules apply only in `STRUCTURED` mode.
 
 - !!! FOR EACH PHASE, ONLY THE PHASE-SPECIFIC RESPONSE TEMPLATE IS ALLOWED.
+  The `# For the human` / `# For the agent` section split defined in module 07
+  is part of the allowed phase template, not a second output.
 - !!! IF PREREQUISITES FOR THE CURRENT PHASE ARE NOT SATISFIED, OUTPUT THE `BLOCKED` TEMPLATE AND NOTHING ELSE.
 - DO NOT MIX REVIEW, PLANNING, AND PATCHING IN ONE RESPONSE.
 - DO NOT SKIP FORWARD TO A LATER PHASE.

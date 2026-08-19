@@ -48,10 +48,6 @@ Servers are grouped by what works when env keys are missing. Configure the ones 
     "type": "http",
     "url": "https://mcp.context7.com/mcp"
   },
-  "tavily": {
-    "command": "npx",
-    "args": ["-y", "tavily-mcp"]
-  },
   "playwright": {
     "command": "npx",
     "args": ["-y", "@playwright/mcp@0.0.79"]
@@ -60,7 +56,6 @@ Servers are grouped by what works when env keys are missing. Configure the ones 
 ```
 
 **Context7** — library docs (stdio: `npx -y @upstash/context7-mcp`)
-**Tavily** — web search (verified: works without key, package is `tavily-mcp` not `@tavily/mcp`)
 **Playwright** — browser automation for live UI verification and e2e walk-throughs (Node 20+; headed by default, add `--headless` for automation)
 
 ### Tier 2 — Requires env keys
@@ -105,9 +100,9 @@ Combine all Tier 1 + Tier 2 + Trello blocks above. Omit any Tier 2 servers whose
 
 ## Environment Variables
 
-| Variable      | Server | Required                |
-| ------------- | ------ | ----------------------- |
-| `EXA_API_KEY` | Exa    | No (skipped if missing) |
+| Variable | Server | Required |
+|---|---|---|
+| `EXA_API_KEY` | Exa | No (skipped if missing) |
 
 ---
 
