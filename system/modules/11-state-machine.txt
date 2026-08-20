@@ -14,6 +14,7 @@ Mode selection is handled by `30-execution-modes.txt` before phase transitions.
 - `BACKLOG` (optional, BabaScrumMaster only)
 - `SPRINT` (optional, BabaScrumMaster only)
 - `TASK_PLAN` (optional, BabaScrumMaster only)
+- `SPEC` (optional, BabaScrumMaster only)
 - `CHECKLIST`
 - `DISCUSS`
 - `DOCS`
@@ -22,6 +23,7 @@ Mode selection is handled by `30-execution-modes.txt` before phase transitions.
 - `PLAN`
 - `HANDOFF` (transition artifact)
 - `PATCH`
+- `DRIFT` (optional, read-only diagnostic)
 - `FAILURE`
 
 ## Transition rules
@@ -50,8 +52,18 @@ Mode selection is handled by `30-execution-modes.txt` before phase transitions.
 - `SPRINT -> TASK_PLAN`
   - Allowed only if: selected items are pulled by ICE priority and the board shows one clear next task.
 
+- `TASK_PLAN -> SPEC`
+  - Allowed only if: the task card is approved and spec-authoring is in scope (module 35).
+  - Spec-authoring is planning, never implementation; SPEC is BabaScrumMaster-owned.
+
+- `BACKLOG -> SPEC`
+  - Allowed only if: SPRINT is explicitly skipped and spec-authoring is in scope.
+
 - `TASK_PLAN -> CHECKLIST`
-  - Allowed only if: task card contains target, size, ICE, milestone, and definition of done, and the task is approved.
+  - Allowed only if: task card contains target, size, ICE, milestone, and definition of done, and the task is approved, and spec-authoring is NOT in scope (otherwise `TASK_PLAN -> SPEC` applies).
+
+- `SPEC -> CHECKLIST`
+  - Allowed only if: the spec artifact is complete (title, status, version, one user story with GWT, one FR, one SC) and approved.
 
 - `CHECKLIST -> DOCS`
   - Allowed only if: checklist artifact exists and docs-sensitive judgment is in scope.
@@ -100,6 +112,20 @@ Mode selection is handled by `30-execution-modes.txt` before phase transitions.
 - `PATCH -> FAILURE`
   - Allowed only if: repeated breach occurs during patch generation after one recovery attempt.
 
+- `PATCH -> DRIFT`
+  - Allowed only if: the session worked against a spec (or the user requests drift analysis) and PATCH verification passed.
+  - DRIFT is read-only; it never writes files.
+
+- `ANY PHASE -> DRIFT`
+  - Allowed only if: the user explicitly requests drift analysis (e.g. "check drift", "run drift") and a spec exists in `SPECS/`.
+  - Prior phase is written to the session's own state carrier (modules 19/34) before entering DRIFT.
+
+- `DRIFT -> PLAN`
+  - Allowed only if: the drift report contains findings requiring writes (diverged claims, orphaned mappings, extract candidates accepted by the user).
+
+- `DRIFT -> <prior phase>`
+  - Allowed only if: the drift report is clean or findings are informational only.
+
 - `FAILURE -> <last valid phase>`
   - Allowed only if: the user explicitly requests a retry and the last valid phase is recorded.
 
@@ -137,6 +163,12 @@ Mode selection is handled by `30-execution-modes.txt` before phase transitions.
 - !!! DISCUSS cannot transition directly to PATCH.
 - !!! No CHECKLIST in full mode before an approved task card.
 - !!! No task card without a sized, ICE-scored backlog (or an approved skip note).
+- !!! No SPEC output before the spec artifact structure of module 35 is followed (title, status, version, story, FR, SC).
+- !!! No SPECS/ write outside PATCH (module 35 write governance).
+- !!! No DRIFT output with a write; DRIFT is read-only (module 36).
+- !!! No adversarial-gate bypass: the devil's-advocate pass fires inside REVIEW's decision section (pre-promotion) and as a pre-close check inside PATCH; it adds no user ask and no new phase (modules 24/25).
+- !!! No HALT bypass: version drift surfaces as a DRIFT-internal decision block with exactly one recommended fix path; never a silent fix, never a BLOCKED variant; HALT invalidates live Plan Approval (modules 19/35/36).
+- !!! BabaTester is intentionally excluded from the adversarial gate (no PLAN/Done declaration in TEST_STRATEGY).
 
 ## Module load on transition
 

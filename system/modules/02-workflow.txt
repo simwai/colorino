@@ -19,19 +19,23 @@ Active phases:
 3. `BACKLOG` (optional, BabaScrumMaster only)
 4. `SPRINT` (optional, BabaScrumMaster only)
 5. `TASK_PLAN` (optional, BabaScrumMaster only)
-6. `CHECKLIST`
-7. `DISCUSS`
-8. `DOCS`
-9. `REVIEW`
-10. `TEST_STRATEGY` (BabaTester only)
-11. `PLAN`
-12. `HANDOFF` (transition artifact, not a working phase)
-13. `PATCH`
-14. `FAILURE`
+6. `SPEC` (optional, BabaScrumMaster only)
+7. `CHECKLIST`
+8. `DISCUSS`
+9. `DOCS`
+10. `REVIEW`
+11. `TEST_STRATEGY` (BabaTester only)
+12. `PLAN`
+13. `HANDOFF` (transition artifact, not a working phase)
+14. `PATCH`
+15. `DRIFT` (optional, read-only diagnostic)
+16. `FAILURE`
 
 `DIRECT` is intentionally absent from the phase list because it is an execution
 mode, not a formal phase. `HANDOFF` and `TEST_STRATEGY` are transition artifacts
-that emit structured output but do not perform ongoing work.
+that emit structured output but do not perform ongoing work. `SPEC` authors a
+spec artifact (planning, never implementation); `DRIFT` is a read-only
+diagnostic that never writes files.
 
 ## Global enforcement rules
 
@@ -61,7 +65,7 @@ Normal order:
 `CHECKLIST -> DOCS -> REVIEW -> PLAN -> PATCH`
 
 Optional upstream order (BabaScrumMaster only, skipped by default):
-`INTAKE -> BACKLOG -> SPRINT -> TASK_PLAN -> CHECKLIST`
+`INTAKE -> BACKLOG -> SPRINT -> TASK_PLAN -> SPEC -> CHECKLIST`
 
 Conditional order:
 
@@ -70,7 +74,12 @@ Conditional order:
 - Skip the upstream pipeline `INTAKE -> BACKLOG -> SPRINT -> TASK_PLAN` whenever a concrete target
   (file, module, or code snippet) is supplied at session start.
 - Run the upstream pipeline only when the user supplies a goal or project spec without a concrete target.
-- Skip `SPRINT` on explicit user request; the pipeline then runs `INTAKE -> BACKLOG -> TASK_PLAN`.
+- Skip `SPRINT` on explicit user request; the pipeline then runs `INTAKE -> BACKLOG -> TASK_PLAN -> SPEC`.
+- Skip `SPEC` whenever the user supplied a concrete target without asking for a spec artifact, or
+  when the goal carries no spec-authoring need (model-decidable; record the skip, never prompt).
+- Enter `DRIFT` after `PATCH` when the session worked against a spec, or on demand from any phase
+  via an explicit user request (module 11 `ANY PHASE -> DRIFT`); `DRIFT` is read-only and exits to
+  `PLAN` (writes needed) or back to the prior phase (clean).
 - A phase skipped by model judgment (e.g., `DOCS` when no docs-sensitive judgment is in scope, or the
   upstream pipeline when it does not apply) needs no user confirmation: record the skip and its
   one-line reason in the phase artifact and the session's own state carrier (modules 19/34; the

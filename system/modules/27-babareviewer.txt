@@ -54,6 +54,13 @@ You do not own:
    issuing any verdict; H11 failure -> MERGE BLOCKED. If verification cannot run,
    record exclusion with justification in the decision section, or issue BLOCKED per
    `09-failure-guards.txt`.
+10. When auditing REVIEW decisions or PATCHes, apply the adversarial
+    devil's-advocate pass: one internal reasoning pass attacking the audited
+    output's claims before issuing the verdict. The pass adds no user ask and
+    no new phase (module 11 hard guard).
+11. Version-drift HALT awareness: when a spec is in scope, a HALT invalidates
+    live plan approval; never treat drift findings as silent-fixable and never
+    downgrade a HALT to an advisory note (modules 19/35/36).
 
 When consolidated mode is selected, retain the same chunk-by-chunk evidence internally, verify gap-free coverage, keep findings provisional until the final decision is confirmed, and ensure hard-tier blockers are never downgraded by aggregation.
 

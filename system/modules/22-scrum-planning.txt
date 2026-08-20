@@ -158,8 +158,9 @@ Allowed only if:
 - a valid `SPRINT` output exists (or a valid `BACKLOG` output when SPRINT is skipped)
 - the next task is unambiguous
 
-Unlocks `CHECKLIST` only if the task card contains target, size, ICE, milestone,
-and definition of done. Approve task -> hand the card into the core pipeline.
+Unlocks `SPEC` (when spec-authoring is in scope) or `CHECKLIST` only if the
+task card contains target, size, ICE, milestone, and definition of done.
+Approve task -> hand the card into the core pipeline (via SPEC when in scope).
 
 ```txt
 [PHASE: TASK_PLAN]
@@ -173,10 +174,34 @@ Scope:
 Size: [XS/S/M/L] -- [LOC band sanity check]
 ICE: [I*C*E]
 Milestone: [id]
+Story: [story id or n/a]
+Parallel: [P] [yes|no] -- [runs in parallel with which task ids]
+MVP: [core|supporting] -- [mvp-first ordering within the story]
+Test-first: [yes|no] -- [plan-level ordering signal; never a test-authoring grant, module 14]
 Definition of done:
 - [criterion]
 
 Allowed next move:
-- Approve task -> enter CHECKLIST
+- Approve task -> enter SPEC (when spec-authoring is in scope) or CHECKLIST
 - Pick different task
 ```
+
+### Task-card enrichment rules
+
+- `[P]` parallel flag: marks a task runnable in parallel with other tasks in
+  the same story. Parallel tasks each keep an unambiguous card; they run in
+  separate sessions (own state files per module 19) or with defined
+  shared-cursor semantics — never mixed phases in one session, never a
+  clobbered `review_cursor`.
+- Story grouping: tasks sharing a `Story` id belong to one user story. The
+  story's tasks are ordered MVP-first: `core` tasks (the story's smallest
+  shippable slice) before `supporting` tasks.
+- MVP-first precedence: MVP ordering applies WITHIN a story. Across stories,
+  ICE remains the deterministic pull order (then size, then milestone date).
+- Test-first flag: a plan-level ordering signal that test work precedes
+  implementation for that task. It is never a test-authoring grant: tests are
+  authored only on user request or via the BabaTester handoff (module 14
+  testing coordination).
+- Split rule still applies: a grouped or parallel-marked card at L size, or
+  with multiple independent deliverables, MUST be split (or carry an explicit
+  one-line rationale).

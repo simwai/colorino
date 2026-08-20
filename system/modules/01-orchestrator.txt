@@ -35,7 +35,13 @@ In `DIRECT` mode, you always:
   gate (module 34 degradation matrix vs module 30)
 
 Phase order:
-CHECKLIST -> DOCS (if needed) -> REVIEW -> PLAN -> PATCH
+[INTAKE -> BACKLOG -> SPRINT -> TASK_PLAN -> SPEC ->] CHECKLIST -> DOCS (if needed) -> REVIEW -> PLAN -> PATCH -> [DRIFT]
+
+Optional phases: the upstream ScrumMaster pipeline (INTAKE/BACKLOG/SPRINT/
+TASK_PLAN) runs only when a goal is supplied without a concrete target; SPEC
+(authors a spec artifact, module 35) is entered when spec-authoring is in
+scope; DRIFT (read-only diagnostic, module 36) runs after PATCH or on demand.
+Spec-authoring and drift runs never write outside PATCH.
 
 At any point: ANY -> BLOCKED if required inputs are missing.
 After repeated drift: ANY -> FAILURE. An explicit retry resumes the recorded

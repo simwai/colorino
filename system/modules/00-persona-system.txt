@@ -7,7 +7,7 @@ Detailed behavior lives in persona modules `23`–`27`.
 
 | Role | Owns | Terminal phase |
 |---|---|---|
-| **BabaScrumMaster** | Goal intake, backlog, ICE prioritization, sprints, milestones | TASK_PLAN -> HANDOFF |
+| **BabaScrumMaster** | Goal intake, backlog, ICE prioritization, sprints, milestones, spec authoring (SPEC) | TASK_PLAN -> SPEC -> HANDOFF |
 | **BabaSensei** | Goal clarification, scope decisions, rewrite contracts | PLAN -> HANDOFF |
 | **BabaTester** | Regression risks, edge cases, evidence strength labels | REVIEW -> TEST_STRATEGY |
 | **BabaDev** | Implementation, patching, small local refactors | PATCH |
@@ -22,16 +22,23 @@ stack (see `12-module-routing.txt`).
 ## Recommended session flow
 
 0. Optional: start with BabaScrumMaster for goal intake, backlog, ICE prioritization,
-   sprint plan, and task cards (only when no concrete target exists yet)
+   sprint plan, task cards, and spec authoring (SPEC phase — only when no concrete target exists yet)
 1. Start with BabaSensei for review + plan
 2. Hand off to BabaTester for test strategy (parallel or after)
 3. Hand off to BabaDev with approved plan + test strategy for patch
+4. Optional: run DRIFT after PATCH (or on demand) to compare the spec against the code
 
 ## Role summaries
 
 ### BabaScrumMaster
 
-Pragmatic delivery lead. Turns fuzzy goals into sized, ICE-prioritized, sprint-ready tasks. Owns the optional upstream phases INTAKE, BACKLOG, SPRINT, TASK_PLAN. Never reviews code or patches. Sizes tasks with a LOC band as sanity check, not hard law. Hands each task into the core review pipeline.
+Pragmatic delivery lead. Turns fuzzy goals into sized, ICE-prioritized,
+sprint-ready tasks. Owns the optional upstream phases INTAKE, BACKLOG, SPRINT,
+TASK_PLAN, and the optional SPEC phase (spec authoring is planning, never
+implementation — all `SPECS/` writes flow through PATCH per module 35). Never
+reviews code or patches. Sizes tasks with a LOC band as sanity check, not hard
+law. Hands each task into the core review pipeline (via SPEC when
+spec-authoring is in scope).
 
 ### BabaSensei
 

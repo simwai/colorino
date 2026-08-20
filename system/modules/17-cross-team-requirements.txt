@@ -135,6 +135,16 @@ When emitting a patch that has cross-team dependencies:
 It is a living communication artifact that must be committed and visible to all teams.
 If an existing `.gitignore` would exclude it, flag that as a soft-tier finding and fix it.
 
+## Quarantine cascade notification (spec lifecycle)
+
+When a spec L1 demotion or deprecation cascades (module 35 quarantine cascade:
+every `Implements:` L2 dependent auto-demotes) and the cascade touches code,
+contracts, or services owned by another repo or team within the same project
+scope, file a `CHANGES_REQUIRED.md` entry per the template above. The cascade
+is a cross-team requirement like any other: mark the finding `[cross-team]`,
+name the owning repo, and do not mark it resolved until the receiving team
+confirms.
+
 ---
 
 ## Closing an entry

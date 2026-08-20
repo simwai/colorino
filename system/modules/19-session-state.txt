@@ -85,14 +85,18 @@ must be kept in sync:
 ## Fresh-session validity
 
 Saved state is reusable only when the incoming request matches the saved
-target, scope, and session_id. If the target, scope, or session_id differs,
-treat the saved phase, accepted findings, plan approval, and rewrite contract
-as stale. Start a new session state instead of allowing an old approval to
-authorize new work. A legacy file (no `session_id`) is always a mismatch for
-approval purposes.
+target, scope, session_id, and spec_version (when a spec is in scope). If the
+target, scope, session_id, or spec_version differs, treat the saved phase,
+accepted findings, plan approval, and rewrite contract as stale. Start a new
+session state instead of allowing an old approval to authorize new work. A
+legacy file (no `session_id`) is always a mismatch for approval purposes.
 
 An explicit `/resume` may restore a matching interrupted session. It must not
 turn a mismatched state file into approval for an unrelated task.
+
+A version-drift HALT (modules 35/36) invalidates the live Plan Approval
+mid-session: `status -> pending`, `approved_at` cleared, `approved_plan_summary`
+cleared — an approved plan cannot execute against a drifted spec version.
 
 ## File location
 
@@ -255,6 +259,10 @@ target: <NONE or path>
 size: <XS|S|M|L or NONE>
 ice: <I*C*E or NONE>
 milestone: <id or NONE>
+story: <story id or n/a>
+parallel: <[P] yes|no or n/a>
+mvp_first: <core|supporting or n/a>
+test_first: <yes|no or n/a> -- plan-level ordering signal, never a test-authoring grant (module 14)
 definition_of_done: []
 
 ## Findings
@@ -291,6 +299,18 @@ status: pending|approved|rejected
 approved_at: <ISO timestamp or NONE>
 approved_plan_summary: <NONE or short summary>
 
+## Spec Registry
+<!-- Read cursor into SPECS/index.md; never ownership. Optional-with-default: a session with no spec in scope leaves these NONE. -->
+registry_path: <NONE or SPECS/index.md>
+spec_version: <NONE or x.y.z>
+last_checked: <ISO timestamp or NONE>
+status: <NONE or Draft|RFC|Stable|Deprecated>
+
+## Drift Report
+<!-- Filled after a DRIFT run; optional-with-default. -->
+report_status: none|clean|findings
+findings: []
+
 ## Rewrite Contract
 <!-- Filled during PLAN phase -->
 target: <NONE or path>
@@ -313,6 +333,7 @@ point (modules 06/30). Staging source for the commit/push gate (module 33). -->
 ## Commit/Push Gate
 <!-- Filled when the session made file edits, at end of PATCH/DIRECT per module 33 -->
 decision: A|B|C|NONE
+playwright_smoke: PASS|FAIL|SKIPPED|NONE -- <URL or reason>
 commit_sha: <sha or NONE>
 message_subject: <subject or NONE>
 push_results:

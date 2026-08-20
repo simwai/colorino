@@ -51,7 +51,9 @@ in session context and report the setup and preflight result when MCP is used.
 - `DOCS`: `context7` primary (official source, exact version); `exa`/`curl` for discovery. MCP output is evidence input only — the DOCS template fields (name, version, URL, changelog window) must still be recorded per module 03.
 - `REVIEW`: `playwright` when the target is a web app needing live UI checks; `trello` when review scope references tracked work.
 - `TEST_STRATEGY`: `playwright` for e2e/UI exploration and verification.
-- `PLAN` / `PATCH`: `trello` for tracked-task status updates; `playwright` for verification; otherwise built-in tools.
+- `PLAN` / `PATCH`: `trello` for tracked-task status updates; `playwright` for
+  verification, including the pre-commit functional smoke in the module-33 gate;
+  otherwise built-in tools.
 - `REVIEW`: decision lives in this phase; no separate CONFIRM MCP pairing.
 - `DISCUSS`: MCP allowed for exploration, but never emits findings without explicit user promotion (module 18).
 
@@ -68,6 +70,10 @@ in session context and report the setup and preflight result when MCP is used.
   result instead of repeating the call.
 - Never send secrets, tokens, or proprietary code through remote endpoints (`context7`, `exa`, `trello`) — H1 guard.
 - `playwright` `browser_run_code_unsafe` is RCE-equivalent — trusted sessions only, never run untrusted code.
+- The pre-commit gate smoke (module 33) uses safe browser tools only
+  (`navigate`/`click`/`fill`/`snapshot`/`screenshot`), never
+  `browser_run_code_unsafe`; when the repo declares no web-app entry point the
+  smoke is SKIPPED with reason, never invented.
 
 ## Web search without keys
 

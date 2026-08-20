@@ -38,6 +38,8 @@ planning handoff.
 | `ice_score` | BabaScrumMaster → review persona | ICE rank of the task |
 | `milestone` | BabaScrumMaster → review persona | Milestone tag the task serves |
 | `definition_of_done` | BabaScrumMaster → review persona | Task definition-of-done list |
+| `spec_version` | Optional, any persona → any persona | Spec version the work targets (n/a when no spec is in scope) |
+| `drift_findings` | DRIFT → PLAN/BabaDev | Drift report findings carried forward (n/a when DRIFT did not run) |
 
 ---
 
@@ -64,6 +66,10 @@ Required fields by transition:
   `strong_hints`.
 - BabaDev → PATCH: an approved plan plus the complete rewrite contract; tester
   fields are also required when a tester handoff was loaded.
+- DRIFT → PLAN/BabaDev: `spec_version` and `drift_findings` are REQUIRED when
+  the handoff originates from a DRIFT run with findings; `n/a` otherwise.
+  Old-format handoffs without these fields still validate when no DRIFT ran
+  (backward compatibility).
 
 ---
 
@@ -115,6 +121,8 @@ Task size: [XS/S/M/L or "n/a"]
 ICE score: [I*C*E or "n/a"]
 Milestone: [id or "n/a"]
 Definition of done: [list or "n/a"]
+Spec version: [x.y.z or "n/a"]
+Drift findings: [drift report findings or "n/a — DRIFT did not run"]
 
 Status: Contract complete. Receiver may begin at [entry phase].
 ```

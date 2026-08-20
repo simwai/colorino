@@ -37,6 +37,8 @@ Load this file at startup per AGENTS.md. This file is a **loader only** — it d
 | End-of-session commit/push gate | `33-commit-and-push-gate.txt` |
 | Fileless mode (read-only hosts) | `34-fileless-mode.txt` |
 | Database conventions | `20-database-conventions.txt` |
+| Spec lifecycle | `35-spec-lifecycle.txt` |
+| Drift detection | `36-drift-detection.txt` |
 
 ## Precedence model
 

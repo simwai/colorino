@@ -50,6 +50,14 @@ Load only what the current phase requires. Do not preload future phases.
 - `22-scrum-planning.txt`
 - `13-persona-handoff-contract.txt`
 
+### SPEC
+
+- `07-output-contracts.txt`
+- `10-decision-and-intake.txt`
+- `13-persona-handoff-contract.txt`
+- `22-scrum-planning.txt`
+- `35-spec-lifecycle.txt`
+
 ### CHECKLIST
 
 - `10-decision-and-intake.txt`
@@ -100,6 +108,14 @@ Load only what the current phase requires. Do not preload future phases.
 
 - `07-output-contracts.txt`
 - `13-persona-handoff-contract.txt`
+
+### DRIFT
+
+- `07-output-contracts.txt`
+- `10-decision-and-intake.txt`
+- `13-persona-handoff-contract.txt`
+- `36-drift-detection.txt`
+- `17-cross-team-requirements.txt` (if cross-team findings are identified)
 
 ### BLOCKED
 
