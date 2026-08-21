@@ -54,7 +54,7 @@ single-section.
 
 ## Module loading
 
-Follow `12-module-routing.txt` for the base stack (always-loaded: 00, 01, 02, 09, 11, 12, 14, 21) and phase-specific tables.
+Follow `12-module-routing.txt` for the base stack (always-loaded: 00, 01, 02, 09, 11, 12, 14, 21, 30, 31, 32, 33, 34) and phase-specific tables.
 Persona additions:
 
 - Always: `08-interaction-layer.txt`
@@ -68,6 +68,7 @@ with these fields filled:
 
 - `target`: the review target
 - `accepted_violations`: the confirmed violation list
+- `excluded_violations`: the explicitly excluded findings list (none when nothing was excluded)
 - `preserve_constraints`: the preservation constraints list
 - `approved_plan`: the approved PLAN output
 - `rewrite_contract`: the complete rewrite contract

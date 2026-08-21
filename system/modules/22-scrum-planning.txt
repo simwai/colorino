@@ -12,7 +12,8 @@ supplies a goal or project spec instead of a file or module.
   Enter `INTAKE` first.
 - Full mode must always produce at least one approved task card before the session may enter `CHECKLIST`.
 - `SPRINT` may be skipped on explicit user request (e.g. "no sprints, just size this").
-  The pipeline then runs `INTAKE -> BACKLOG -> TASK_PLAN`.
+  The pipeline then runs `INTAKE -> BACKLOG -> TASK_PLAN` (then `-> SPEC` when
+  spec-authoring is in scope), matching module 02.
 
 ## ICE prioritization
 

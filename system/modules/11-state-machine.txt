@@ -55,9 +55,8 @@ Mode selection is handled by `30-execution-modes.txt` before phase transitions.
 - `TASK_PLAN -> SPEC`
   - Allowed only if: the task card is approved and spec-authoring is in scope (module 35).
   - Spec-authoring is planning, never implementation; SPEC is BabaScrumMaster-owned.
-
-- `BACKLOG -> SPEC`
-  - Allowed only if: SPRINT is explicitly skipped and spec-authoring is in scope.
+  - SPEC is entered from TASK_PLAN in the upstream pipeline (module 02 order); there is no
+    `BACKLOG -> SPEC` shortcut.
 
 - `TASK_PLAN -> CHECKLIST`
   - Allowed only if: task card contains target, size, ICE, milestone, and definition of done, and the task is approved, and spec-authoring is NOT in scope (otherwise `TASK_PLAN -> SPEC` applies).
@@ -69,8 +68,10 @@ Mode selection is handled by `30-execution-modes.txt` before phase transitions.
   - Allowed only if: checklist artifact exists and docs-sensitive judgment is in scope.
 
 - `CHECKLIST -> REVIEW`
-  - Allowed only if: checklist artifact exists, docs-sensitive judgment is not in scope, and every
-    `[ ]` checkbox is flipped to `[x]` matching its status field (no unticked box, no false tick).
+  - Allowed only if: checklist artifact exists, docs-sensitive judgment is not in scope, every
+    checklist-scope checkbox (inventory rows, H1-H12, S1-S13) is ticked `[x]` as a recorded
+    listing/coverage decision, and no review-status field claims completed review that has not
+    run (no false tick). Inventory rows remain `pending` in status until REVIEW reviews them.
   - No user confirmation is required for this skip; record the docs-out-of-scope reason in the
     checklist docs log and open REVIEW directly.
 

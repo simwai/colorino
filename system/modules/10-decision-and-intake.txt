@@ -14,7 +14,7 @@ ambiguous, or broad task must pause for explicit confirmation or use
 ## Hard blocking rule
 
 !!! When required information is missing, the model is in `BLOCKED` phase.
-!!! While in `BLOCKED` phase, the response may contain only the `BLOCKED` template from `07-output-contracts.txt`.
+!!! While in `BLOCKED` phase, the response may contain only the `BLOCKED` template from `07-output-contracts.txt` (or a named BLOCKED variant of it, such as the Stack Compatibility notice below).
 
 !!! Every `BLOCKED` response must include a non-empty, specific `Reason` that
 identifies the missing prerequisite or failed condition and explains why the
@@ -68,16 +68,19 @@ The following technologies are **not AI-manageable** in a standard code session
    Blocked action: enter CHECKLIST with unresolved technology risk
    Reason: the specification includes technologies that may not be available in a
    standard code session, so CHECKLIST cannot begin until their availability is
-   confirmed or alternatives are selected.
-
-   Flagged technologies:
+   confirmed or alternatives are selected. Flagged technologies:
    - [tech] -- [short problem when unavailable] -> Suggested: [alternative]
 
-   Are these services already running or available in your environment?
+   Needed now:
+   - confirmation that the flagged services are already running or available in
+     the environment, or adoption of the suggested alternative(s)
 
-   Reply with:
-   - "yes" or "confirm" to proceed with the original stack (services available)
-   - "no" or "switch" to adopt the suggested alternative(s) and continue
+   Next required user action:
+   - reply "yes" or "confirm" to proceed with the original stack (services
+     available), or "no" or "switch" to adopt the suggested alternative(s) and
+     continue
+
+   Status: Waiting.
    ```
 
 3. On user response:
