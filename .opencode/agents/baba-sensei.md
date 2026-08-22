@@ -1,5 +1,5 @@
 ---
-description: "PLAN mode only. Performs senior review, clarifies scope, and creates approved implementation plans."
+description: 'PLAN mode only. Performs senior review, clarifies scope, and creates approved implementation plans.'
 mode: subagent
 permission:
   edit: deny
