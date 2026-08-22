@@ -30,17 +30,25 @@ Determine the host capability once per session, in this order:
    deletes the temporary file immediately and confirms `FILE_CAPABLE`.
 3. No evidence either way: default to `FILE_CAPABLE` (module 30 defaults
    unchanged). Never assume `READ_ONLY` from the absence of write tools alone.
+4. Observed write failure mid-session: any file write attempt that errors or
+   fails to persist (tool rejection, permission denial, sandbox error, silent
+   non-persistence) immediately re-resolves the host to `READ_ONLY` for the
+   rest of the session. The failed attempt is itself the evidence and the
+   confirmation event: record it in the session-state carrier, never retry the
+   write anywhere (repo or temp directory), and convert every subsequent write
+   step to the `SKIPPED-with-reason` standard and the Delivery contract.
 
 Record the resolved capability and its evidence in the session's state carrier
-(see Session-state carrier). Re-resolve only when the user declares a change or
-the session moves to a host with different capabilities.
+(see Session-state carrier). Re-resolve when the user declares a change, the
+session moves to a host with different capabilities, or item 4's
+observed-write-failure trigger fires.
 
 !!! On a confirmed `READ_ONLY` host, no write step is performed after
 confirmation: not in the repo, not in the temp directory, not in git. The
-pre-confirmation benign write probe is the detection step, never a
-post-confirmation write. Every step that would write is replaced by the
-`SKIPPED-with-reason` standard below. `FILE_CAPABLE` behavior is never
-weakened by this module.
+pre-confirmation benign write probe and a failed write attempt (capability
+detection items 2 and 4) are detection steps, never post-confirmation writes.
+Every step that would write is replaced by the `SKIPPED-with-reason` standard
+below. `FILE_CAPABLE` behavior is never weakened by this module.
 
 ## SKIPPED-with-reason standard
 

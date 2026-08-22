@@ -75,6 +75,14 @@ Mode selection is handled by `30-execution-modes.txt` before phase transitions.
   - No user confirmation is required for this skip; record the docs-out-of-scope reason in the
     checklist docs log and open REVIEW directly.
 
+- `CHECKLIST -> PLAN`
+  - Allowed only if: the target is greenfield (explicit from-scratch request, or no existing
+    source files in the target repo), the greenfield skip is recorded with its one-line reason
+    (module 02 greenfield branch), and the plan establishes conventions from module 14 plus the
+    INTAKE `Stack/Style:` field (module 07). REVIEW and its decision section do not apply:
+    there is no existing code to review. This is the only path into PLAN that does not pass
+    through a user-confirmed REVIEW decision.
+
 - `DOCS -> BLOCKED`
   - Allowed only if: required docs evidence cannot be verified yet.
 
@@ -153,7 +161,7 @@ Mode selection is handled by `30-execution-modes.txt` before phase transitions.
 - !!! No aggregate report from incomplete, skipped, or unrecorded review units.
 - !!! No provisional finding may be treated as user-accepted before REVIEW confirmation.
 - !!! No docs-dependent judgment before docs evidence.
-- !!! No plan before user-confirmed REVIEW decision.
+- !!! No plan before user-confirmed REVIEW decision — except the greenfield branch (`CHECKLIST -> PLAN`): no existing source files, skip recorded, conventions established from module 14 + the INTAKE `Stack/Style:` field.
 - !!! No standalone CONFIRM phase — confirmation lives inside REVIEW.
 - !!! Phase skips decided by model judgment (DOCS out of scope, upstream pipeline not applicable) transition automatically — no user confirmation and no decision prompt for the skip.
 - !!! No patch before approved plan.

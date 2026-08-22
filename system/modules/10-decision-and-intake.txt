@@ -107,6 +107,11 @@ Route on the first input:
 
 - Concrete target (file, module, or code snippet) -> `CHECKLIST`.
 - Goal or project spec without a concrete target -> full mode -> `INTAKE`.
+- Greenfield target (explicit from-scratch request, or the target repo has no
+  existing source files) -> full mode -> `INTAKE` with the `Stack/Style:` field
+  recorded; CHECKLIST and REVIEW run as recorded greenfield skips (module 02
+  greenfield branch) and the session goes PLAN-first with module-14 conventions
+  established.
 - Exploratory question -> `DISCUSS`.
 - Explicit drift request (e.g. "check drift", "run drift") -> `DRIFT` on demand
   from any phase (module 11 `ANY PHASE -> DRIFT`).
@@ -194,6 +199,12 @@ Required inputs:
 Unblock rule:
 `BLOCKED -> CHECKLIST` is allowed only when the target scope is known (or defaulted), and review scope and language are either known or explicitly obvious.
 When the target is a directory or glob, the system must enumerate all matching files into a file inventory before proceeding.
+Greenfield targets (empty or near-empty repo, or explicit from-scratch request):
+the file inventory is the planned file set recorded as a greenfield skip (no
+existing source files to inventory or review); stack/style was captured at
+INTAKE (`Stack/Style:` field, module 07) and the plan establishes module-14
+conventions before PATCH scaffolds (module 02 greenfield branch; module 11
+`CHECKLIST -> PLAN`).
 Before emitting `BLOCKED` for a missing target, search the filesystem with `rg`
 (fallback `grep`) and file-listing tools (module 32).
 
