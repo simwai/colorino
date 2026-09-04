@@ -78,6 +78,10 @@ When artifact, gitattributes, or pre-commit review is in scope, those extensions
 - `S-gitattributes` -- `.gitattributes` correctness (line endings, diff drivers, large-file handling).
 - `S-precommit` -- pre-commit hook configuration (file globs, hook ordering, auto-fix behavior).
 
+When logical correctness review is in scope, the L-series rubrics apply:
+
+- `L1-L10` -- Logical correctness: mathematical invariants (L1), boundary conditions (L2), state machines (L3), time-series integrity (L4), portfolio arithmetic (L5), statistical validity (L6), backtesting integrity (L7), risk/sizing logic (L8), metric correctness (L9), strategy logic (L10).
+
 ## Usage
 
 - Apply all hard-tier items to every chunk unless explicitly excluded in the checklist. H11 is the sole aggregate-level criterion; H1-H10 and H12 still apply per chunk.

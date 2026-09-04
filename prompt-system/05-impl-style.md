@@ -119,9 +119,9 @@ A method should not reach through another object to access its parts. `customer.
 
 - **Legal comments** -- copyright, license, or authorship headers required by a contract. Place once at the top of the file; never duplicate.
 - **Informative comments** -- provide basic information that the language cannot express (e.g., the regex pattern's meaning, the byte order of a packed struct). Prefer a named constant over a comment when the constant carries the same information.
-- **Explanation of intent** -- why a block of code exists, not what it does. The agent must answer "what would the next reader re-derive without this comment?" in one sentence. Use the marker `// why: <one-line reason>`.
+- **Explanation of intent** -- why a block of code exists, not what it does. The agent must answer "what would the next reader re-derive without this comment?" in one sentence. Write as a plain sentence, no marker prefix.
 - **Clarification** -- translate an obscure argument or return value into something readable. Use only when the alternative is worse than the comment (e.g., a standard-library call whose return value is genuinely confusing).
-- **Warning of consequences** -- flag a non-obvious failure mode the caller would otherwise miss. Use the marker `// safety: <one-line consequence>`.
+- **Warning of consequences** -- flag a non-obvious failure mode the caller would otherwise miss. Write as a plain sentence, no marker prefix.
 - **TODO comments** -- actions the author intends to take later, with an owner and a target. Format: `// TODO(<owner>): <what> -- <why deferred>`. A TODO without an owner is disallowed by default.
 - **Amplification** -- make an otherwise subtle line of code louder. Use sparingly; if the code needs amplification, refactor it first.
 - **Public-API docstrings** -- public-API docstrings are required for any function, class, or module that crosses a package or service boundary. Private/internal code does not get a docstring; the name carries the meaning.
@@ -130,6 +130,7 @@ A method should not reach through another object to access its parts. `customer.
 
 - **Mumbling** -- a comment that says something without saying anything useful. Always delete.
 - **Redundant comments** -- restate the next line of code in prose. Always delete.
+- **Comments that duplicate code** -- when a comment says exactly what the code already expresses (e.g., `// set user to null` above `user = null`), the comment is noise and must be deleted. The code is the source of truth.
 - **Misleading comments** -- say one thing while the code does another. Worse than no comment. Delete and fix the code or the comment.
 - **Mandated comments** -- required by a process but not by the code (e.g., "this function exists"). Delete; the function name is the mandate.
 - **Journal comments** -- change logs at the top of a file ("added by X on Y"). Use git, not a comment.
@@ -281,16 +282,16 @@ The defaults above are a floor, not a ceiling. They never replace the per-edit l
 - PDM scripts defined under `[tool.pdm.scripts]`:
   - `lint` - `ruff check src`
   - `format` - `ruff format src`
-  - `typecheck` - `pyrefly check`
+  - `typecheck` - `pyrefly check`  (only if pyrefly is a declared dependency in `pyproject.toml`)
   - `test` - `pytest`
   - `dev` - `python -m src.index`
-- Checks run through the detected runner regardless of tool: `lint` (`ruff check src`), `format` (`ruff format src`), `typecheck` (`pyrefly check`), `test` (`pytest`) - e.g., `pdm run test`, `poetry run pytest`, `uv run pytest`, or `<venv>\Scripts\python.exe -m pytest` for a bare venv.
+- Checks run through the detected runner regardless of tool: `lint` (`ruff check src`), `format` (`ruff format src`), `typecheck` (`pyrefly check` — **only if pyrefly is a declared dependency** in `pyproject.toml` under `[project].dependencies` or `[project].optional-dependencies`), `test` (`pytest`) - e.g., `pdm run test`, `poetry run pytest`, `uv run pytest`, or `<venv>\Scripts\python.exe -m pytest` for a bare venv.
 - Tool role split (Pylance / Pyrefly / Ruff) so the three tools do not duplicate work or fight each other in the editor or CI:
   - **Pylance** is the language server / IntelliSense. Configure in the target repo's `.vscode/settings.json`: `python.languageServer: "Pylance"`, `python.analysis.typeCheckingMode: "strict"`. Do not enable Pylance's own type checker when Pyrefly is in use; Pyrefly is the single source of type errors.
-  - **Pyrefly** is the type checker. Configure in `pyproject.toml [tool.pyrefly]`; CLI entry point is `pyrefly check`. Run on save in the editor; full check in CI and pre-commit.
+  - **Pyrefly** is the type checker. Configure in `pyproject.toml [tool.pyrefly]`; CLI entry point is `pyrefly check`. **Only runs if pyrefly is a declared dependency** in `pyproject.toml` under `[project].dependencies` or `[project].optional-dependencies`. Run on save in the editor; full check in CI and pre-commit (when present).
   - **Ruff** is the lint + format + isort tool (single binary replaces flake8, black, and isort). Configure in `pyproject.toml [tool.ruff]` and `[tool.ruff.lint]` with a sensible default like `select = ["E", "F", "I", "W", "B", "UP"]`. Editor: `charliermarsh.ruff` extension, `[python].editor.defaultFormatter = "charliermarsh.ruff"`, `formatOnSave = true`, `editor.codeActionsOnSave.source.organizeImports = "explicit"` so Ruff handles isort without a separate extension.
   - **Recommended `.vscode/extensions.json`** `recommendations`: `ms-python.vscode-pylance`, `meta.pyrefly`, `charliermarsh.ruff`. The prompt system does not ship `.vscode/` files; PATCH runs apply this wiring to target repos on demand.
-- Pyrefly is the type checker (not Pyright or mypy). Configured in `[tool.pyrefly]` in `pyproject.toml` with `strict = true`. Override noisy strict rules only with rationale. Per-file opt-out via `# pyrefly: ignore[rule]` with a one-line why comment.
+- Pyrefly is the type checker (not Pyright or mypy). Configured in `[tool.pyrefly]` in `pyproject.toml` with `strict = true`. Override noisy strict rules only with rationale. Per-file opt-out via `# pyrefly: ignore[rule]` with a one-line why comment. **Type-check gate only executes when pyrefly is a declared dependency.**
 - DI container: **dependency-injector**. Favor constructor injection; wire the composition root at the application entry point. Default to transient lifetime unless a clear singleton or scoped rationale exists.
 - Result pattern library: **rustico** with the `safe()` convention:
   - A project-level `safe()` helper wraps a throwing expression into a `Result`:

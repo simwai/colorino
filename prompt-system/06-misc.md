@@ -199,7 +199,7 @@ The gate cannot statically prove a tautology. The PATCH `## Plan-Actual` block m
 
 ### Lock verification
 
-Before any `git add`, this gate calls `scripts/session-locks.ps1` functions `Verify-LocksForStagedFiles` and `ReReadAndDiffStagedFiles` to verify, for every path in the proposed commit:
+Before any `git add`, this gate calls `prompt-system/scripts/session-locks.ps1` functions `Verify-LocksForStagedFiles` and `ReReadAndDiffStagedFiles` to verify, for every path in the proposed commit:
 
 - the current session holds the lock for that path (per-file or dependency lock), or
 - the current session released the lock within this PATCH/DIRECT step.

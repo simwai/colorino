@@ -217,6 +217,18 @@ Soft tier:
 - [ ] S16
 - [ ] S17
 
+Logical tier (L1-L10):
+- [ ] L1
+- [ ] L2
+- [ ] L3
+- [ ] L4
+- [ ] L5
+- [ ] L6
+- [ ] L7
+- [ ] L8
+- [ ] L9
+- [ ] L10
+
 Verification:
 - Build: pending -- [command]
 - Smoke: pending -- [command]

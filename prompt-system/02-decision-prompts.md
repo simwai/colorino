@@ -35,6 +35,7 @@ Rules:
 - State the recommendation and the reason before the options.
 - Keep pros and cons to one line each.
 - One response, one format. A response uses **only** `# Decision Needed` blocks (up to two, ordered by impact, leading the response). **Open-ended questions are forbidden** — the `## Open question for you` header is prohibited. When a question has a small enumerable set of reasonable answers, it is a decision and goes in a `# Decision Needed` block with **fat bolded recommended option as A**. Probes and decisions do not mix.
+- **Cap is a hard emit-time check, not a preference.** Before emitting any `# Decision Needed` block, count the blocks this response would contain. Three or more is a protocol breach: stop, hold the extras, and emit only the highest-impact one (or two when they are clearly independent and answerable in either order). The remainder wait for the next turn under the same phase header after the user answers. Never stack the full set in one response (see Anti-pattern 3).
 - Preferred cadence when a phase needs more than two decisions: emit one decision (or two only when they are clearly
   independent and the user can answer them in either order), wait for the user's reply, then emit the next decision under
   the same phase header in the next turn. Repeat until all decisions are resolved. One decision per turn is the safer
@@ -151,6 +152,8 @@ The ask uses the decision format above (this file owns the format; the style-pol
 
 - `A` (preserve-local)  -> agent writes `policy: preserve-local` to `STYLE_POLICY.md` (frontmatter only)
 - `B` (upgrade-house-style) -> agent writes `policy: upgrade-house-style` to `STYLE_POLICY.md` (frontmatter only)
+
+**Pre-emptiveness.** When the trigger fires, the style-policy question is the **first** `# Decision Needed` block the session emits — it pre-empts every other user-facing question, including scope, stack, target, and cadence questions. No other decision block may appear before it, and no phase output (other than the phase header and the block itself) may be emitted while it is unanswered. The reason is that every downstream question ("which path?", "which stack?") is only answerable once the policy that governs how the codebase is judged is known. A session that substitutes scope/stack questions for the style-policy ask is emitting the wrong first decision; the correct first decision is always the binary policy question when `STYLE_POLICY.md` is missing and the project is not greenfield.
 
 The artifact is a markdown file with frontmatter only:
 

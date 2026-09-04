@@ -140,7 +140,7 @@ When patching or creating hook configuration:
   "*.{ts,tsx,js,jsx}": ["bash -c 'tsc --noEmit'"]
   ```
 
-- **For Python projects**: prefer `.pre-commit-config.yaml` with local hooks over custom shell scripts. Formatter: `ruff format` (runs first). Linter: `ruff check --fix` (runs second). Type check: `pyrefly check` with the project's existing config. Tests: `pytest -x -q` (fail fast, minimal output).
+- **For Python projects**: prefer `.pre-commit-config.yaml` with local hooks over custom shell scripts. Formatter: `ruff format` (runs first). Linter: `ruff check --fix` (runs second). Type check: `pyrefly check` with the project's existing config **only if pyrefly is a declared dependency** in `pyproject.toml`. Tests: `pytest -x -q` (fail fast, minimal output).
 
 ### Script opt-in marker
 
