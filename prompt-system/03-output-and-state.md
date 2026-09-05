@@ -174,9 +174,10 @@ Target scope: [scope description, e.g. "src/" or "all .ts files"]
 Focus: [what to look for]
 
 File inventory:
-- [ ] [file path] -- [LOC] -- pending
-- [ ] [file path] -- [LOC] -- pending (large, will chunk)
+- [ ] [file path] -- [LOC] -- pending -- [discovery: keyword-match(N), entry-dist(N), layer:X, test:Y/N]
+- [ ] [file path] -- [LOC] -- pending (large, will chunk) -- [discovery: ...]
 (status: pending | reviewing | complete)
+Source: [discovery | manual | task-card]
 
 Pre-review docs log:
 - [ ] Library / version / URL recorded
@@ -621,6 +622,13 @@ plan_actual_history: [list of (timestamp, items, verdict) tuples]
 ## Drift State
 prior_phase: [phase or n/a]
 spec_version: [x.y.z or n/a]
+
+## Discovery Evidence
+- search_terms: [term1, term2, ...]
+- candidate_searches: [ {fingerprint, hit_count, top_hits: [file:line...]} ]
+- entry_traces: [ {fingerprint, entry_point, path_to_candidate} ]
+- scored_candidates: [ {file, keyword_match, entry_distance, layer_fit, test_proximity, recency, total} ]
+- inventory_source: discovery|manual|task-card
 ```
 
 Compare `target`, `scope`, `session_id`, and `spec_version` with the current request before restoring any phase, approval, or rewrite contract. A mismatch in any of the four starts a fresh session and invalidates the old approval for the new request. A legacy file (no `session_id`) is always a mismatch for approval purposes.

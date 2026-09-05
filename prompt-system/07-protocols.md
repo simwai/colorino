@@ -742,3 +742,50 @@ Every backlog item carries one milestone tag. A milestone is reached when all ta
 - MVP-first precedence: MVP ordering applies WITHIN a story. Across stories, ICE remains the deterministic pull order (then size, then milestone date).
 - Test-first flag: a plan-level ordering signal that test work precedes implementation for that task. It is never a test-authoring grant: tests are authored only on user request or via the BabaTester handoff.
 - Split rule still applies: a grouped or parallel-marked card at L size, or with multiple independent deliverables, MUST be split (or carry an explicit one-line rationale).
+
+## Relevance Discovery
+
+A protocol that enhances CHECKLIST file inventory initialization when the target is a directory, glob pattern, or natural-language feature area (not a specific file). Produces a ranked, evidence-backed file inventory.
+
+### When discovery runs
+
+- CHECKLIST initialization with target = directory, glob, or feature-area description
+- Explicit user request: `/discover <goal>` from CHECKLIST or earlier
+
+### Discovery steps (bounded budget)
+
+1. **Keyword extraction** — parse goal/area into search terms (domain nouns, verbs, tech terms). Max 10 terms.
+
+2. **Candidate search** — `rg` + `glob` across source tree (exclude artifact dirs per `## Artifact handling`). Max 3 searches. Max 50 candidates.
+
+3. **Entry-point tracing** — from known entry points (`main`, `index`, `App`, `routes/`, `handlers/`, `controllers/`, `pages/`, `views/`, `cli.ts`, `server.ts`), trace imports toward candidates. Max 2 searches.
+
+4. **Architectural layer detection** — classify by project structure conventions (controller, service, repository, component, hook, middleware, utility, model, test).
+
+5. **Relevance scoring** (0-100, evidence-backed per factor):
+   - `keyword_match` (0-30): term frequency in file (citable hit lines)
+   - `entry_distance` (0-25): import-graph hops from entry point
+   - `layer_fit` (0-20): layer appropriateness for goal type
+   - `test_proximity` (0-15): adjacent test file exists
+   - `recency` (0-10): git touch frequency (optional)
+
+6. **Ranked inventory output** — top 20 files formatted for CHECKLIST:
+
+   ```markdown
+   File inventory:
+   - [ ] src/auth/login-handler.ts -- 142 LOC -- pending -- discovery: keyword-match(3), entry-dist(2), layer:controller, test:yes
+   - [ ] src/auth/token-service.ts -- 98 LOC -- pending -- discovery: keyword-match(2), entry-dist(1), layer:service, test:yes
+   ```
+
+### Hard guards
+
+- Budget: max 5 `rg`/`glob` invocations. Loop protection applies.
+- No content reads — only search hits and import statements.
+- Empty inventory → `BLOCKED` with reason "no source files matched discovery terms".
+- Concrete file target skips discovery entirely.
+
+### Integration
+
+- Runs during CHECKLIST initialization, before any checklist ticks.
+- Output pre-populates CHECKLIST `File inventory:` section.
+- Evidence recorded in session state under `## Discovery Evidence`.
