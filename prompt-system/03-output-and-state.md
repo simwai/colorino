@@ -52,6 +52,24 @@ Scope:
 
 The two-section shape is part of the allowed template, not a second output: it does not mix phases and does not violate the phase-header rule. Applies in `STRUCTURED` mode only.
 
+## `STARTUP` template
+
+```txt
+[PHASE: STARTUP]
+
+# Startup Verification
+AGENTS.md: [one specific rule cited]
+00-system.md: [one specific rule cited]
+01-personas.md: [one specific rule cited]
+02-decision-prompts.md: [one specific rule cited]
+03-output-and-state.md: [one specific rule cited]
+04-rubrics.md: [one specific rule cited]
+05-impl-style.md: [one specific rule cited]
+06-misc.md: [one specific rule cited]
+07-protocols.md: [one specific rule cited]
+Status: Complete -- proceeding to next phase
+```
+
 ## `BLOCKED` template
 
 ```txt
@@ -574,6 +592,18 @@ mode: [AUTO|DIRECT|STRUCTURED]
 style_policy: [preserve-local|upgrade-house-style]
 style_policy_source: [STYLE_POLICY.md artifact|INTAKE Stack/Style field|SKIPPED: file-edit|auto-trigger pending]
 style_policy_resolved: [yes|no]
+
+## Startup Verification
+AGENTS.md: [cited rule]
+00-system.md: [cited rule]
+01-personas.md: [cited rule]
+02-decision-prompts.md: [cited rule]
+03-output-and-state.md: [cited rule]
+04-rubrics.md: [cited rule]
+05-impl-style.md: [cited rule]
+06-misc.md: [cited rule]
+07-protocols.md: [cited rule]
+Status: [Complete|Incomplete]
 
 ## Phase Artifacts
 [concatenated phase outputs in order; one block per phase]

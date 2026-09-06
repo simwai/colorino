@@ -124,11 +124,19 @@ Combine all Tier 1 + Tier 2 + Trello blocks above. Omit any Tier 2 servers whose
 
 `AGENTS.md` is the entry point. The system lives in `prompt-system/`, which holds the merged Baba system: orchestrator + routing (00), personas (01), decision prompts (02), output contracts + state schema (03), review rubrics (04), implementation style (05), operational protocol (06), cross-cutting protocol (07).
 
-**On startup:**
+**On startup (MANDATORY - no exceptions):**
 
 1. Read `AGENTS.md` (this file).
 2. Read `prompt-system/00-system.md` (orchestrator + load order + hard guards).
-3. Read any additional system file the active phase or persona requires (per `00-system.md` `## Load order`).
+3. Read `prompt-system/01-personas.md` (personas, handoff contract, persona depth).
+4. Read `prompt-system/02-decision-prompts.md` (decision format, intake routing, project style policy auto-trigger).
+5. Read `prompt-system/03-output-and-state.md` (phase templates, session state file schema, handoff missing-field response).
+6. Read `prompt-system/04-rubrics.md` (H1-H12 hard-tier, S1-S17 soft-tier).
+7. Read `prompt-system/05-impl-style.md` (implementation core, stack variants, project-specific tooling).
+8. Read `prompt-system/06-misc.md` (operational protocol: PATCH behavior, commit/push gate).
+9. Read `prompt-system/07-protocols.md` (cross-cutting protocol: artifacts, pre-commit, cross-team, app lifecycle, library selection, session file locks, spec lifecycle, drift detection, discuss, scrum).
+
+**All 9 files must be read in full before ANY other action.** This is not optional, not conditional on phase or persona. The STARTUP phase in `00-system.md` enforces this with a hard guard: if STARTUP is not complete, any response in any other phase is a protocol breach.
 
 The full load graph is flat and a star: `00-system.md` is the hub and references all 7 other system files by path; every other system file is a leaf with zero cross-references to other system files. There are no cycles.
 

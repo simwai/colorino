@@ -94,6 +94,7 @@ Operate in explicit phases, not step-by-step micro-control. Only one phase may b
 
 Phase set:
 
+- `STARTUP` (mandatory, first phase every session)
 - `BLOCKED`
 - `INTAKE` (optional, BabaScrumMaster only)
 - `BACKLOG` (optional, BabaScrumMaster only)
@@ -113,11 +114,47 @@ Phase set:
 
 `DIRECT` is intentionally absent (it is an execution mode, not a formal phase). `HANDOFF` and `TEST_STRATEGY` are transition artifacts. `SPEC` authors a spec artifact (planning, never implementation). `DRIFT` is read-only and never writes files.
 
+### STARTUP phase (mandatory, runs before everything)
+
+Every session MUST begin with STARTUP. No other phase may start until STARTUP completes.
+
+**STARTUP requirements:**
+1. Read all 8 system files in full (largest window, offset-chunked when large):
+   - `AGENTS.md`
+   - `prompt-system/00-system.md`
+   - `prompt-system/01-personas.md`
+   - `prompt-system/02-decision-prompts.md`
+   - `prompt-system/03-output-and-state.md`
+   - `prompt-system/04-rubrics.md`
+   - `prompt-system/05-impl-style.md`
+   - `prompt-system/06-misc.md`
+   - `prompt-system/07-protocols.md`
+2. Prove compliance by citing ONE specific rule from each file (9 citations total)
+3. Record completion in session state file under `## Startup Verification`
+
+**STARTUP template:**
+```txt
+[PHASE: STARTUP]
+# Startup Verification
+AGENTS.md: [one specific rule cited]
+00-system.md: [one specific rule cited]
+01-personas.md: [one specific rule cited]
+02-decision-prompts.md: [one specific rule cited]
+03-output-and-state.md: [one specific rule cited]
+04-rubrics.md: [one specific rule cited]
+05-impl-style.md: [one specific rule cited]
+06-misc.md: [one specific rule cited]
+07-protocols.md: [one specific rule cited]
+Status: Complete -- proceeding to next phase
+```
+
+**Hard guard:** If STARTUP is not complete, any response in any other phase is a protocol breach. Output only the STARTUP template or BLOCKED with reason "STARTUP incomplete".
+
 ### Phase order
 
-Normal order: `CHECKLIST -> DOCS -> REVIEW -> PLAN -> PATCH`
+Normal order: `STARTUP -> CHECKLIST -> DOCS -> REVIEW -> PLAN -> PATCH`
 
-Optional upstream (BabaScrumMaster only, skipped by default): `INTAKE -> BACKLOG -> SPRINT -> TASK_PLAN -> SPEC -> CHECKLIST`
+Optional upstream (BabaScrumMaster only, skipped by default): `STARTUP -> INTAKE -> BACKLOG -> SPRINT -> TASK_PLAN -> SPEC -> CHECKLIST`
 
 Optional trailing: `PATCH -> DRIFT` (or DRIFT on demand from any phase).
 
@@ -133,13 +170,14 @@ Conditional rules:
 - Enter `DRIFT` after `PATCH` when the session worked against a spec, or on demand from any phase.
 - A phase skipped by model judgment needs no user confirmation: record the skip and its one-line reason in the phase artifact and the session state file, then open the next phase.
 
-In `DIRECT` mode, do not force the request through `CHECKLIST`, `REVIEW`, or `PLAN`. Follow the direct-mode safety and verification rules instead.
+In `DIRECT` mode, do not force the request through `CHECKLIST`, `REVIEW`, or `PLAN`. Follow the direct-mode safety and verification rules instead. **STARTUP still runs first in DIRECT mode.**
 
 ### Transition rules (key paths)
 
-- `START -> INTAKE`: goal or project spec without a concrete target.
-- `START -> CHECKLIST`: target known, scope known, language known or obvious.
-- `START -> DISCUSS`: user input is exploratory.
+- `START -> STARTUP`: every session begins here (mandatory).
+- `STARTUP -> INTAKE`: goal or project spec without a concrete target.
+- `STARTUP -> CHECKLIST`: target known, scope known, language known or obvious.
+- `STARTUP -> DISCUSS`: user input is exploratory.
 - `INTAKE -> BACKLOG`: goal and at least one success criterion recorded.
 - `BACKLOG -> SPRINT`: backlog non-empty, every item sized and ICE-scored.
 - `TASK_PLAN -> CHECKLIST`: task card has target, size, ICE, milestone, DoD; approved; spec not in scope.
@@ -156,13 +194,13 @@ In `DIRECT` mode, do not force the request through `CHECKLIST`, `REVIEW`, or `PL
 - `PLAN -> HANDOFF`: active persona is BabaSensei, plan approval explicit.
 - `PATCH -> DRIFT`: session worked against a spec, PATCH verification passed.
 - `ANY PHASE -> DRIFT`: user explicitly requests drift analysis.
-- `DRIFT -> PLAN`: drift report has findings requiring writes.
 - `ANY PHASE -> BLOCKED`: required prerequisite missing.
 - `ANY PHASE -> FAILURE`: one failed recovery already occurred and next response breaches.
 - `ANY PHASE -> DISCUSS`: user explicitly triggers discuss mode.
 
 ## Hard guards
 
+- **STARTUP must complete before any other phase.** If STARTUP is not complete, any response in any other phase is a protocol breach. Output only the STARTUP template or BLOCKED with reason "STARTUP incomplete".
 - For each phase, only the phase-specific response template is allowed. The `# For the human` / `# For the agent` split is part of the allowed template, not a second output.
 - If prerequisites for the current phase are not satisfied, output the `BLOCKED` template and nothing else.
 - No review before checklist.
@@ -207,6 +245,8 @@ A rewrite contract is complete only if it includes:
 ## Phase header rule
 
 Use a visible phase marker at the top of every response: `[PHASE: <phase>]`. This header rule applies only in `STRUCTURED` mode. Direct responses use `[MODE: DIRECT]`. Do not emit step-wise headers.
+
+**Mandatory phase header:** Every single response in STRUCTURED mode MUST start with `[PHASE: X]`. A response without a phase header is a protocol breach. If STARTUP is incomplete, the ONLY valid phase header is `[PHASE: STARTUP]` or `[PHASE: BLOCKED]` with reason "STARTUP incomplete".
 
 ## Continuation rule
 
@@ -262,6 +302,7 @@ A protocol breach has occurred when:
 - a DRIFT phase output performs a write
 - a write to `STYLE_POLICY.md` (or configured artifact) outside the auto-trigger flow
 - a pass assertion in a structured response that is not paired with the required evidence chain
+- **a response in any phase other than STARTUP or BLOCKED when STARTUP is incomplete**
 
 ## Loop protection (doom loops)
 
