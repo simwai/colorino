@@ -283,6 +283,7 @@ The following concerns were merged out of 11 separate deprecated modules and con
 - Pre-commit behavior (hook configuration, formatter/linter order, `tsc --noEmit`)
 - Cross-team requirements (`CHANGES_REQUIRED.md` protocol)
 - App lifecycle (startup validation, graceful shutdown)
+- API architecture & design (REST/HTTP semantics, versioning, rate-limiting, OpenAPI, error shape, pagination, idempotency, caching, edge authn/authz)
 - Library selection (signals, license check, blockers)
 - Session file locks (lock directory, acquisition, release, wait-and-surface)
 - Spec lifecycle (artifact format, L1/L2, registry, quarantine cascade)

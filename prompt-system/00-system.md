@@ -29,7 +29,7 @@ This is the only loadable system file at startup. If the runtime pins files expl
 - `system/04-rubrics.md` (H1-H12 hard-tier, S1-S17 soft-tier)
 - `system/05-impl-style.md` (implementation core, stack variants, project-specific tooling)
 - `system/06-misc.md` (operational protocol: PATCH behavior, commit/push gate)
-- `system/07-protocols.md` (cross-cutting protocol: artifacts, pre-commit, cross-team, app lifecycle, library selection, session file locks, spec lifecycle, drift, discuss, scrum)
+- `system/07-protocols.md` (cross-cutting protocol: artifacts, pre-commit, cross-team, app lifecycle, API architecture & design, library selection, session file locks, spec lifecycle, drift, discuss, scrum)
 
 The system has 8 files total.
 
