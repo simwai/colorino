@@ -331,6 +331,7 @@ Do not adopt the candidate without an explicit exception when it is archived or 
 ## Session file locks
 
 Per-file serialization for concurrent editing sessions operating on the same repository checkout. Prevents two sessions from silently bundling each other's uncommitted hunks into one commit by ensuring one file has at most one writer at a time. Loaded for PATCH and DIRECT only. On every other phase this section is inert. On a `READ_ONLY` host, locks are inert.
+Host capability reaches the script via the `BABA_READ_ONLY` environment flag; when set, every script entry point returns Skipped instead of touching the filesystem.
 
 ### Hard rules
 
@@ -356,7 +357,7 @@ The directory's filesystem mtime is never read for liveness; only the `acquired_
 At PATCH or DIRECT entry, scan `.session-locks/` and `SESSION_STATE-*.md` to build a list of live peers:
 
 - A lock is live when its `acquired_at` is within `SESSION_LOCK_TTL_MINUTES = 30` (named constant).
-- A state file represents a live peer when its latest entry is non-terminal and its `last_active_at` is within `SESSION_LOCK_TTL_MINUTES = 30`.
+- A state file represents a live peer when its latest entry is non-terminal and its `last_active_at` (defined in the 03-output-and-state.md session schema) is within `SESSION_LOCK_TTL_MINUTES = 30`.
 
 The presence of a live peer does not change behavior directly. It only means lock contention is plausible; the actual contention is detected at acquisition time.
 
@@ -367,10 +368,13 @@ Before the first write to a file:
 1. Verify the file is in the session's `## Edited Files` ledger. A file not in the ledger is not eligible for a lock, and acquiring one anyway is BLOCKED.
 2. Compute the flat name per the Lock directory section.
 3. Attempt to create the lock directory atomically: POSIX `mkdir .session-locks/<flat-name>.lock` and treat `EEXIST` as "already locked"; Windows PowerShell `New-Item -ItemType Directory -Path .session-locks/<flat-name>.lock -ErrorAction Stop` and treat the thrown `IOException` as "already locked".
+Use `New-LockDirectoryAtomic` (create without `-Force`); a `-Force` create is never atomic and silently steals.
 4. On success, write `owner` and `acquired_at` into the new directory. The lock is held.
 5. On "already locked", read the existing `owner` and `acquired_at`. If `acquired_at` is within `SESSION_LOCK_TTL_MINUTES`, the peer is live; enter Wait and surface. Otherwise the lock is stale; enter Stale lock handling.
 
-Acquisition is recorded in the session's state file under a new `## Locked Files` section.
+Before the create attempt, a per-file acquisition also refuses when a live peer dependency lock covers the flat name, and session identity always comes from the once-per-session cache, never from a per-call generated fallback.
+
+Acquisition is recorded in the session's state file under `## Locked Paths` (`### Per-file`).
 
 ### Release
 
@@ -379,18 +383,19 @@ After patch verification for the file completes successfully, release the lock:
 - POSIX: `rmdir .session-locks/<flat-name>.lock` (the directory holds exactly two files, so a plain `rmdir` succeeds).
 - Windows PowerShell: `Remove-Item -LiteralPath .session-locks/<flat-name>.lock -Recurse -Force`.
 
-A failed patch does not auto-release the lock; the lock stays held until either the next successful patch on the same file or explicit user instruction. Stale locks then time out per `SESSION_LOCK_TTL_MINUTES`. Release is recorded in `## Locked Files`.
+A failed patch does not auto-release the lock; the lock stays held until either the next successful patch on the same file or explicit user instruction. Stale locks then time out per `SESSION_LOCK_TTL_MINUTES`. Release is recorded in `## Locked Paths`.
 
 ### Wait and surface
 
-If the lock is held by a live peer:
+If the lock is held by a live peer, the acquisition attempt returns immediately (a multi-minute blocking wait outlasts a model turn) and surfaces a single multiple-choice question to the user with three options:
 
-1. Wait up to `SESSION_LOCK_WAIT_ATTEMPTS = 3` retries spaced `SESSION_LOCK_WAIT_INTERVAL_SECONDS = 60` apart, re-attempting the create between waits.
-2. If still locked after 3 retries, surface a single multiple-choice question to the user with three options:
-   - **A. Wait longer** - one additional retry burst, then re-surface.
-   - **B. Skip this file** - remove the file from the proposed patch and continue. Do not commit it.
-   - **C. Override-steal the lock** - the user accepts responsibility for clobbering the peer's uncommitted work. The session then overwrites the existing `owner` and `acquired_at` and records the steal event in its state file under `## Locked Files`.
-3. The model never auto-decides among A, B, C.
+- **A. Wait longer** - one additional retry burst, then re-surface.
+
+- **B. Skip this file** - remove the file from the proposed patch and continue. Do not commit it.
+
+- **C. Override-steal the lock** - the user accepts responsibility for clobbering the peer's uncommitted work. The session then overwrites the existing `owner` and `acquired_at` and records the steal event in its state file under `## Locked Paths`.
+
+The model never auto-decides among A, B, C.
 
 ### Stale lock handling
 
@@ -398,11 +403,14 @@ A lock is stale when its `acquired_at` is older than `SESSION_LOCK_TTL_MINUTES =
 
 - **D. Contact the peer** - out of scope for the agent; the user resolves manually.
 
-The model records the stale-lock event in the session's state file under `## Locked Files` regardless of which option the user picks.
+The model records the stale-lock event in the session's state file under `## Locked Paths` regardless of which option the user picks.
 
 ### Commit/push gate integration
 
-The commit/push gate must, before staging, call into session file locks to verify: for every path in the proposed commit, the current session holds the lock or released it within the current PATCH/DIRECT step. Any path that fails this check is surfaced to the user with the same three options as Wait and surface, and staging is refused until the user decides. The re-read check that defends against the read-then-write race lives in the commit/push gate right after the lock check: re-read the working-tree version of each path, diff it against the in-memory expected content, and refuse to stage any path with unowned hunks.
+The commit/push gate must, before staging, call into session file locks to verify: for every path in the proposed commit, the current session holds the lock or released it within the current PATCH/DIRECT step.
+Verification also scans every lock's `dependencies.txt`, so a file covered by a live peer dependency lock refuses staging even without an exact-path lock.
+Any path that fails this check is surfaced to the user with the same three options as Wait and surface, and staging is refused until the user decides.
+The re-read check that defends against the read-then-write race lives in the commit/push gate right after the lock check: re-read the working-tree version of each path, diff it against the in-memory expected content, and refuse to stage any path with unowned hunks.
 
 ### Named constants
 
@@ -411,6 +419,8 @@ The named constants below are the single source of truth and must be referenced 
 - `SESSION_LOCK_TTL_MINUTES = 30`
 - `SESSION_LOCK_WAIT_ATTEMPTS = 3`
 - `SESSION_LOCK_WAIT_INTERVAL_SECONDS = 60`
+
+The WAIT_* values are retained for protocol compatibility and hosted runners; interactive acquisition attempts once and surfaces instead of sleeping.
 
 ### Dependency locks
 
@@ -468,7 +478,7 @@ The session state file uses `## Locked Paths` with two subsections:
 - [root flat-name] -- [owner] -- [acquired_at] -- [dependency count] -- [status: held|released]
 ```
 
-Legacy state files with `## Locked Files` continue to be readable as per-file only.
+Legacy state files using the previous ledger name continue to be readable as per-file only.
 
 #### Commit/push gate integration
 

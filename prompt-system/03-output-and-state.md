@@ -427,6 +427,8 @@ Will change:
   verify: [command -- idempotent read-only check, max 2 KiB]
   expect: [pass|fail|exit:N|regex:<pat>|contains:<s>|silent]
 
+The runner MUST execute each verify command automatically after staging and before the commit/push ask; emitting the command text without running it is a gate FAIL.
+
 Will preserve:
 - [constraint]
 - [constraint]
@@ -582,6 +584,7 @@ The session state file is `SESSION_STATE-<session_id>.md` and is the standing pe
 # Session State
 
 session_id: [YYYYMMDDTHHMMSS-<hash>]
+last_active_at: [ISO-8601 UTC of last session activity or n/a]
 target: [file/module/repo path]
 scope: [in scope / out of scope]
 spec_version: [x.y.z or n/a]
@@ -594,6 +597,7 @@ style_policy_source: [STYLE_POLICY.md artifact|INTAKE Stack/Style field|SKIPPED:
 style_policy_resolved: [yes|no]
 
 ## Startup Verification
+
 AGENTS.md: [cited rule]
 00-system.md: [cited rule]
 01-personas.md: [cited rule]
@@ -606,9 +610,11 @@ AGENTS.md: [cited rule]
 Status: [Complete|Incomplete]
 
 ## Phase Artifacts
+
 [concatenated phase outputs in order; one block per phase]
 
 ## Plan Approval
+
 status: [pending|approved|invalidated]
 
 approved_at: [timestamp or n/a]
@@ -620,40 +626,56 @@ rewrite_contract: [inline or n/a]
 plan_actual_history: [list of (timestamp, items, verdict) tuples]
 
 ## Findings Mitigations
+
 <!-- Mitigation choice per finding from the # Findings Mitigations: block. Format: finding_id -> choice. -->
+
 - [finding_id]: [A|B|C|skip|accept]
 
 ## Accepted Violations
+
 - [criterion id] -- [one-line description] ([confidence]%)
 
 ## Disputed Violations
+
 - [criterion id] -- [one-line description] ([confidence]%)
 
 ## Preservation Constraints
+
 - [constraint]
 
 ## Edited Files
+
 - [path] -- [edit summary]
+
 <!-- Per-item records consumed by the Plan-Versus-Actual Gate. -->
+
 - format: pass|fail|exit:N|regex:<pat>|contains:<s>|silent
 
 ## Plan-Actual History
+
 - [timestamp] -- [N planned / M landed / K missing] -- [verdict]
 
 ## Locked Paths
+
 ### Per-file
+
 - [flat-name] -- [owner] -- [acquired_at] -- [status: held|released]
+
 ### Dependency
+
 - [root flat-name] -- [owner] -- [acquired_at] -- [dependency count] -- [status: held|released]
 
 ## MCP Preflight
+
 - [server]: [ready|unavailable|not_checked]
 
 ## Drift State
+
 prior_phase: [phase or n/a]
 spec_version: [x.y.z or n/a]
 
 ## Discovery Evidence
+
 - search_terms: [term1, term2, ...]
 - candidate_searches: [ {fingerprint, hit_count, top_hits: [file:line...]} ]
 - entry_traces: [ {fingerprint, entry_point, path_to_candidate} ]

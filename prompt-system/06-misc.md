@@ -94,7 +94,9 @@ Before the ask, when the gate triggers, run a Playwright MCP functional smoke of
 
 ### Plan-Versus-Actual Gate
 
-A user-approved plan lists `Will change` items; this gate runs after the Playwright smoke and before lock verification, and confirms that each item actually landed in the staged working tree. The gate is the answer to "the plan said X, Y, Z - did all three really make it in?" A miss is not a soft warning; it is a hard gate. The commit is refused until the gap is fixed or the user re-plans.
+A user-approved plan lists `Will change` items; this gate runs after lock verification and staging and before the commit/push ask, and confirms that each item actually landed in the staged working tree. The gate is the answer to "the plan said X, Y, Z - did all three really make it in?" A miss is not a soft warning; it is a hard gate. The commit is refused until the gap is fixed or the user re-plans.
+
+The runner MUST execute each verify command automatically after staging and before the commit/push ask; emitting the command text without running it is a gate FAIL.
 
 #### Source of truth
 
@@ -104,14 +106,14 @@ The approved plan's `Will change` list, persisted in the session's own state fil
 
 The `expect` field on each `Will change` item is one of:
 
-| Value | Pass criterion |
-|---|---|
-| `pass` | exit code 0 |
-| `fail` | exit code non-zero |
-| `exit:N` | exit code exactly N |
-| `regex:<pat>` | exit 0 and a regex match against stdout |
-| `contains:<s>` | exit 0 and the literal text appears in stdout |
-| `silent` | exit 0 AND stdout is empty AND stderr is empty |
+| Value          | Pass criterion                                 |
+| -------------- | ---------------------------------------------- |
+| `pass`         | exit code 0                                    |
+| `fail`         | exit code non-zero                             |
+| `exit:N`       | exit code exactly N                            |
+| `regex:<pat>`  | exit 0 and a regex match against stdout        |
+| `contains:<s>` | exit 0 and the literal text appears in stdout  |
+| `silent`       | exit 0 AND stdout is empty AND stderr is empty |
 
 Any `expect` field that does not match one of the six shapes is recorded as `FAIL -- malformed expect: <field>` and the gate is RED. The plan author cannot pass garbage.
 
@@ -152,7 +154,7 @@ This is not a security boundary; it is a guard against accidental plan-author mi
 
 #### Staging interaction
 
-The gate runs AFTER `git add` of the session's edited files and BEFORE the commit. The verify commands must observe the staged state. The lock-verification step moves above the gate for the same reason: it gates what gets staged; the gate verifies what was staged. The ordering inside the commit/push gate is therefore: trigger -> Playwright smoke -> **Plan-Versus-Actual Gate** -> lock verification -> the ask.
+The gate runs AFTER `git add` of the session's edited files and BEFORE the commit. The verify commands must observe the staged state. Lock verification gates what gets staged; the gate verifies what was staged. The ordering inside the commit/push gate is therefore: trigger -> Playwright smoke -> lock verification -> stage -> Plan-Versus-Actual Gate -> the ask.
 
 #### Skip conditions (Plan-Versus-Actual)
 
@@ -160,8 +162,8 @@ Record `SKIPPED: plan-actual -- <reason>`, never silently pass:
 
 - No `Will change` items in the approved plan -> `SKIPPED: plan-actual -- no will-change items to verify` (YAGNI; trivial edits do not need a gate).
 - Confirmed `READ_ONLY` host -> `SKIPPED: plan-actual -- gate trigger is false on a read-only host`.
-- DIRECT mode with no plan approved AND no `direct_gate_opt_in` flag in `## Meta` -> `SKIPPED: plan-actual -- no approved plan in DIRECT mode; rely on per-edit lint and PATCH verification`. The user-facing reason points at the modules that still protect them.
-- DIRECT mode with `direct_gate_opt_in: true` set in `## Meta` -> the gate runs against the inline PATCH `## Will change` block, with `verify` fields best-effort (BabaDev writes one if it can, otherwise records `SKIPPED` per item). Same retry loop, same escalation.
+- DIRECT mode runs the gate against the inline PATCH `## Will change` block when at least one `Will change` item exists, with `verify` fields best-effort (BabaDev writes one if it can, otherwise records `SKIPPED` per item). Same retry loop, same escalation.
+- DIRECT mode with no `Will change` items -> `SKIPPED: plan-actual -- no will-change items to verify` (YAGNI; trivial edits do not need a gate).
 
 #### Recording (Plan-Versus-Actual)
 
@@ -207,6 +209,9 @@ Before any `git add`, this gate calls `prompt-system/scripts/session-locks.ps1` 
 If any path fails the check, staging is refused and the gate surfaces the same three options as Wait and surface (wait longer / skip this file / override-steal). The wait/surface logic lives in `07-protocols.md`; this section does not duplicate it.
 
 After the lock check passes, the gate re-reads the working-tree version of each path and diffs it against the in-memory expected content to catch the read-then-write race that implicit-on-write locking cannot prevent. Any unowned hunk surfaces with the same three options and refuses staging.
+
+SKIPPED-allowlist: recording `SKIPPED -- <reason>` for lock verification is legitimate only when the host has no shell tool to invoke the script, when no staged file overlaps the session's ledger, or on a confirmed `READ_ONLY` host.
+Any other missing lock refuses staging via the wait/skip/steal surface above; a bare SKIPPED outside these three cases is a gate FAIL.
 
 A confirmed `READ_ONLY` host skips this section: the gate trigger is already false, so no staging and no lock check occur.
 
