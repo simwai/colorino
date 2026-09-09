@@ -225,7 +225,7 @@
     },
     "playwright": {
       "type": "local",
-      "command": ["npx", "-y", "@playwright/mcp@0.0.79"]
+      "command": ["npx", "-y", "@playwright/mcp@0.0.80"]
     },
     // Tier 2 — requires env key
     "exa": {

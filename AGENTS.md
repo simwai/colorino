@@ -71,6 +71,7 @@ Servers are grouped by what works when env keys are missing. Configure the ones 
 
 **Context7** - library docs (stdio: `npx -y @upstash/context7-mcp`)
 **Playwright** - browser automation for live UI verification and e2e walk-throughs (Node 20+; headed by default, add `--headless` for automation)
+**Playwright bootstrap** — run `scripts/ensure-playwright.ps1` before first use or after fresh clones; checks Node ≥ 20, resolves `@playwright/mcp`, installs missing browser binaries.
 
 ### Tier 2 - Requires env keys
 
