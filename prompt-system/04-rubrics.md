@@ -70,6 +70,14 @@ Hard-tier (H1-H12) and soft-tier (S1-S20) review rubrics. Hard-tier items block 
 
 **S20 -- Decision format violation: using open-ended questions (`## Open question for you`, prose question lists) instead of `# Decision Needed` blocks with fat-bolded recommended option as `**A. option text**`.** Every user decision must use the decision format with 2-3 options, recommended option first as bolded A per `00-system.md` Rendering Rule.
 
+**S21 -- Accessibility regression**: a UI change removes semantic HTML, breaks keyboard navigation, removes ARIA labels, or fails color contrast requirements without an a11y review.
+
+**S22 -- Missing a11y test coverage**: a UI component has no a11y test (axe-core, pa11y, lighthouse a11y score) for interactive elements, forms, or modal dialogs.
+
+**S23 -- SEO regression**: a page change removes or breaks meta tags, structured data (JSON-LD), canonical URLs, or heading hierarchy without SEO review.
+
+**S24 -- Missing SEO test coverage**: a content page has no SEO validation for meta descriptions, title tags, or structured data.
+
 ## Documented extension IDs
 
 When artifact, gitattributes, or pre-commit review is in scope, those extensions fall under the soft-tier coverage tick:
@@ -81,6 +89,12 @@ When artifact, gitattributes, or pre-commit review is in scope, those extensions
 When logical correctness review is in scope, the L-series rubrics apply:
 
 - `L1-L10` -- Logical correctness: mathematical invariants (L1), boundary conditions (L2), state machines (L3), time-series integrity (L4), portfolio arithmetic (L5), statistical validity (L6), backtesting integrity (L7), risk/sizing logic (L8), metric correctness (L9), strategy logic (L10).
+
+Severity:
+- **Blocking**: L1-L10 findings that affect correctness, safety, financial outcomes, or data integrity are blocking (behave like H-tier: block PATCH until accepted or excluded with justification in the REVIEW decision section).
+- **Advisory**: L-tier findings in non-critical paths (logging, display formatting, non-validated display calculations, cosmetic state transitions) are advisory (behave like S-tier: flag and discuss, do not hard-block).
+
+The reviewer must classify each L-tier finding as blocking or advisory at discovery time.
 
 ## Usage
 
