@@ -26,7 +26,7 @@ export abstract class AbstractColorino {
     this.palette = initialPalette
 
     const validatePaletteResult = this.validator.validatePalette(this.palette)
-    if (validatePaletteResult.isErr()) throw validatePaletteResult.error
+    if (!validatePaletteResult.ok) throw validatePaletteResult.error
 
     this.colorLevel = colorLevel
     this.logLevel = this.resolveLogLevel(options.level)
@@ -124,7 +124,7 @@ export abstract class AbstractColorino {
   private resolveLogLevel(level: LogLevel | undefined): LogLevel {
     const resolved = level ?? 'trace'
     const validateLogLevelResult = this.validator.validateLogLevel(resolved)
-    if (validateLogLevelResult.isErr()) throw validateLogLevelResult.error
+    if (!validateLogLevelResult.ok) throw validateLogLevelResult.error
 
     return resolved
   }

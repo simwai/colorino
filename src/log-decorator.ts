@@ -3,6 +3,7 @@ import type {
   LogDecoratorOptions,
 } from './interfaces.js'
 import type { ConsoleMethod } from './types.js'
+import { from } from 'super-result'
 
 type Method<This, Args extends unknown[], Return> = (
   this: This,

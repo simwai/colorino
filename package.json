@@ -74,7 +74,7 @@
     "prepare": "husky"
   },
   "dependencies": {
-    "neverthrow": "^8.2.0"
+    "super-result": "^1.4.3"
   },
   "devDependencies": {
     "@playwright/test": "^1.57.0",

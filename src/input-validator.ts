@@ -1,4 +1,4 @@
-import { ok, err, Result } from 'neverthrow'
+import { ok, err, type Result } from 'super-result'
 import { InputValidationError } from './errors.js'
 import type { Palette } from './types.js'
 import type { ColorinoFileLoggingOptions } from './interfaces.js'
@@ -26,7 +26,7 @@ export class InputValidator {
 
       const hex = palette[level]
       const result = this.validateHex(hex)
-      if (result.isErr()) return err(result.error)
+      if (!result.ok) return err(result.error)
     }
 
     return ok(true)

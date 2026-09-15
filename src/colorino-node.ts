@@ -7,6 +7,7 @@ import { Palette } from './types.js'
 import { ColorinoNodeInterface, ColorinoOptions } from './interfaces.js'
 import { InputValidator } from './input-validator.js'
 import { ColorinoFileLogger } from './file-logger.js'
+import { from } from 'super-result'
 
 export class ColorinoNode
   extends AbstractColorino

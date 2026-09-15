@@ -247,7 +247,7 @@ The defaults above are a floor, not a ceiling. They never replace the per-edit l
   - `.catch()` on promises is forbidden. Do not convert Promise rejections via `.catch()`.
   - When the logic needs more than one statement, extract a named function or method and pass that as the single call: `from(async () => await fetchJson<RpcResponse>(url, body))`.
   - Do not use `.map()`, `.andThen()`, `.match()`, `.unwrapOr()` or other chaining methods on results.
-- If `neverthrow` is already established in the codebase, continue using it; do not mix both.
+- If `super-result` is already established in the codebase, continue using it; do not mix both.
 
 ## Stack: Python
 

@@ -24,7 +24,7 @@ export class ColorinoFileLogger {
 
   constructor(options: ColorinoFileLoggingOptions, validator: InputValidator) {
     const validationResult = validator.validateFileLoggingOptions(options)
-    if (validationResult.isErr()) throw validationResult.error
+    if (!validationResult.ok) throw validationResult.error
 
     this.path = options.path
     this.maxBytes = options.maxBytes ?? 10 * 1024 * 1024

@@ -10,18 +10,18 @@ describe('InputValidator - Node & Browser Environment - Unit Test', () => {
   describe('validateHex', () => {
     it('should return ok for a valid hex color', () => {
       const result = validator.validateHex('#AABBCC')
-      expect(result.isOk()).toBe(true)
+      expect(result.ok).toBe(true)
     })
 
     it('should trim whitespace and return ok', () => {
       const result = validator.validateHex('  #AABBCC  ')
-      expect(result.isOk()).toBe(true)
+      expect(result.ok).toBe(true)
     })
 
     it('should return err for an invalid hex color', () => {
       const result = validator.validateHex('#123')
-      expect(result.isErr()).toBe(true)
-      const err = result._unsafeUnwrapErr()
+      expect(result.ok).toBe(false)
+      const err = result.error
       expect(err).toBeInstanceOf(InputValidationError)
       expect(err.message).toBe("Invalid hex color: '#123'")
     })
@@ -29,10 +29,9 @@ describe('InputValidator - Node & Browser Environment - Unit Test', () => {
     it('fuzzing: should return err for random non-hex strings', () => {
       for (let i = 0; i < 100; i++) {
         const randomString = generateRandomString(7)
-        // Ensure we don't accidentally generate a valid hex
         if (!/^#[0-9A-F]{6}$/i.test(randomString)) {
           const result = validator.validateHex(randomString)
-          expect(result.isErr()).toBe(true)
+          expect(result.ok).toBe(false)
         }
       }
     })
@@ -42,14 +41,14 @@ describe('InputValidator - Node & Browser Environment - Unit Test', () => {
     it('should return ok for a valid palette', () => {
       const palette = createTestPalette()
       const result = validator.validatePalette(palette)
-      expect(result.isOk()).toBe(true)
+      expect(result.ok).toBe(true)
     })
 
     it('should return err if a palette color is invalid', () => {
       const palette = createTestPalette({ error: 'invalid-hex' })
       const result = validator.validatePalette(palette)
-      expect(result.isErr()).toBe(true)
-      const err = result._unsafeUnwrapErr()
+      expect(result.ok).toBe(false)
+      const err = result.error
       expect(err).toBeInstanceOf(InputValidationError)
       expect(err.message).toBe("Invalid hex color: 'invalid-hex'")
     })

@@ -1,5 +1,5 @@
 import { describe, expect, vi } from 'vitest'
-import { Result } from 'neverthrow'
+import { from } from 'super-result'
 import { createTestPalette } from '../helpers/palette.js'
 import { createColorino } from '../../node.js'
 import { generateRandomString } from '../helpers/random.js'
@@ -17,10 +17,7 @@ test.afterEach(() => {
 })
 
 const safeLog = (logger: ReturnType<typeof createColorino>, ...args: any[]) =>
-  Result.fromThrowable(
-    () => logger.log(...args),
-    error => error as Error
-  )()
+  from(() => logger.log(...args))
 
 describe('Colorino - Node Environment - Fuzz Test', () => {
   describe('Random String Inputs', () => {
@@ -39,7 +36,7 @@ describe('Colorino - Node Environment - Fuzz Test', () => {
           results.push(result)
         }
 
-        const successCount = results.filter(r => r.isOk()).length
+        const successCount = results.filter(r => r.ok).length
         expect(successCount).toBeGreaterThan(990)
       })
 
@@ -62,7 +59,7 @@ describe('Colorino - Node Environment - Fuzz Test', () => {
 
         for (const str of specialChars) {
           const result = safeLog(logger, str)
-          expect(result.isErr()).toBe(false)
+          expect(result.ok).toBe(true)
         }
       })
 
@@ -74,7 +71,7 @@ describe('Colorino - Node Environment - Fuzz Test', () => {
         for (const size of sizes) {
           const longString = 'x'.repeat(size)
           const result = safeLog(logger, longString)
-          expect(result.isErr()).toBe(false)
+          expect(result.ok).toBe(true)
         }
       })
     })
@@ -96,7 +93,7 @@ describe('Colorino - Node Environment - Fuzz Test', () => {
 
         for (const obj of [circular1, circular2, circular3]) {
           const result = safeLog(logger, obj)
-          expect(result.isErr()).toBe(false)
+          expect(result.ok).toBe(true)
         }
       })
 
@@ -118,7 +115,7 @@ describe('Colorino - Node Environment - Fuzz Test', () => {
 
         for (const obj of weirdObjects) {
           const result = safeLog(logger, obj)
-          expect(result.isErr()).toBe(false)
+          expect(result.ok).toBe(true)
         }
       })
 
@@ -131,7 +128,7 @@ describe('Colorino - Node Environment - Fuzz Test', () => {
         }
 
         const result = safeLog(logger, deep)
-        expect(result.isErr()).toBe(false)
+        expect(result.ok).toBe(true)
       })
 
       test('should handle large arrays with mixed types', () => {
@@ -152,20 +149,19 @@ describe('Colorino - Node Environment - Fuzz Test', () => {
         })
 
         const result = safeLog(logger, largeArray)
-        expect(result.isErr()).toBe(false)
+        expect(result.ok).toBe(true)
       })
     })
   })
 
   describe('Random Color Codes', () => {
     test('should handle invalid hex colors', () => {
-      const result = Result.fromThrowable(
-        () => createColorino(createTestPalette({ log: '#gggggg' })),
-        error => error as Error
-      )()
+      const result = from(() =>
+        createColorino(createTestPalette({ log: '#gggggg' }))
+      )
 
-      expect(result.isErr()).toBe(true)
-      if (result.isErr()) {
+      expect(result.ok).toBe(false)
+      if (!result.ok) {
         expect(result.error).toBeInstanceOf(InputValidationError)
       }
     })
@@ -183,7 +179,7 @@ describe('Colorino - Node Environment - Fuzz Test', () => {
           const logger = createColorino(createTestPalette({ log: hex }), {})
 
           const result = safeLog(logger, 'test')
-          expect(result.isErr()).toBe(false)
+          expect(result.ok).toBe(true)
 
           const currentOutput = stdoutSpy.getOutput()
           expect(currentOutput.length).toBeGreaterThan(previousLength)
@@ -213,7 +209,7 @@ describe('Colorino - Node Environment - Fuzz Test', () => {
         const logger = createColorino(createTestPalette(), {})
 
         const result = safeLog(logger, 'test')
-        expect(result.isErr()).toBe(false)
+        expect(result.ok).toBe(true)
 
         vi.unstubAllEnvs()
       }
@@ -233,7 +229,7 @@ describe('Colorino - Node Environment - Fuzz Test', () => {
           results.push(result)
         }
 
-        const allSuccessful = results.every(r => r.isOk())
+        const allSuccessful = results.every(r => r.ok)
         expect(allSuccessful).toBe(true)
       })
     })
@@ -247,27 +243,12 @@ describe('Colorino - Node Environment - Fuzz Test', () => {
         const results = []
         for (let i = 0; i < 250; i++) {
           results.push(safeLog(logger, `log ${i}`))
-          results.push(
-            Result.fromThrowable(
-              () => logger.info(`info ${i}`),
-              error => error as Error
-            )()
-          )
-          results.push(
-            Result.fromThrowable(
-              () => logger.warn(`warn ${i}`),
-              error => error as Error
-            )()
-          )
-          results.push(
-            Result.fromThrowable(
-              () => logger.error(`error ${i}`),
-              error => error as Error
-            )()
-          )
+          results.push(from(() => logger.info(`info ${i}`)))
+          results.push(from(() => logger.warn(`warn ${i}`)))
+          results.push(from(() => logger.error(`error ${i}`)))
         }
 
-        const allSuccessful = results.every(r => r.isOk())
+        const allSuccessful = results.every(r => r.ok)
         expect(allSuccessful).toBe(true)
       })
     })
