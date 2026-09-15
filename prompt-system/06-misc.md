@@ -214,6 +214,7 @@ Fix/debug sessions produce three categories of leftovers that must be auto-delet
    - Stale locks: `Remove-Item -Recurse -Force` on the lock directory (releases the lock)
    - Uncommitted session artifacts: `Remove-Item -Force` on `SESSION_STATE-*.md` not in the current session's ledger
 3. **Record** -- write a `## Leftover Audit` section to the session state file:
+
    ```markdown
    ## Leftover Audit
 
@@ -221,6 +222,7 @@ Fix/debug sessions produce three categories of leftovers that must be auto-delet
    - stale locks: [count] removed -- [flat-names]
    - uncommitted session artifacts: [count] removed -- [paths]
    ```
+
 4. **Gate** -- the PATCH verification gate reports PASS only if the audit completes (leftovers found and deleted, or none found). A failure to run the audit is a gate FAIL.
 
 ### Hard Guard (cross-reference)
