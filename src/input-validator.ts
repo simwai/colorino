@@ -39,4 +39,23 @@ export class InputValidator {
 
     return ok(true)
   }
+
+  validateFileLoggingOptions(
+    options: ColorinoFileLoggingOptions
+  ): Result<boolean, InputValidationError> {
+    if (!options.path.trim()) {
+      return err(new InputValidationError('File logging path cannot be empty'))
+    }
+    if (options.maxBytes !== undefined && options.maxBytes <= 0) {
+      return err(
+        new InputValidationError('File logging maxBytes must be positive')
+      )
+    }
+    if (options.maxFiles !== undefined && options.maxFiles < 1) {
+      return err(
+        new InputValidationError('File logging maxFiles must be positive')
+      )
+    }
+    return ok(true)
+  }
 }
