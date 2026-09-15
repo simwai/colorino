@@ -56,6 +56,30 @@ describe('ColorinoFileLogger validation', () => {
     ).toThrow('File logging maxFiles must be positive')
   })
 
+  test('allows undefined maxBytes and maxFiles (use defaults)', () => {
+    expect(
+      () =>
+        new ColorinoFileLogger(
+          { path: join(directory, 'defaults.log') },
+          validator
+        )
+    ).not.toThrow()
+    expect(
+      () =>
+        new ColorinoFileLogger(
+          { path: join(directory, 'defaults2.log'), maxBytes: undefined },
+          validator
+        )
+    ).not.toThrow()
+    expect(
+      () =>
+        new ColorinoFileLogger(
+          { path: join(directory, 'defaults3.log'), maxFiles: undefined },
+          validator
+        )
+    ).not.toThrow()
+  })
+
   afterAll(() => {
     rmSync(directory, { recursive: true, force: true })
   })
