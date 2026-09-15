@@ -4,14 +4,14 @@ Persona system overview. Six personas, each with a defined role, ownership, and 
 
 ## Roles
 
-| Role | Owns | Terminal phase |
-|---|---|---|
+| Role                | Owns                                                                                 | Terminal phase                                                 |
+| ------------------- | ------------------------------------------------------------------------------------ | -------------------------------------------------------------- |
 | **BabaScrumMaster** | Goal intake, backlog, ICE prioritization, sprints, milestones, spec authoring (SPEC) | TASK_PLAN -> HANDOFF (SPEC, when in scope, exits to CHECKLIST) |
-| **BabaSensei** | Goal clarification, scope decisions, rewrite contracts | PLAN -> HANDOFF |
-| **BabaTester** | Regression risks, edge cases, evidence strength labels | REVIEW -> TEST_STRATEGY -> HANDOFF |
-| **BabaDev** | Implementation, patching, small local refactors | PATCH |
-| **BabaReviewer** | Hard/soft tier quality gate, merge verdicts, patch audit | REVIEW (may audit PATCH) |
-| **Process Master** | Phase ordering, checklist lifecycle, no-skip enforcement | embedded |
+| **BabaSensei**      | Goal clarification, scope decisions, rewrite contracts                               | PLAN -> HANDOFF                                                |
+| **BabaTester**      | Regression risks, edge cases, evidence strength labels                               | REVIEW -> TEST_STRATEGY -> HANDOFF                             |
+| **BabaDev**         | Implementation, patching, small local refactors                                      | PATCH                                                          |
+| **BabaReviewer**    | Hard/soft tier quality gate, merge verdicts, patch audit                             | REVIEW (may audit PATCH)                                       |
+| **Process Master**  | Phase ordering, checklist lifecycle, no-skip enforcement                             | embedded                                                       |
 
 ## Recommended session flow
 
@@ -69,29 +69,29 @@ A handoff is a structured transfer of session state from one persona to another.
 
 The handing-off persona must include the fields required by the receiver's entry phase.
 
-| Field | Required by | Description |
-|---|---|---|
-| `target` | All handoffs | File, module, or code region under review |
-| `accepted_violations` | BabaSensei -> BabaDev | Confirmed violation list with criterion IDs |
-| `excluded_violations` | BabaSensei -> BabaDev | Explicitly excluded findings with justification |
-| `preserve_constraints` | BabaSensei -> BabaDev | Constraints the patch must not break |
-| `logical_violations` | BabaSensei -> BabaDev | Confirmed logical violations with severity (blocking/advisory) |
-| `approved_plan` | BabaSensei -> BabaDev | Full PLAN phase output, approved by user |
-| `rewrite_contract` | BabaSensei -> BabaDev | Complete rewrite contract (target, preserve, eliminate, forbidden) |
-| `test_strategy` | BabaTester -> BabaDev | Full TEST_STRATEGY output |
-| `binding_items` | BabaTester -> BabaDev | List of findings classified as BINDING |
-| `strong_hints` | BabaTester -> BabaDev | List of findings classified as STRONG HINT |
-| `teaching_note` | BabaSensei only | One sentence the developer should carry forward |
-| `task_card` | BabaScrumMaster -> review persona | Full TASK_PLAN output |
-| `task_size` | BabaScrumMaster -> review persona | XS/S/M/L size label |
-| `ice_score` | BabaScrumMaster -> review persona | ICE rank of the task |
-| `milestone` | BabaScrumMaster -> review persona | Milestone tag the task serves |
-| `definition_of_done` | BabaScrumMaster -> review persona | Task definition-of-done list |
-| `spec_version` | Optional, any persona -> any persona | Spec version the work targets (n/a when no spec is in scope) |
-| `drift_findings` | DRIFT -> PLAN/BabaDev | Drift report findings carried forward (n/a when DRIFT did not run) |
-| `partial_handoff` | Optional, any persona -> any persona | Boolean indicating partial vs full handoff |
-| `pending_review_items` | Optional, any persona -> any persona | List of findings still under review |
-| `scope` | Optional, any persona -> any persona | `partial` or `full` |
+| Field                  | Required by                          | Description                                                        |
+| ---------------------- | ------------------------------------ | ------------------------------------------------------------------ |
+| `target`               | All handoffs                         | File, module, or code region under review                          |
+| `accepted_violations`  | BabaSensei -> BabaDev                | Confirmed violation list with criterion IDs                        |
+| `excluded_violations`  | BabaSensei -> BabaDev                | Explicitly excluded findings with justification                    |
+| `preserve_constraints` | BabaSensei -> BabaDev                | Constraints the patch must not break                               |
+| `logical_violations`   | BabaSensei -> BabaDev                | Confirmed logical violations with severity (blocking/advisory)     |
+| `approved_plan`        | BabaSensei -> BabaDev                | Full PLAN phase output, approved by user                           |
+| `rewrite_contract`     | BabaSensei -> BabaDev                | Complete rewrite contract (target, preserve, eliminate, forbidden) |
+| `test_strategy`        | BabaTester -> BabaDev                | Full TEST_STRATEGY output                                          |
+| `binding_items`        | BabaTester -> BabaDev                | List of findings classified as BINDING                             |
+| `strong_hints`         | BabaTester -> BabaDev                | List of findings classified as STRONG HINT                         |
+| `teaching_note`        | BabaSensei only                      | One sentence the developer should carry forward                    |
+| `task_card`            | BabaScrumMaster -> review persona    | Full TASK_PLAN output                                              |
+| `task_size`            | BabaScrumMaster -> review persona    | XS/S/M/L size label                                                |
+| `ice_score`            | BabaScrumMaster -> review persona    | ICE rank of the task                                               |
+| `milestone`            | BabaScrumMaster -> review persona    | Milestone tag the task serves                                      |
+| `definition_of_done`   | BabaScrumMaster -> review persona    | Task definition-of-done list                                       |
+| `spec_version`         | Optional, any persona -> any persona | Spec version the work targets (n/a when no spec is in scope)       |
+| `drift_findings`       | DRIFT -> PLAN/BabaDev                | Drift report findings carried forward (n/a when DRIFT did not run) |
+| `partial_handoff`      | Optional, any persona -> any persona | Boolean indicating partial vs full handoff                         |
+| `pending_review_items` | Optional, any persona -> any persona | List of findings still under review                                |
+| `scope`                | Optional, any persona -> any persona | `partial` or `full`                                                |
 
 ### Receiving-persona validation
 

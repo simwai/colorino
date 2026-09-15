@@ -56,13 +56,13 @@ Hard-tier (H1-H12) and soft-tier (S1-S20) review rubrics. Hard-tier items block 
 
 **S13 -- Over-engineering: unrequested abstractions or speculative genericity beyond what the change needs;** includes an interface with one implementation, a factory for one product, config for values that never change, and new dependencies when an existing one covers the need.
 
-**S14 -- Stepdown rule: a function's body mixes high-level orchestration with low-level operations.** Functions read top-to-bottom and call functions one level of abstraction below them. A function whose first line is a high-level call (`fetchUser()`) and whose next line is a low-level call (`parseJwt(token)`) without a named intermediate is a stepdown violation (Martin, *Clean Code* ch. 3 "One Level of Abstraction per Function" / ch. 11 "The Stepdown Rule").
+**S14 -- Stepdown rule: a function's body mixes high-level orchestration with low-level operations.** Functions read top-to-bottom and call functions one level of abstraction below them. A function whose first line is a high-level call (`fetchUser()`) and whose next line is a low-level call (`parseJwt(token)`) without a named intermediate is a stepdown violation (Martin, _Clean Code_ ch. 3 "One Level of Abstraction per Function" / ch. 11 "The Stepdown Rule").
 
-**S15 -- Newspaper order: a file does not read top-to-bottom from public API to private details.** A public function appears below the private helper it calls, or a related group of functions is split across the top and bottom of the file. Files read like a newspaper article: headline first, then increasingly fine detail (Martin, *Clean Code* ch. 5 / ch. 11 "The Newspaper Metaphor").
+**S15 -- Newspaper order: a file does not read top-to-bottom from public API to private details.** A public function appears below the private helper it calls, or a related group of functions is split across the top and bottom of the file. Files read like a newspaper article: headline first, then increasingly fine detail (Martin, _Clean Code_ ch. 5 / ch. 11 "The Newspaper Metaphor").
 
-**S16 -- Flag/output arguments: a function takes a boolean flag that selects between two behaviors, or a function mutates an argument passed by reference instead of returning a value.** Split the flag-argument function into two; return a value instead of mutating an output argument (Martin, *Clean Code* ch. 3 / ch. 8 "Function Arguments" -- Flag Arguments and Output Arguments).
+**S16 -- Flag/output arguments: a function takes a boolean flag that selects between two behaviors, or a function mutates an argument passed by reference instead of returning a value.** Split the flag-argument function into two; return a value instead of mutating an output argument (Martin, _Clean Code_ ch. 3 / ch. 8 "Function Arguments" -- Flag Arguments and Output Arguments).
 
-**S17 -- Tell, don't ask (Law of Demeter): a method reaches through another object to access its parts (`a.b.c.d`); the behavior belongs on the inner object.** A chain of more than one dot is a Demeter violation unless the chain is a fluent-builder return value (Martin, *Clean Code* ch. 6 / ch. 12 "Objects and Data Structures" -- The Law of Demeter).
+**S17 -- Tell, don't ask (Law of Demeter): a method reaches through another object to access its parts (`a.b.c.d`); the behavior belongs on the inner object.** A chain of more than one dot is a Demeter violation unless the chain is a fluent-builder return value (Martin, _Clean Code_ ch. 6 / ch. 12 "Objects and Data Structures" -- The Law of Demeter).
 
 **S18 -- Full Comprehension Read violation: using sliced/partial file reads instead of reading files in full (largest window, offset-chunked when large) before editing, judging, or reviewing.** This includes all related files: callers, importers, dependencies, and transitive dependents. Partial reads reduce accuracy and are prohibited per `00-system.md` `## Identity` `### Rules always in force` (Full Comprehension Read rule). **Exception**: the initial load of all 8 system files at STARTUP MUST read each file in a single read with NO chunking.
 
@@ -91,6 +91,7 @@ When logical correctness review is in scope, the L-series rubrics apply:
 - `L1-L10` -- Logical correctness: mathematical invariants (L1), boundary conditions (L2), state machines (L3), time-series integrity (L4), portfolio arithmetic (L5), statistical validity (L6), backtesting integrity (L7), risk/sizing logic (L8), metric correctness (L9), strategy logic (L10).
 
 Severity:
+
 - **Blocking**: L1-L10 findings that affect correctness, safety, financial outcomes, or data integrity are blocking (behave like H-tier: block PATCH until accepted or excluded with justification in the REVIEW decision section).
 - **Advisory**: L-tier findings in non-critical paths (logging, display formatting, non-validated display calculations, cosmetic state transitions) are advisory (behave like S-tier: flag and discuss, do not hard-block).
 

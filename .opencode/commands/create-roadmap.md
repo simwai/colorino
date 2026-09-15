@@ -36,9 +36,11 @@ phases:
 ---
 
 ## Description
+
 <description from $ARGUMENTS>
 
 ## Phases
+
 - **Backlog**: No items yet. Use /edit-roadmap to add items.
 - **Planned**: No items yet.
 - **In Progress**: No items yet.

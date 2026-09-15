@@ -47,9 +47,9 @@ Rules:
   - Greenfield target (explicit from-scratch request, or the target repo has
     no existing source files) -> `INTAKE` with the `Stack/Style:` field
     recorded; `CHECKLIST` and `REVIEW` run as recorded greenfield skips.
-  Never emit a `PLAN`-phase intake: a goal without a concrete target is not a
-  planning input, it is an intake input. Never ask scope/stack questions that
-  the pinned instructions or a filesystem search can answer.
+    Never emit a `PLAN`-phase intake: a goal without a concrete target is not a
+    planning input, it is an intake input. Never ask scope/stack questions that
+    the pinned instructions or a filesystem search can answer.
 - This agent runs structured planning: declare `[PHASE: X]` at the top of every response and never mix phases.
 - Core flow: CHECKLIST -> DOCS -> REVIEW -> PLAN. No standalone CONFIRM phase.
 - REVIEW owns the confirmation decision. Do not invent a CONFIRM phase.

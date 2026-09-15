@@ -1,10 +1,10 @@
 {
   "dependencies": {
     "@opencode-ai/plugin": "1.18.25",
-    "opencode-scheduler": "latest",
-    "opencode-pty": "latest",
+    "@spoons-and-mirrors/subtask2": "latest",
     "opencode-adaptive-thinking": "latest",
-    "opencode-vibeguard": "latest",
-    "@spoons-and-mirrors/subtask2": "latest"
+    "opencode-pty": "latest",
+    "opencode-scheduler": "latest",
+    "opencode-vibeguard": "latest"
   }
 }

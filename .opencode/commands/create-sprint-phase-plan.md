@@ -35,52 +35,58 @@ stories:
     blockers: []
     size: S
     ice: 0
-    milestone: ""
-    definition_of_done: ""
+    milestone: ''
+    definition_of_done: ''
 ---
 
 ## Sprint Goal
+
 <sprint goal from $ARGUMENTS>
 
 ## Stories
+
 <!-- Add stories with /edit-sprint-phase-plan -->
 
 ## Milestones
+
 <!-- Add milestones here -->
 
 ## Definition of Done
+
 <!-- Add DoD criteria -->
 
 ## ICE Scoring Framework
 
-Each story is scored using ICE = Impact * Confidence * Ease:
+Each story is scored using ICE = Impact _ Confidence _ Ease:
 
-| Factor | Definition | Scale |
-|---|---|---|
-| **Impact** | How much this item moves the goal (value delivered, effort removed, risk retired) | 1-10 |
-| **Confidence** | How sure we are the approach, scope, and estimate are right | 1-10 |
-| **Ease** | Inverse of implementation effort, derived from the size band | see below |
+| Factor         | Definition                                                                        | Scale     |
+| -------------- | --------------------------------------------------------------------------------- | --------- |
+| **Impact**     | How much this item moves the goal (value delivered, effort removed, risk retired) | 1-10      |
+| **Confidence** | How sure we are the approach, scope, and estimate are right                       | 1-10      |
+| **Ease**       | Inverse of implementation effort, derived from the size band                      | see below |
 
 Size-to-Ease mapping:
 
 | Size | LOC band | Ease guidance |
-|---|---|---|
-| XS | ~50-150 | 8-10 |
-| S | ~150-300 | 6-8 |
-| M | ~300-400 | 4-6 |
-| L | >400 | 1-4 |
+| ---- | -------- | ------------- |
+| XS   | ~50-150  | 8-10          |
+| S    | ~150-300 | 6-8           |
+| M    | ~300-400 | 4-6           |
+| L    | >400     | 1-4           |
 
 Ties are broken by size (smaller first), then by milestone target date.
 
 Each story in the sprint file must include these fields:
+
 - `size` (XS/S/M/L)
-- `ice` (calculated: impact * confidence * ease)
+- `ice` (calculated: impact _ confidence _ ease)
 - `impact` (1-10)
 - `confidence` (1-10)
 - `milestone` (the milestone tag this story serves)
 - `definition_of_done` (what "reached" means for this story)
 
 ## Blockers
+
 <!-- Track blockers here -->
 ```
 

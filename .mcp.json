@@ -1,12 +1,12 @@
 {
-    "mcpServers": {
+  "mcpServers": {
     "context7": {
-        "type": "http",
-        "url": "https://mcp.context7.com/mcp"
+      "type": "http",
+      "url": "https://mcp.context7.com/mcp"
     },
     "playwright": {
-        "command": "npx",
-        "args": ["-y", "@playwright/mcp@0.0.80"]
+      "command": "npx",
+      "args": ["-y", "@playwright/mcp@0.0.80"]
     }
-    }
+  }
 }

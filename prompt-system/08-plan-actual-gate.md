@@ -16,14 +16,14 @@ The approved plan's `Will change` list, persisted in the session's own state fil
 
 The `expect` field on each `Will change` item is one of:
 
-| Value          | Pass criterion                                 |
-| -------------- | ---------------------------------------------- |
-| `pass`         | exit code 0                                    |
-| `fail`         | exit code non-zero                             |
-| `exit:N`       | exit code exactly N                            |
-| `regex:<pat>`  | exit 0 and a regex match against stdout        |
-| `contains:` | exit 0 and the literal text appears in stdout  |
-| `silent`       | exit 0 AND stdout is empty AND stderr is empty |
+| Value         | Pass criterion                                 |
+| ------------- | ---------------------------------------------- |
+| `pass`        | exit code 0                                    |
+| `fail`        | exit code non-zero                             |
+| `exit:N`      | exit code exactly N                            |
+| `regex:<pat>` | exit 0 and a regex match against stdout        |
+| `contains:`   | exit 0 and the literal text appears in stdout  |
+| `silent`      | exit 0 AND stdout is empty AND stderr is empty |
 
 Any `expect` field that does not match one of the six shapes is recorded as `FAIL -- malformed expect: <field>` and the gate is RED. The plan author cannot pass garbage.
 

@@ -1,5 +1,5 @@
 ---
-description: "PLAN mode only. Applies hard and soft quality gates and confirms whether work may proceed to implementation."
+description: 'PLAN mode only. Applies hard and soft quality gates and confirms whether work may proceed to implementation.'
 mode: subagent
 permission:
   edit: deny

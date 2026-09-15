@@ -23,7 +23,7 @@ Then:
    - Parse stories and their statuses.
    - Count: total stories, done stories, in-progress stories, not-started stories.
    - Count tasks and blockers.
-   - Calculate completion percentage: done_stories / total_stories * 100.
+   - Calculate completion percentage: done_stories / total_stories \* 100.
    - Check ICE scores and note if any story is unsized.
 4. Emit a summary:
 

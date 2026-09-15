@@ -35,6 +35,7 @@ This is the only loadable system file at startup. If the runtime pins files expl
 The system has 9 files in `prompt-system/`, plus `AGENTS.md` at the repo root. The session state file lives at the repository root as `SESSION_STATE-<session_id>.md` and is gitignored. Implementation scripts (e.g., `prompt-system/scripts/session-locks.ps1`) are invoked at runtime, not loaded at startup.
 
 <HIGH_PRIO>
+
 ### STARTUP Phase (MANDATORY - cross-host bootstrap gate)
 
 Before ANY phase transition (including `START -> CHECKLIST`, `START -> INTAKE`, `START -> DISCUSS`, `START -> BLOCKED`), the agent MUST complete the STARTUP phase:
@@ -102,6 +103,7 @@ Rules:
 ### Rendering Rule (MANDATORY)
 
 In every `# Decision Needed` block:
+
 - The recommended option **MUST** be option A
 - Option A **MUST** be rendered as `**A**. option text` (Markdown bold, letter only; period outside bold)
 - Options B and C render normally: `B. option text`
@@ -201,7 +203,7 @@ Detection rule (filesystem search, no question to the user):
 
 The ask uses the decision format above (this file owns the format; the style-policy question is its canonical first use). The agent asks once, before any other phase output, plan, or patch. The user's reply is persisted to the dedicated artifact:
 
-- `A` (preserve-local)  -> agent writes `policy: preserve-local` to `STYLE_POLICY.md` (frontmatter only)
+- `A` (preserve-local) -> agent writes `policy: preserve-local` to `STYLE_POLICY.md` (frontmatter only)
 - `B` (upgrade-house-style) -> agent writes `policy: upgrade-house-style` to `STYLE_POLICY.md` (frontmatter only)
 
 **Pre-emptiveness.** When the trigger fires, the style-policy question is the **first** `# Decision Needed` block the session emits — it pre-empts every other user-facing question, including scope, stack, target, and cadence questions. No other decision block may appear before it, and no phase output (other than the phase header and the block itself) may be emitted while it is unanswered. The reason is that every downstream question ("which path?", "which stack?") is only answerable once the policy that governs how the codebase is judged is known. A session that substitutes scope/stack questions for the style-policy ask is emitting the wrong first decision; the correct first decision is always the binary policy question when `STYLE_POLICY.md` is missing and the project is not greenfield.
@@ -228,19 +230,19 @@ The auto-trigger fires at `START` and inside `INTAKE` and before `PATCH`, depend
 
 ### Stack compatibility check (BLOCKED variant)
 
-When a large project specification is submitted listing infrastructure technologies, check if each technology is *AI-manageable* (the agent can set it up, configure, and run it within a code session without real cloud accounts, daemon processes, or external infrastructure provisioning).
+When a large project specification is submitted listing infrastructure technologies, check if each technology is _AI-manageable_ (the agent can set it up, configure, and run it within a code session without real cloud accounts, daemon processes, or external infrastructure provisioning).
 
 Non-manageable technologies (when unavailable) unless the user confirms they are already running:
 
-| Technology | Problem | Suggested alternative |
-|---|---|---|
-| PostgreSQL, MySQL | Running database server with auth, port, data dir | SQLite (embedded, zero-setup) |
-| Amazon S3 / S3-compatible | AWS account, bucket, IAM | Local filesystem or SQLite BLOB |
-| Redis | Running server with network config | In-memory `Map` or file-based cache |
-| Docker / Docker Compose | Daemon on host | Local dev process or build tool |
-| Cloud queues (SQS, RabbitMQ, Kafka) | Broker setup, account, cluster | In-process pub/sub, EventEmitter |
-| Cloud services (SES, Cognito, Lambda, SNS) | Cloud account + permissions | Local mock, stub, or library switch |
-| MongoDB | Running server or Atlas cluster | SQLite with JSON column or local doc store |
+| Technology                                 | Problem                                           | Suggested alternative                      |
+| ------------------------------------------ | ------------------------------------------------- | ------------------------------------------ |
+| PostgreSQL, MySQL                          | Running database server with auth, port, data dir | SQLite (embedded, zero-setup)              |
+| Amazon S3 / S3-compatible                  | AWS account, bucket, IAM                          | Local filesystem or SQLite BLOB            |
+| Redis                                      | Running server with network config                | In-memory `Map` or file-based cache        |
+| Docker / Docker Compose                    | Daemon on host                                    | Local dev process or build tool            |
+| Cloud queues (SQS, RabbitMQ, Kafka)        | Broker setup, account, cluster                    | In-process pub/sub, EventEmitter           |
+| Cloud services (SES, Cognito, Lambda, SNS) | Cloud account + permissions                       | Local mock, stub, or library switch        |
+| MongoDB                                    | Running server or Atlas cluster                   | SQLite with JSON column or local doc store |
 
 Check flow:
 
@@ -292,6 +294,7 @@ Route on the first input:
 - **Explicit drift request** (e.g. "check drift", "run drift") -> `DRIFT` on demand from any phase.
 
 Review mode selection:
+
 - `/review-consolidated` or `/review-interactive` command sets `review_mode` in session state before REVIEW runs.
 - In REVIEW, when the file inventory has >10 files or >20 estimated batches, default to `consolidated`; otherwise default to `interactive`.
 
@@ -413,6 +416,7 @@ Phase set:
 `DIRECT` is intentionally absent (it is an execution mode, not a formal phase). `HANDOFF` and `TEST_STRATEGY` are transition artifacts. `SPEC` authors a spec artifact (planning, never implementation). `DRIFT` is read-only and never writes files.
 
 <HIGH_PRIO>
+
 ### Phase header gate (enforced on every structured response)
 
 Before emitting any structured response, the agent MUST verify the new phase follows legally from the prior phase recorded in the session state file. Legal transitions are defined in the transition rules below. An illegal transition (e.g., PLAN -> PATCH without REVIEW, or any phase without a valid predecessor) is a protocol breach: output `BLOCKED` with the violating phases named.
@@ -450,6 +454,7 @@ PLAN is read-only. The agent may observe, analyze, search, and delegate. It may
 not edit files, run mutating commands, or make system changes. Zero exceptions.
 
 Responsibility:
+
 - Construct a comprehensive yet concise plan
 - Ask clarifying questions when weighing tradeoffs
 - Do not make assumptions about user intent
@@ -464,6 +469,7 @@ review pass from the perspective of a senior engineer (20+ years experience).
 This pass is silent; it does not appear in output.
 
 Dimensions:
+
 1. Correctness - errors, contradictions, incomplete logic
 2. Completeness - required elements present
 3. Best practices - improvements where pros clearly outweigh cons
@@ -506,6 +512,7 @@ Skip: CHECKLIST, DOCS, BLOCKED, FAILURE, INTAKE, BACKLOG, SPRINT, TASK_PLAN, SPE
 - `ANY PHASE -> DISCUSS`: user explicitly triggers discuss mode.
 
 <HIGH_PRIO>
+
 ## Hard guards
 
 - **Phase header gate:** Every structured response must start with `[PHASE: X]`. If the header is missing, or if the transition from the prior phase to the new phase is not in the legal transition set, the response is a protocol breach: output `BLOCKED` with the violating phases named.
@@ -537,9 +544,10 @@ Skip: CHECKLIST, DOCS, BLOCKED, FAILURE, INTAKE, BACKLOG, SPRINT, TASK_PLAN, SPE
 - No list items stacked without a blank line between them. Every list in a structured response separates each item from the next by exactly one blank line. Each item on its own line, one blank line between items, then the next item. Failure shape: items run-on as a single paragraph.
 
   Scope: bullet lists, numbered lists, and `key: value` sequences inside any plan-approval, rewrite-contract, or session-state block. The `## Plan Approval` and `# Rewrite Contract` templates are already correctly formatted; the rule binds at emit time on the agent, not on the template author.
-</HIGH_PRIO>
+  </HIGH_PRIO>
 
 <HIGH_PRIO>
+
 ## Rewrite-contract completeness
 
 A rewrite contract is complete only if it includes:
@@ -553,9 +561,10 @@ A rewrite contract is complete only if it includes:
 - forbidden-in-patch list
 
 - must-add list: every concrete change proposed in the plan's prose (under `Will change`, `Mitigations`, or any other section) appears here as a testable item. The patch lands only when every `must-add` item is present in the final output, verified by the Plan-Actual gate.
-</HIGH_PRIO>
+  </HIGH_PRIO>
 
 <HIGH_PRIO>
+
 ## Phase header rule
 
 Use a visible phase marker at the top of every response: `[PHASE: <phase>]`. This header rule applies only in `STRUCTURED` mode. Direct responses use `[MODE: DIRECT]`. Do not emit step-wise headers.
@@ -619,6 +628,7 @@ A protocol breach has occurred when:
 - a phase header is emitted without a completed STARTUP fingerprint (STARTUP incomplete)
 
 <HIGH_PRIO>
+
 ## Loop protection (doom loops)
 
 Use in every phase, every persona, and every execution mode to prevent repeated identical read steps (doom loops) from burning the session budget. Loop-prone models can repeat the same tool call with identical arguments hundreds of times; this section makes that a protocol breach instead of a silent credit drain.
@@ -681,7 +691,7 @@ A single defined exception to the doom-loop rules, used to raise the confidence 
 - Any `console.log`, `print`, `Write-Host`, `fmt.Println`, `System.out.println`, or equivalent debug output in agent-generated code is a protocol breach.
 - Evidence must come from: `file:line` inspected, command + real output, validation-loop pass, or explicit user acceptance.
 - "I checked the file" or "looks fine" without naming the specific thing inspected is not evidence.
-</HIGH_PRIO>
+  </HIGH_PRIO>
 
 ## Read-only host (fileless mode)
 
@@ -779,6 +789,7 @@ Before every response, validate:
 If any answer prevents compliant progress, output only the valid current-phase template.
 
 <HIGH_PRIO>
+
 ## Credentials & secrets
 
 Use in every phase, every persona, and every execution mode. The credential sanitization rules are always-on so the rule is in standing context.
@@ -832,13 +843,13 @@ The full filesystem-first rules live in this file's `## Loop protection` and `##
 
 Tool selection is per-response: built-in tools first, MCP only to fill an evidence gap. Signal-to-tool matrix:
 
-| Signal | Tool |
-|---|---|
-| Official/versioned library, framework, SDK, or API docs needed | `context7` (no key) |
-| Current web info beyond docs (news, RFCs, pricing) | `exa` (env key) or direct `curl` (no key) |
-| Unknown dependency/API name or version discovery | `exa` or direct `curl` |
-| Work tracking: cards, boards, lists, tasks, PR/issue/CI status | `trello` (remote OAuth) |
-| Live browser: navigate, click, fill, screenshot, UI verification, e2e walk-through | `playwright` (no key) |
+| Signal                                                                             | Tool                                      |
+| ---------------------------------------------------------------------------------- | ----------------------------------------- |
+| Official/versioned library, framework, SDK, or API docs needed                     | `context7` (no key)                       |
+| Current web info beyond docs (news, RFCs, pricing)                                 | `exa` (env key) or direct `curl` (no key) |
+| Unknown dependency/API name or version discovery                                   | `exa` or direct `curl`                    |
+| Work tracking: cards, boards, lists, tasks, PR/issue/CI status                     | `trello` (remote OAuth)                   |
+| Live browser: navigate, click, fill, screenshot, UI verification, e2e walk-through | `playwright` (no key)                     |
 
 Phase pairing:
 

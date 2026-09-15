@@ -1,4 +1,4 @@
-# Dependencies
+﻿# Dependencies
 node_modules/
 pnpm-lock.yaml
 yarn.lock
@@ -98,3 +98,6 @@ out
 # Baba session state (never committed)
 SESSION_STATE-*.md
 SESSION_STATE.md
+.session-locks
+.session-locks/
+.playwright-mcp/

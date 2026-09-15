@@ -29,7 +29,7 @@ This is the one case where "defaults" are binding rather than advisory: a greenf
 
 ## Local-convention policy
 
-The decision between *preserve local convention* and *upgrade to house style* is a **per-project** choice, made once when the target project adopts the system. There is no per-file override.
+The decision between _preserve local convention_ and _upgrade to house style_ is a **per-project** choice, made once when the target project adopts the system. There is no per-file override.
 
 - The decision is recorded in the target project's `STYLE_POLICY.md` artifact. Once recorded, the bot **must not** modify that artifact.
 - If the artifact is missing or malformed in a target project, the bot runs the auto-trigger ask from `00-system.md` (which recommends `preserve-local` as option A) and proceeds with the result.
@@ -77,19 +77,19 @@ The ladder runs after full comprehension, never instead of it: read the task and
 
 ## Stepdown rule (S14)
 
-Functions read top-to-bottom. Each function calls functions one level of abstraction below it. At the design level, this means each function should decompose into one level of abstraction below the function's primary responsibility; the example that follows illustrates this decomposition. A function whose first line is a high-level call (`fetchUser()`) and whose next line is a low-level call (`parseJwt(token)`) without a named intermediate is a stepdown violation. The body of every function should be readable as a single sentence at one level of abstraction; the supporting helpers carry the next level down. (Martin, *Clean Code* ch. 3 "One Level of Abstraction per Function" / ch. 11 "The Stepdown Rule".)
+Functions read top-to-bottom. Each function calls functions one level of abstraction below it. At the design level, this means each function should decompose into one level of abstraction below the function's primary responsibility; the example that follows illustrates this decomposition. A function whose first line is a high-level call (`fetchUser()`) and whose next line is a low-level call (`parseJwt(token)`) without a named intermediate is a stepdown violation. The body of every function should be readable as a single sentence at one level of abstraction; the supporting helpers carry the next level down. (Martin, _Clean Code_ ch. 3 "One Level of Abstraction per Function" / ch. 11 "The Stepdown Rule".)
 
 ## Newspaper order (S15)
 
-A file reads like a newspaper article: headline first, then increasingly fine-grained detail as you scroll. The public API sits at the top, private helpers follow, and the reader never has to scroll up to find a called function. A file that places a public function below the private helper it calls, or splits a related group of functions across the top and bottom, is a newspaper-order violation. (Martin, *Clean Code* ch. 5 "The Purpose of Formatting" / ch. 11 "The Newspaper Metaphor".)
+A file reads like a newspaper article: headline first, then increasingly fine-grained detail as you scroll. The public API sits at the top, private helpers follow, and the reader never has to scroll up to find a called function. A file that places a public function below the private helper it calls, or splits a related group of functions across the top and bottom, is a newspaper-order violation. (Martin, _Clean Code_ ch. 5 "The Purpose of Formatting" / ch. 11 "The Newspaper Metaphor".)
 
 ## Flag arguments and output arguments (S16)
 
-A boolean flag argument almost always means the function does two things; split it. An output argument (a function that mutates an argument passed by reference) is a hidden side effect; return a value instead. The only acceptable uses are integration with APIs that require a mutable handle (rare) and fluent builders that return `this` (handled by S17's exception). (Martin, *Clean Code* ch. 3 / ch. 8 "Function Arguments" - Flag Arguments and Output Arguments.)
+A boolean flag argument almost always means the function does two things; split it. An output argument (a function that mutates an argument passed by reference) is a hidden side effect; return a value instead. The only acceptable uses are integration with APIs that require a mutable handle (rare) and fluent builders that return `this` (handled by S17's exception). (Martin, _Clean Code_ ch. 3 / ch. 8 "Function Arguments" - Flag Arguments and Output Arguments.)
 
 ## Tell, don't ask - Law of Demeter (S17)
 
-A method should not reach through another object to access its parts. `customer.wallet.balance.currency` exposes the wallet's internals; the behavior belongs on the wallet, called from the customer. Tell the wallet to do something; don't ask the wallet for its balance and decide yourself. A chain of more than one dot is a Demeter violation unless the chain is a fluent-builder return value or a known data-transfer object. (Martin, *Clean Code* ch. 6 / ch. 12 "Objects and Data Structures".)
+A method should not reach through another object to access its parts. `customer.wallet.balance.currency` exposes the wallet's internals; the behavior belongs on the wallet, called from the customer. Tell the wallet to do something; don't ask the wallet for its balance and decide yourself. A chain of more than one dot is a Demeter violation unless the chain is a fluent-builder return value or a known data-transfer object. (Martin, _Clean Code_ ch. 6 / ch. 12 "Objects and Data Structures".)
 
 ## Minimal verification floor
 
@@ -109,7 +109,7 @@ A method should not reach through another object to access its parts. `customer.
 
 ## Comments
 
-*Reference: Robert C. Martin, Clean Code -- chapter 4 (1st ed., 2008) / chapter 5 (2nd ed., 2025). The categories below are Martin's, with stack-specific markers added on top.*
+_Reference: Robert C. Martin, Clean Code -- chapter 4 (1st ed., 2008) / chapter 5 (2nd ed., 2025). The categories below are Martin's, with stack-specific markers added on top._
 
 **Content over prefix.** The rule is what the comment says, not what character starts it. Prefix follows the language (`//` in TS/JS/Java/Pine, `#` in Python/PowerShell/Bash, `--` in SQL/Lua/Haskell -- automatic, not policed here). Stack sections do not re-state the prefix; this is the only place the prefix is mentioned.
 
@@ -153,14 +153,14 @@ Deliberate simplifications that cut a real corner with a known ceiling (global l
 
 ## Naming
 
-Names must reveal intent, usage, and role. Reference: Robert C. Martin, *Clean Code* chapter 2 (1st ed., 2008) / chapter 4 (2nd ed., 2025) -- "Meaningful Names." Apply the rules there as the house style. The project-specific markers that follow are how this system names the same ideas: classes are nouns (`UserService`); functions are verbs (`calculateTotal`); booleans read like facts (`isAdmin`, `hasPermission`, `canRetry`); in TypeScript class code, prefer underscore-prefixed private fields as a default house style.
+Names must reveal intent, usage, and role. Reference: Robert C. Martin, _Clean Code_ chapter 2 (1st ed., 2008) / chapter 4 (2nd ed., 2025) -- "Meaningful Names." Apply the rules there as the house style. The project-specific markers that follow are how this system names the same ideas: classes are nouns (`UserService`); functions are verbs (`calculateTotal`); booleans read like facts (`isAdmin`, `hasPermission`, `canRetry`); in TypeScript class code, prefer underscore-prefixed private fields as a default house style.
 
 ## File naming
 
 - Name every file after its primary concept or export; a file exporting several unrelated helpers should split.
 - Default to kebab-case filenames unless the stack section says otherwise: `user-service.ts`, `pre-commit-config.yaml`, `architecture.md`. This matches this repository's own system and doc naming.
 - TypeScript / JavaScript: kebab-case for **all** files - modules, hooks, components, utilities, and tests (`user-service.ts`, `use-user-profile.ts`, `user-profile.tsx`, `user-repository.ts`, `user-service.test.ts`). PascalCase governs identifiers inside a file (the exported component/class name), not the filename.
-- Python: snake_case modules per PEP 8 (`user_service.py`); tests use the `test_` prefix (`test_user_service.py`).
+- Python: snake*case modules per PEP 8 (`user_service.py`); tests use the `test*` prefix (`test_user_service.py`).
 - Java: PascalCase class files matching the public class name per Google Java Style (`UserService.java`); tests use `*Test.java` / `*IT.java`.
 - Frontend: kebab-case filenames for components and everything else (Vue SFCs `user-profile.vue`, React `user-profile.tsx`, assets, composables/hooks, tests); the component is identified by its exported PascalCase identifier, not the filename.
 - Avoid file names that differ only by case (`user-service.ts` vs `UserService.ts`); they collide on case-insensitive filesystems and break cross-platform checkouts.
@@ -182,23 +182,23 @@ Names must reveal intent, usage, and role. Reference: Robert C. Martin, *Clean C
 
 ### Catppuccin Mocha
 
-| Level | Color | Hex | ANSI 256 |
-|---|---|---|---|
-| ERROR | Red | #f38ba8 | 203 |
-| WARN | Peach / Yellow | #fab387 / #f9e2af | 215 / 221 |
-| INFO | Sapphire / Blue | #74c7ec / #89b4fa | 81 / 110 |
-| DEBUG | Lavender | #b4befe | 183 |
-| TRACE | Overlay1 / Surface2 | #7f849c / #585b70 | 102 / 59 |
+| Level | Color               | Hex               | ANSI 256  |
+| ----- | ------------------- | ----------------- | --------- |
+| ERROR | Red                 | #f38ba8           | 203       |
+| WARN  | Peach / Yellow      | #fab387 / #f9e2af | 215 / 221 |
+| INFO  | Sapphire / Blue     | #74c7ec / #89b4fa | 81 / 110  |
+| DEBUG | Lavender            | #b4befe           | 183       |
+| TRACE | Overlay1 / Surface2 | #7f849c / #585b70 | 102 / 59  |
 
 ### Dracula
 
-| Level | Color | Hex | ANSI 256 |
-|---|---|---|---|
-| ERROR | Red | #ff5555 | 203 |
-| WARN | Orange / Yellow | #ffb86c / #f1fa8c | 215 / 221 |
-| INFO | Cyan / Green | #8be9fd / #50fa7b | 81 / 119 |
-| DEBUG | Purple | #bd93f9 | 141 |
-| TRACE | Comment (dim) | #6272a4 | 60 |
+| Level | Color           | Hex               | ANSI 256  |
+| ----- | --------------- | ----------------- | --------- |
+| ERROR | Red             | #ff5555           | 203       |
+| WARN  | Orange / Yellow | #ffb86c / #f1fa8c | 215 / 221 |
+| INFO  | Cyan / Green    | #8be9fd / #50fa7b | 81 / 119  |
+| DEBUG | Purple          | #bd93f9           | 141       |
+| TRACE | Comment (dim)   | #6272a4           | 60        |
 
 - Logging still follows H1 (no secrets), H7 (no untrusted stack traces or internal paths), and S8 (no missing, excessive, or misleading statements).
 
@@ -272,7 +272,7 @@ The defaults above are a floor, not a ceiling. They never replace the per-edit l
 - PDM scripts defined under `[tool.pdm.scripts]`:
   - `lint` - `ruff check src`
   - `format` - `ruff format src`
-  - `typecheck` - `pyrefly check`  (only if pyrefly is a declared dependency in `pyproject.toml`)
+  - `typecheck` - `pyrefly check` (only if pyrefly is a declared dependency in `pyproject.toml`)
   - `test` - `pytest`
   - `dev` - `python -m src.index`
 - Checks run through the detected runner regardless of tool: `lint` (`ruff check src`), `format` (`ruff format src`), `typecheck` (`pyrefly check` — **only if pyrefly is a declared dependency** in `pyproject.toml` under `[project].dependencies` or `[project].optional-dependencies`), `test` (`pytest`) - e.g., `pdm run test`, `poetry run pytest`, `uv run pytest`, or `<venv>\Scripts\python.exe -m pytest` for a bare venv.
@@ -304,6 +304,7 @@ The defaults above are a floor, not a ceiling. They never replace the per-edit l
   - **No `.map()`, `.and_then()`, `.or_else()`, `.inspect()`, `.match()` method chaining allowed.**
   - `.unwrap()` / `.unwrap_or()` only at boundary points where exiting the Result pattern into exception land.
   - Do not mix `rustico` with another result library in the same project.
+
 - Preferred typed library stack (fully typed, reduce manual code):
   - Validation/models: **Pydantic v2** for API boundaries; `@dataclass(slots=True)` for internal data.
   - HTTP: **httpx** (fully typed, async).

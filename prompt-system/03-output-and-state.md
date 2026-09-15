@@ -247,6 +247,7 @@ Verdict: Pending
 ```
 
 Tick semantics: Two checkbox types exist in CHECKLIST:
+
 - **Inventory rows**: `[x]` = item recorded in inventory with status. Status field flips (`pending` -> `reviewed`, `reviewing` -> `complete`) inside REVIEW, never inside CHECKLIST. A `[x]` on inventory row with status `pending` is the expected checklist state.
 - **Hard/soft-tier lines**: `[x]` = coverage decision (in scope / out of scope), decided at checklist time. These do not flip during REVIEW.
 
@@ -285,7 +286,7 @@ Allowed next move:
 
 ## `DOCS` template
 
-```txt
+````txt
 [PHASE: DOCS]
 
 # Docs Evidence
@@ -419,7 +420,7 @@ Next batch:
 
 Sections omitted (when applicable):
 - [Cross-team requirements / Validation loop / Open questions / Informational / Confirmed Items / Pending Review Items / Partial Handoff Available / Plan Draft -- list the omitted sections and why]
-```
+````
 
 REVIEW owns confirmation. There is no standalone CONFIRM phase.
 
@@ -492,14 +493,16 @@ Awaiting:
 These templates auto-populate `Will change` items from REVIEW findings. They are starting points; the user may edit any field in PLAN.
 
 ### H2 -- Injection
+
 - id: [finding_id]
   change: Replace [string concatenation/raw query] with parameterized query using [library]
-  verify: rg "SELECT.*\+" [file] || rg "query\(.*\+" [file]
+  verify: rg "SELECT._\+" [file] || rg "query\(._\+" [file]
   expect: silent
   verify: rg "prepareStatement|parameterized|bindParam" [file]
   expect: pass
 
 ### S4 -- Duplication
+
 - id: [finding_id]
   change: Extract repeated logic from lines [X-Y] into [function name] in [file]
   verify: [detect duplication pattern]
@@ -508,6 +511,7 @@ These templates auto-populate `Will change` items from REVIEW findings. They are
   expect: pass
 
 ### H12 -- Idiom consistency
+
 - id: [finding_id]
   change: Refactor lines [X-Y] to use [dominant idiom] consistent with file pattern
   verify: [detect non-conforming pattern]
@@ -670,11 +674,11 @@ style_policy_source: [STYLE_POLICY.md artifact|INTAKE Stack/Style field|SKIPPED:
 style_policy_resolved: [yes|no]
 startup_verified: [true|false]
 startup_fingerprint:
-  line_count: [number]
-  first_100_chars: "[string]"
-  last_100_chars: "[string]"
-  sha256_first_1kb: "[hash or N/A]"
-  verified_at: [ISO-8601 UTC]
+line_count: [number]
+first_100_chars: "[string]"
+last_100_chars: "[string]"
+sha256_first_1kb: "[hash or N/A]"
+verified_at: [ISO-8601 UTC]
 
 ## Startup Verification
 
