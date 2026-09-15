@@ -8,6 +8,7 @@ import {
 } from 'node:fs'
 import { dirname } from 'node:path'
 import type { ColorinoFileLoggingOptions } from './interfaces.js'
+import { InputValidator } from './input-validator.js'
 
 const ansiPattern = new RegExp(
   `${String.fromCharCode(27)}\\[[0-?]*[ -/]*[@-~]`,
@@ -21,18 +22,15 @@ export class ColorinoFileLogger {
   private readonly stripAnsi: boolean
   private readonly timezone: string | undefined
 
-  constructor(options: ColorinoFileLoggingOptions) {
+  constructor(options: ColorinoFileLoggingOptions, validator: InputValidator) {
+    const validationResult = validator.validateFileLoggingOptions(options)
+    if (validationResult.isErr()) throw validationResult.error
+
     this.path = options.path
     this.maxBytes = options.maxBytes ?? 10 * 1024 * 1024
     this.maxFiles = options.maxFiles ?? 5
     this.stripAnsi = options.stripAnsi ?? true
     this.timezone = options.timezone === 'local' ? undefined : options.timezone
-
-    if (!this.path.trim()) throw new Error('File logging path cannot be empty')
-    if (this.maxBytes <= 0)
-      throw new Error('File logging maxBytes must be positive')
-    if (this.maxFiles < 1)
-      throw new Error('File logging maxFiles must be positive')
 
     mkdirSync(dirname(this.path), { recursive: true })
   }

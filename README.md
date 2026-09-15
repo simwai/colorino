@@ -190,6 +190,9 @@ const logger = createColorino(
 )
 ```
 
+Invalid `fileLogging` options throw `InputValidationError` at creation time:
+`path` must be non-empty, `maxBytes` must be positive, and `maxFiles` must be at least `1`.
+
 Log levels follow a strict severity order (`trace < debug < log < info < warn < error`). Set the `level` option to a minimum threshold and everything below it is suppressed, in both the console and the file logger. Change the threshold at runtime with `setLevel()` and read it back with `getLevel()`:
 
 ```typescript

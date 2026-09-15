@@ -1,6 +1,7 @@
 import { ok, err, Result } from 'neverthrow'
 import { InputValidationError } from './errors.js'
 import type { Palette } from './types.js'
+import type { ColorinoFileLoggingOptions } from './interfaces.js'
 import { TypeValidator } from './type-validator.js'
 
 export class InputValidator {
@@ -37,6 +38,25 @@ export class InputValidator {
     )
     if (!TypeValidator.isLogLevel(level)) return err(inputValidationError)
 
+    return ok(true)
+  }
+
+  validateFileLoggingOptions(
+    options: ColorinoFileLoggingOptions
+  ): Result<boolean, InputValidationError> {
+    if (!options.path.trim()) {
+      return err(new InputValidationError('File logging path cannot be empty'))
+    }
+    if (options.maxBytes <= 0) {
+      return err(
+        new InputValidationError('File logging maxBytes must be positive')
+      )
+    }
+    if (options.maxFiles < 1) {
+      return err(
+        new InputValidationError('File logging maxFiles must be positive')
+      )
+    }
     return ok(true)
   }
 }

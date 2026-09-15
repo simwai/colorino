@@ -23,7 +23,7 @@ export class ColorinoNode
   ) {
     super(initialPalette, userPalette, validator, colorLevel, options)
     this.fileLogger = options.fileLogging
-      ? new ColorinoFileLogger(options.fileLogging)
+      ? new ColorinoFileLogger(options.fileLogging, validator)
       : undefined
   }
 
