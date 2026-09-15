@@ -47,12 +47,12 @@ export class InputValidator {
     if (!options.path.trim()) {
       return err(new InputValidationError('File logging path cannot be empty'))
     }
-    if (options.maxBytes !== undefined && options.maxBytes <= 0) {
+    if (options.maxBytes <= 0) {
       return err(
         new InputValidationError('File logging maxBytes must be positive')
       )
     }
-    if (options.maxFiles !== undefined && options.maxFiles < 1) {
+    if (options.maxFiles < 1) {
       return err(
         new InputValidationError('File logging maxFiles must be positive')
       )
