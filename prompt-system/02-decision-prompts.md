@@ -47,7 +47,6 @@ Rules:
 ## Rendering Rule (MANDATORY)
 
 In every `# Decision Needed` block:
-
 - The recommended option **MUST** be option A
 - Option A **MUST** be rendered as `**A**. option text` (Markdown bold, letter only; period outside bold)
 - Options B and C render normally: `B. option text`
@@ -147,7 +146,7 @@ Detection rule (filesystem search, no question to the user):
 
 The ask uses the decision format above (this file owns the format; the style-policy question is its canonical first use). The agent asks once, before any other phase output, plan, or patch. The user's reply is persisted to the dedicated artifact:
 
-- `A` (preserve-local) -> agent writes `policy: preserve-local` to `STYLE_POLICY.md` (frontmatter only)
+- `A` (preserve-local)  -> agent writes `policy: preserve-local` to `STYLE_POLICY.md` (frontmatter only)
 - `B` (upgrade-house-style) -> agent writes `policy: upgrade-house-style` to `STYLE_POLICY.md` (frontmatter only)
 
 **Pre-emptiveness.** When the trigger fires, the style-policy question is the **first** `# Decision Needed` block the session emits -- it pre-empts every other user-facing question, including scope, stack, target, and cadence questions. No other decision block may appear before it, and no phase output (other than the phase header and the block itself) may be emitted while it is unanswered. The reason is that every downstream question ("which path?", "which stack?") is only answerable once the policy that governs how the codebase is judged is known. A session that substitutes scope/stack questions for the style-policy ask is emitting the wrong first decision; the correct first decision is always the binary policy question when `STYLE_POLICY.md` is missing and the project is not greenfield.
@@ -174,19 +173,19 @@ The auto-trigger fires at `START` and inside `INTAKE` and before `PATCH`, depend
 
 ## Stack compatibility check (BLOCKED variant)
 
-When a large project specification is submitted listing infrastructure technologies, check if each technology is _AI-manageable_ (the agent can set it up, configure, and run it within a code session without real cloud accounts, daemon processes, or external infrastructure provisioning).
+When a large project specification is submitted listing infrastructure technologies, check if each technology is *AI-manageable* (the agent can set it up, configure, and run it within a code session without real cloud accounts, daemon processes, or external infrastructure provisioning).
 
 Non-manageable technologies (when unavailable) unless the user confirms they are already running:
 
-| Technology                                 | Problem                                           | Suggested alternative                      |
-| ------------------------------------------ | ------------------------------------------------- | ------------------------------------------ |
-| PostgreSQL, MySQL                          | Running database server with auth, port, data dir | SQLite (embedded, zero-setup)              |
-| Amazon S3 / S3-compatible                  | AWS account, bucket, IAM                          | Local filesystem or SQLite BLOB            |
-| Redis                                      | Running server with network config                | In-memory `Map` or file-based cache        |
-| Docker / Docker Compose                    | Daemon on host                                    | Local dev process or build tool            |
-| Cloud queues (SQS, RabbitMQ, Kafka)        | Broker setup, account, cluster                    | In-process pub/sub, EventEmitter           |
-| Cloud services (SES, Cognito, Lambda, SNS) | Cloud account + permissions                       | Local mock, stub, or library switch        |
-| MongoDB                                    | Running server or Atlas cluster                   | SQLite with JSON column or local doc store |
+| Technology | Problem | Suggested alternative |
+|---|---|---|
+| PostgreSQL, MySQL | Running database server with auth, port, data dir | SQLite (embedded, zero-setup) |
+| Amazon S3 / S3-compatible | AWS account, bucket, IAM | Local filesystem or SQLite BLOB |
+| Redis | Running server with network config | In-memory `Map` or file-based cache |
+| Docker / Docker Compose | Daemon on host | Local dev process or build tool |
+| Cloud queues (SQS, RabbitMQ, Kafka) | Broker setup, account, cluster | In-process pub/sub, EventEmitter |
+| Cloud services (SES, Cognito, Lambda, SNS) | Cloud account + permissions | Local mock, stub, or library switch |
+| MongoDB | Running server or Atlas cluster | SQLite with JSON column or local doc store |
 
 Check flow:
 

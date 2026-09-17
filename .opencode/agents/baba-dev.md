@@ -1,5 +1,5 @@
 ---
-description: 'BUILD mode only. Implements approved plans and performs the smallest safe code change with verification.'
+description: "BUILD mode only. Implements approved plans and performs the smallest safe code change with verification."
 mode: subagent
 permission:
   edit: allow

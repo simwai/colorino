@@ -40,7 +40,6 @@ Before ANY phase transition (including `START -> CHECKLIST`, `START -> INTAKE`, 
 ## Host-Specific Notes
 
 ### opencode
-
 - **Auto-enforced** by the `startup-gate` plugin (`.opencode/plugins/startup-gate.ts`)
 - Plugin hooks `session.created`, injects fingerprint requirement into system prompt
 - Blocks `chat.message` until valid fingerprint received
@@ -48,17 +47,14 @@ Before ANY phase transition (including `START -> CHECKLIST`, `START -> INTAKE`, 
 - **You do not need to manually emit fingerprint on opencode** — the plugin handles it
 
 ### Cursor
-
 - **Auto-enforced** by `.cursor/rules/bootstrap.mdc` with `alwaysApply: true`
 - Rule injects fingerprint requirement into every session automatically
 
 ### Claude Code
-
 - Run `/bootstrap` command (auto-attaches 00-system.md) OR
 - Follow this BOOTSTRAP.md manually (imported by CLAUDE.md)
 
 ### Codex / Other hosts
-
 - **Manual compliance required** — follow this BOOTSTRAP.md exactly
 - AGENTS.md imports this file as `@BOOTSTRAP.md` — read it first
 - No phase output until fingerprint emitted
@@ -68,7 +64,6 @@ Before ANY phase transition (including `START -> CHECKLIST`, `START -> INTAKE`, 
 ## Verification Checklist
 
 After emitting fingerprint, confirm:
-
 - [ ] 00-system.md read in full (single read)
 - [ ] Fingerprint emitted in exact format above
 - [ ] All 7 other system files loaded (full, no chunking)
@@ -86,7 +81,6 @@ After emitting fingerprint, confirm:
 
 ```markdown
 ## Startup Verification
-
 00-system.md: [cited rule] — fingerprint: <line_count> lines, first_100_chars="<first 100 chars>", last_100_chars="<last 100 chars>", sha256_first_1kb="<hash or N/A>"
 01-personas.md: [cited rule]
 03-output-and-state.md: [cited rule]

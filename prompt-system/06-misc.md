@@ -3,10 +3,12 @@
 Operational protocol: PATCH behavior, commit/push gate. Cross-cutting protocol details (artifacts, pre-commit, cross-team, app lifecycle, library selection, session file locks, spec lifecycle, drift, discuss, scrum) live in `07-protocols.md`.
 
 <HIGH_PRIO>
-
 ## PATCH protocol
 
 Prerequisites: explicit user plan approval; complete rewrite contract.
+
+<MUST>Explicit user plan approval is required before PATCH.</MUST>
+<MUST>Complete rewrite contract is required before PATCH.</MUST>
 
 Rewrite contract fields (all required):
 
@@ -15,6 +17,11 @@ Rewrite contract fields (all required):
 - Must preserve: list of constraints
 - Must eliminate: list of confirmed violations
 - Forbidden in patch: tokens, patterns, or constructs that must not appear
+- Must use: [from System constraints - system populated]
+- Must route through: [from System constraints - system populated]
+- Must not duplicate: [from System constraints - system populated]
+- Must use available library: [from System constraints - system populated]
+- Must follow layer: [from System constraints - system populated]
 
 Patch rules:
 
@@ -31,7 +38,8 @@ If a library, driver, or SDK appears to mislead during PATCH (unexpected error s
 
 ### Per-edit lint gate
 
-Before each file edit sequence, confirm the applicable defaults from `05-impl-style.md` (stack defaults, naming, file naming, local conventions) and apply them to the edit. Lock acquisition MUST complete before this gate runs for the first write to the file; lint auto-fixes that occur before lock acquisition are a protocol breach. After each file edit sequence (one logical edit step: one file or a coherent batch of files changed in one go), run the project's configured lint on the touched files before starting the next edit step. Follow the order from `07-protocols.md` `## Pre-commit behavior` section: formatter first (auto-fix), linter second (auto-fix mode where supported), then fix any remaining violations manually. When `.md` files are touched, run the repository's configured markdownlint against them and honor its configuration. Re-run lint after manual fixes. A step may not conclude with outstanding auto-fixable issues.
+<MUST>Lock acquisition MUST complete before this gate runs for the first write to the file; lint auto-fixes that occur before lock acquisition are a protocol breach.</MUST>
+Before each file edit sequence, confirm the applicable defaults from `05-impl-style.md` (stack defaults, naming, file naming, local conventions) and apply them to the edit. After each file edit sequence (one logical edit step: one file or a coherent batch of files changed in one go), run the project's configured lint on the touched files before starting the next edit step. Follow the order from `07-protocols.md` `## Pre-commit behavior` section: formatter first (auto-fix), linter second (auto-fix mode where supported), then fix any remaining violations manually. When `.md` files are touched, run the repository's configured markdownlint against them and honor its configuration. Re-run lint after manual fixes. A step may not conclude with outstanding auto-fixable issues.
 
 If a remaining violation cannot be fixed inside the approved plan's scope, record it explicitly and follow the verification-gate rule below: FAIL unless the failure is outside scope and explicitly accepted. Record the exact command and its real output per step in the session's own state file; never record an assumed-clean pass. If no lint command exists, record SKIPPED with the reason.
 
@@ -39,6 +47,7 @@ At the same recording step, append each edited path to the session's own state f
 
 ### Bug-fix regression protocol
 
+<MUST>For each confirmed bug, the patch must record a missed-coverage root cause, add a regression test, run baseline verification (expected FAIL), and run post-fix verification (expected PASS).</MUST>
 A confirmed bug entering PATCH triggers this protocol. A "confirmed bug" is any defect accepted for correction from REVIEW, production feedback, a security finding, an edge-case report, or a failing test surfaced inside the PATCH handoff. The protocol is canonical here; persona obligations in `01-personas.md` and template rows in `03-output-and-state.md` are specializations and must not duplicate this text.
 
 For each confirmed bug, the patch must, in order:
@@ -52,14 +61,59 @@ A green pre-existing suite is never proof that a confirmed bug is covered. A ful
 
 ### Compliance audit
 
-After every patch, emit a compliance audit section. For each must-preserve item: PASS or FAIL. For each must-eliminate item: PASS or FAIL. For each forbidden token: PASS or FAIL. If any audit item is FAIL, do not emit the patch. Return to PLAN phase.
+<MUST>After every patch, emit a compliance audit section. For each must-preserve item: PASS or FAIL. For each must-eliminate item: PASS or FAIL. For each forbidden token: PASS or FAIL. If any audit item is FAIL, do not emit the patch. Return to PLAN phase.</MUST>
+
+### Constraint verification
+
+<MUST>After the compliance audit, verify all system-derived constraints mechanically. This is a non-negotiable gate; a single FAIL returns to PLAN.</MUST>
+
+For each item in `Must use`:
+- verify: `rg "<module.method>" <target_file>`
+- expect: `pass` (exit 0, match found)
+- Record: PASS or FAIL with sanitized rg output
+
+For each item in `Must route through`:
+- verify: `rg "<owner_module>" <target_file>`
+- expect: `pass` (exit 0, match found)
+- Record: PASS or FAIL with sanitized rg output
+
+For each item in `Must not duplicate`:
+- verify: `rg "<pattern>" <target_file>`
+- expect: `silent` (exit 0, no matches)
+- Record: PASS or FAIL with sanitized rg output
+
+For each item in `Must use available library`:
+- verify: `rg "<library_usage>" <target_file>`
+- expect: `pass` (exit 0, match found)
+- Record: PASS or FAIL with sanitized rg output
+
+For each item in `Must follow layer`:
+- verify: `rg "<forbidden_pattern>" <target_file>`
+- expect: `silent` (exit 0, no matches)
+- Record: PASS or FAIL with sanitized rg output
+
+Gate result: ALL PASS required. Any FAIL -> return to PLAN with specific constraint violation.
+
+### Self-review verification
+
+<MUST>After the constraint verification, verify the agent's self-review claims from the PATCH template. This is a non-negotiable gate; a single FALSE claim returns to PLAN.</MUST>
+
+For each item in `## Self-Review`:
+- Agent claimed: [PASS|FAIL]
+- System verification: [PASS|FAIL]
+- Evidence: [rg command output or "n/a"]
+- Result: [TRUE|FALSE]
+
+<MUST>Gate result: ALL TRUE required. Any FALSE -> return to PLAN with specific self-review violation.</MUST>
+
 </HIGH_PRIO>
 
 <HIGH_PRIO>
+!!!
 
-### Verification gate
+## Verification gate
 
-After a successful compliance audit, inspect the resulting diff. Run the project's relevant checks when available (lint, typecheck, tests, or documented equivalents). The Playwright smoke is the functional verification and runs once inside the commit gate, after this gate passes; it is referenced here, not executed here; its PASS|FAIL|SKIPPED outcome is recorded in the gate outcome and the session's own state file. When `.md` files are created or changed, run the project's configured Markdown lint check against them when available and honor the repository configuration. Do not invent commands. If none exist, record SKIPPED with reason. Write verification results to the PATCH template and the session's own state file. If a required check fails, report FAIL and return to PLAN unless the failure is outside scope and explicitly accepted.
+<MUST>After a successful compliance audit, inspect the resulting diff. Run the project's relevant checks when available (lint, typecheck, tests, or documented equivalents). The Playwright smoke is the functional verification and runs once inside the commit gate, after this gate passes; it is referenced here, not executed here; its PASS|FAIL|SKIPPED outcome is recorded in the gate outcome and the session's own state file. When `.md` files are created or changed, run the project's configured Markdown lint check against them when available and honor the repository configuration. Do not invent commands. If none exist, record SKIPPED with reason. Write verification results to the PATCH template and the session's own state file. If a required check fails, report FAIL and return to PLAN unless the failure is outside scope and explicitly accepted.</MUST>
 
 For partial-scope patches, the verification gate checks only the scoped items. Pending review items are not verified and remain untouched in the working tree.
 
@@ -68,7 +122,8 @@ When the patch contains a confirmed bug, the verification gate runs two extra ro
 - **Regression baseline (expected FAIL):** PASS|FAIL/SKIPPED -- <command or n/a> -- <note or SKIPPED reason>.
 - **Regression post-fix (expected PASS):** PASS|FAIL/SKIPPED -- <command or n/a> -- <note or SKIPPED reason>.
 
-Each row is mandatory for every confirmed bug in the patch. A row with `SKIPPED` must carry a concrete reason and the nearest feasible substitute; an unjustified `SKIPPED` is a gate FAIL. A full-suite result is not accepted in either row; the row must name the targeted regression test.
+<MUST>Each row is mandatory for every confirmed bug in the patch. A row with `SKIPPED` must carry a concrete reason and the nearest feasible substitute; an unjustified `SKIPPED` is a gate FAIL. A full-suite result is not accepted in either row; the row must name the targeted regression test.</MUST>
+***
 </HIGH_PRIO>
 
 ### Commit/push gate (PATCH trigger)
@@ -80,10 +135,12 @@ After the Verification gate, when the session made file edits, apply the commit/
 Applies only on a confirmed `READ_ONLY` host. `00-system.md` `## Read-only host` owns capability detection, the `SKIPPED-with-reason` standard, the Delivery contract, and all read-only surface behavior. On a read-only host, PATCH follows that contract: delivery of complete file contents replaces file edits, every write/run step reports `SKIPPED: <category> -- <reason>`, recording lands in the in-conversation carrier, and the commit/push gate never triggers. On `FILE_CAPABLE` hosts this branch does not apply.
 
 <HIGH_PRIO>
+!!!
 
 ## Commit/push gate (full rules)
 
 The commit/push gate is the final step of PATCH when the session made file edits. It exists to prevent silent file mutations, unsanitized remote URLs in transcripts, and untracked large file commits.
+***
 </HIGH_PRIO>
 
 ### Trigger
@@ -187,14 +244,15 @@ In STRUCTURED mode the ask carries the `[PHASE: PATCH]` header; in DIRECT mode i
 
 ### Hard rules (commit/push)
 
-- No commit or push without the ask when edits were made (breach).
-- Never stage files outside the session's edited-file set (H9).
-- Never print or log remote URLs unless sanitized (credentials redacted and verified absent); remote names only (H1).
-- Never force-push (H3: destructive ops).
-- Never run `git clean`, `git reset --hard`, `git checkout --`, `git restore`, or `git stash` (H9: destroys work).
-- The gate is not a phase: it runs inside PATCH after verification and inside DIRECT before completion. The pre-ask smoke above is a gate-internal verification step, never a phase and never a second REVIEW pass.
+<MUST>No commit or push without the ask when edits were made (breach).</MUST>
+<MUST_NOT>Stage files outside the session's edited-file set (H9).</MUST_NOT>
+<MUST_NOT>Print or log remote URLs unless sanitized (credentials redacted and verified absent); remote names only (H1).</MUST_NOT>
+<MUST_NOT>Force-push (H3: destructive ops).</MUST_NOT>
+<MUST_NOT>Run `git clean`, `git reset --hard`, `git checkout --`, `git restore`, or `git stash` (H9: destroys work).</MUST_NOT>
+<MUST>The gate is not a phase: it runs inside PATCH after verification and inside DIRECT before completion. The pre-ask smoke above is a gate-internal verification step, never a phase and never a second REVIEW pass.</MUST>
 
 <HIGH_PRIO>
+!!!
 
 ## Leftover Handling
 
@@ -202,8 +260,8 @@ Fix/debug sessions produce three categories of leftovers that must be auto-delet
 
 ### Categories
 
-- **Temp files** -- files created during the session that are not in the session's `## Edited Files` ledger (e.g., temporary test outputs, scratch files, intermediate build artifacts outside configured output directories).
-- **Stale locks** -- `.session-locks/<flat-name>.lock/` directories whose `acquired_at` timestamp exceeds `SESSION_LOCK_TTL_MINUTES = 30` (see `07-protocols.md` `## Session file locks`).
+ - **Temp files** -- files created during the session that are not in the session's `## Edited Files` ledger (e.g., temporary test outputs, scratch files, intermediate build artifacts outside configured output directories). Files in the OS temp directory (`$env:TEMP` on Windows, `/tmp` on Unix) are exempt from leftover audit; repo-local temp files are subject to auto-deletion.
+ - **Stale locks** -- `.session-locks/<flat-name>.lock/` directories whose `acquired_at` timestamp exceeds `SESSION_LOCK_TTL_MINUTES = 30` (see `07-protocols.md` `## Session file locks`).
 - **Uncommitted session artifacts** -- `SESSION_STATE-*.md` files not staged for commit in the current session.
 
 ### Procedure (auto-delete at PATCH verification gate)
@@ -214,20 +272,16 @@ Fix/debug sessions produce three categories of leftovers that must be auto-delet
    - Stale locks: `Remove-Item -Recurse -Force` on the lock directory (releases the lock)
    - Uncommitted session artifacts: `Remove-Item -Force` on `SESSION_STATE-*.md` not in the current session's ledger
 3. **Record** -- write a `## Leftover Audit` section to the session state file:
-
    ```markdown
    ## Leftover Audit
-
    - temp files: [count] removed -- [paths]
    - stale locks: [count] removed -- [flat-names]
    - uncommitted session artifacts: [count] removed -- [paths]
    ```
-
 4. **Gate** -- the PATCH verification gate reports PASS only if the audit completes (leftovers found and deleted, or none found). A failure to run the audit is a gate FAIL.
 
-### Hard Guard (cross-reference)
-
-`00-system.md` enforces: No PATCH conclusion while leftover audit fails.
+<MUST>No PATCH conclusion while leftover audit fails. The PATCH verification gate must complete the leftover audit before concluding.</MUST>
+***
 </HIGH_PRIO>
 
 ## Cross-cutting protocol

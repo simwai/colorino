@@ -1,5 +1,5 @@
 ---
-description: 'PLAN mode only. Finds regression risks and defines adversarial test strategies without changing code.'
+description: "PLAN mode only. Finds regression risks and defines adversarial test strategies without changing code."
 mode: subagent
 permission:
   edit: deny

@@ -32,6 +32,31 @@ Verification (build/smoke/tests/Playwright) is the one place the evidence chain 
 
 A pass assertion that breaks this rule is a protocol breach.
 
+## Template Field Contract
+
+This section defines which fields in each phase template are required and which are optional. Required fields must appear in the output; optional fields may be omitted when their trigger condition is unmet. Empty optional fields are omitted, not filled with placeholders.
+
+- `[required]` — the field must be present in the output for the phase to be valid.
+- `[optional]` — the field may be omitted when its trigger condition is unmet.
+
+Template field requirements:
+
+- `BLOCKED`: `Reason` [required]; `Needed now` [required]; `Next required user action` [required]; `Status` [required].
+- `INTAKE`: `Goal` [required]; `Stack/Style` [required]; `Scope` [required]; `Target repo` [required]; `Success criteria` [required]; `Milestones` [required]; `Open questions` [optional]; `Status` [required].
+- `BACKLOG`: `Milestone map` [required]; `Items` [required]; `Split candidates` [optional]; `Allowed next move` [required].
+- `SPRINT`: `Sprint` [required]; `Serves milestone` [required]; `Selected items` [required]; `Board` [required]; `Completion criteria` [required]; `Allowed next move` [required].
+- `TASK_PLAN`: `Task` [required]; `Target` [required]; `Type` [required]; `Scope` [required]; `Size` [required]; `ICE` [required]; `Milestone` [required]; `Story` [optional]; `MVP` [optional]; `Test-first` [optional]; `Definition of done` [required]; `Allowed next move` [required].
+- `CHECKLIST`: `Target scope` [required]; `Focus` [required]; `Scope` [required]; `File inventory` [required]; `System Discovery` [required]; `Pre-review docs log` [required]; `Hard tier` [required]; `Soft tier` [required]; `Logical tier` [optional]; `Verification` [required]; `Batch log` [optional]; `Verdict` [required].
+- `SPEC`: `Path` [required]; `Status` [required]; `User Stories` [required]; `Functional Requirements` [required]; `Success Criteria` [required]; `Assumptions` [optional]; `Open Questions` [optional]; `Allowed next move` [required].
+- `DOCS`: `In scope` [required]; `Verified evidence` [required]; `Status` [required].
+- `REVIEW`: `Multi-file progress` [required]; `Findings` [required]; `Logical Findings` [optional]; `Informational` [optional]; `Confirmed Items` [optional]; `Pending Review Items` [optional]; `Partial Handoff Available` [optional]; `Plan Draft` [optional]; `Decision Items` [optional]; `Cross-team requirements` [optional]; `Verification` [required]; `Decision Needed` [required when findings are present].
+- `PLAN`: `Target` [required]; `Scope` [required]; `Scope type` [required]; `Pending review items` [required]; `Source` [required]; `System Constraints` [required]; `Will change` [required]; `Will preserve` [required]; `Conventions` [required]; `Risks` [optional]; `Logical constraints` [optional]; `Awaiting` [required].
+- `PATCH`: `Rewrite Contract` [required]; `Patch` [required]; `Self-Review` [required]; `Compliance Audit` [required]; `Constraint Verification` [required]; `Verification` [required]; `Plan-Actual` [required when plan exists]; `Commit/Push Gate` [required when edits exist].
+- `DRIFT`: `Spec` [required]; `Registry check` [required]; `Verified claims` [optional]; `Diverged claims` [optional]; `Orphaned mappings` [optional]; `Code-exceeds-spec` [optional]; `HALT` [optional]; `Fresh-eyes review` [optional]; `Exit` [required].
+- `HANDOFF`: `For the human` [required]; `For the agent` [required]; `Persona Handoff Contract` [required]; `Status` [required].
+- `TEST_STRATEGY`: `Test Strategy` [required]; `Binding items` [required]; `Strong hints` [required]; `Weak hints` [optional].
+- `FAILURE`: `Status` [required]; `Reason` [required]; `Last valid phase` [required]; `Failed phase` [required]; `Retry` [required].
+
 ## Dual-section output (human + agent)
 
 A structured phase output may split into a plain-language section for the human reader and a machine-checkable section for the receiving agent:
@@ -146,6 +171,7 @@ Allowed next move:
 # Task Card
 Task: [id] -- [one-line description]
 Target: [file/module or TBD]
+Type: [bugfix | feature | refactor]
 Scope:
 - In: [in scope]
 - Out: [out of scope]
@@ -171,12 +197,24 @@ Allowed next move:
 # Review Session Checklist
 Target scope: [scope description, e.g. "src/" or "all .ts files"]
 Focus: [what to look for]
+Scope: [bugfix | feature | refactor] -- [one-line description]
 
 File inventory:
 - [ ] [file path] -- [LOC] -- pending -- [discovery: keyword-match(N), entry-dist(N), layer:X, test:Y/N]
 - [ ] [file path] -- [LOC] -- pending (large, will chunk) -- [discovery: ...]
 (status: pending | reviewing | complete)
 Source: [discovery | manual | task-card]
+
+## System Discovery (auto-populated, agent cannot modify)
+
+System evidence: [see session state system_evidence block]
+Pattern owner: [module] (confidence: [high|medium|low]) [file:line]
+Existing utilities: [list or "none"]
+Available libraries: [list or "none"]
+Dominant idiom: [pattern] at [file:line] (frequency: N)
+Rules triggered: [list of H-rules from system_evidence]
+Architecture flags: [list from system_evidence or "none"]
+Status: [complete | blocked]
 
 Pre-review docs log:
 - [ ] Library / version / URL recorded
@@ -197,7 +235,34 @@ Hard tier:
 - [ ] H10
 - [ ] H11
 - [ ] H12
-  - Greenfield skip: mark `[x] H1-H12 -- skipped (greenfield)` when CHECKLIST/REVIEW are skipped per the greenfield branch.
+- [ ] H13
+- [ ] H14
+- [ ] H15
+- [ ] H16
+- [ ] H17
+- [ ] H18
+- [ ] H19
+- [ ] H20
+- [ ] H21
+- [ ] H22
+- [ ] H23
+- [ ] H24
+- [ ] H25
+- [ ] H26
+- [ ] H27
+- [ ] H28
+- [ ] H29
+- [ ] H30
+- [ ] H31
+- [ ] H32
+- [ ] H33
+- [ ] H34
+- [ ] H35
+- [ ] H36
+- [ ] H37
+- [ ] H38
+- [ ] H39
+  - Greenfield skip: mark `[x] H1-H39 -- skipped (greenfield)` when CHECKLIST/REVIEW are skipped per the greenfield branch.
 
 Soft tier:
 - [ ] S1
@@ -247,7 +312,6 @@ Verdict: Pending
 ```
 
 Tick semantics: Two checkbox types exist in CHECKLIST:
-
 - **Inventory rows**: `[x]` = item recorded in inventory with status. Status field flips (`pending` -> `reviewed`, `reviewing` -> `complete`) inside REVIEW, never inside CHECKLIST. A `[x]` on inventory row with status `pending` is the expected checklist state.
 - **Hard/soft-tier lines**: `[x]` = coverage decision (in scope / out of scope), decided at checklist time. These do not flip during REVIEW.
 
@@ -286,7 +350,7 @@ Allowed next move:
 
 ## `DOCS` template
 
-````txt
+```txt
 [PHASE: DOCS]
 
 # Docs Evidence
@@ -420,7 +484,7 @@ Next batch:
 
 Sections omitted (when applicable):
 - [Cross-team requirements / Validation loop / Open questions / Informational / Confirmed Items / Pending Review Items / Partial Handoff Available / Plan Draft -- list the omitted sections and why]
-````
+```
 
 REVIEW owns confirmation. There is no standalone CONFIRM phase.
 
@@ -458,15 +522,36 @@ decision you must approve]
 # Fix Plan
 Target: [file/module]
 Scope: [full|partial]
+Scope type: [bugfix | feature | refactor]
 Pending review items: [list of finding_ids still under review, or "none"]
 
 Source: [auto-generated from REVIEW findings | manual]
 
+## System Constraints (from Discovery Protocol)
+Must use:
+- <module.method> (<file:line>) [rule: H15]
+
+Must not duplicate:
+- <file:lines> -- <pattern> [rule: H13]
+
+Must route through:
+- <layer> [rule: H16]
+
+Must use available library:
+- <name> (<version>) [rule: H14]
+
+Rule exceptions (auto-granted):
+- H<number>: <reason from system_evidence>
+
+Architecture flags:
+- <flag_type>: <details> [from system_evidence]
+
+Agent writes only:
 Will change:
-- id: [unique id]
-  change: [change]
-  verify: [command -- idempotent read-only check, max 2 KiB]
-  expect: [pass|fail|exit:N|regex:<pat>|contains:<s>|silent]
+- id: <unique id>
+  change: <change description - agent controls this only>
+  verify: <system-generated rg command>
+  expect: <pass|fail|exit:N|regex:<pat>|contains:<s>|silent>
 
 The runner MUST execute each verify command automatically after staging and before the commit/push ask; emitting the command text without running it is a gate FAIL.
 
@@ -493,16 +578,14 @@ Awaiting:
 These templates auto-populate `Will change` items from REVIEW findings. They are starting points; the user may edit any field in PLAN.
 
 ### H2 -- Injection
-
 - id: [finding_id]
   change: Replace [string concatenation/raw query] with parameterized query using [library]
-  verify: rg "SELECT._\+" [file] || rg "query\(._\+" [file]
+  verify: rg "SELECT.*\+" [file] || rg "query\(.*\+" [file]
   expect: silent
   verify: rg "prepareStatement|parameterized|bindParam" [file]
   expect: pass
 
 ### S4 -- Duplication
-
 - id: [finding_id]
   change: Extract repeated logic from lines [X-Y] into [function name] in [file]
   verify: [detect duplication pattern]
@@ -511,7 +594,6 @@ These templates auto-populate `Will change` items from REVIEW findings. They are
   expect: pass
 
 ### H12 -- Idiom consistency
-
 - id: [finding_id]
   change: Refactor lines [X-Y] to use [dominant idiom] consistent with file pattern
   verify: [detect non-conforming pattern]
@@ -547,13 +629,65 @@ Forbidden in patch:
 
 - [token/pattern]
 
+Must use:
+
+- [module.method or library] [from System constraints - system populated]
+
+Must route through:
+
+- [owner module.method] [from System constraints - system populated]
+
+Must not duplicate:
+
+- [existing file:line pattern] [from System constraints - system populated]
+
+Must use available library:
+
+- [library] [from System constraints - system populated]
+
+Must follow layer:
+
+- [layer constraint] [from System constraints - system populated]
+
 # Patch
 [code or patch]
+
+# Self-Review
+- [ ] All `Must use` dependencies are called in the patch
+- [ ] No `Must not duplicate` patterns appear in the patch
+- [ ] All `Must use available library` items are used in the patch
+- [ ] All `Must route through` modules are called in the patch
+- [ ] No `Must follow layer` violations in the patch
+- [ ] Scope type respected: [bugfix/feature/refactor] rules applied
+- [ ] Auto-exceptions from system_evidence were honored
+- [ ] No speculative code added (H25)
+- [ ] No dead code added (H33)
+- [ ] No magic values introduced (H34)
+- [ ] No debug prints or sensitive data in logs (H36)
+- [ ] No unsafe casts or `any` type used (H37)
 
 # Compliance Audit
 - [check]: PASS/FAIL
 - [check]: PASS/FAIL
 - Project style policy: PASS|FAIL -- [one-line evidence; FAIL only on a non-greenfield, non-READ_ONLY repo missing STYLE_POLICY.md artifact]
+
+# Constraint Verification
+For each item in Must use:
+- [module.method]: PASS|FAIL -- rg "<module.method>" <target_file>
+
+For each item in Must route through:
+- [owner_module]: PASS|FAIL -- rg "<owner_module>" <target_file>
+
+For each item in Must not duplicate:
+- [file:lines]: PASS|FAIL -- rg "<pattern>" <target_file>
+
+For each item in Must use available library:
+- [library]: PASS|FAIL -- rg "<library_usage>" <target_file>
+
+For each item in Must follow layer:
+- [layer_constraint]: PASS|FAIL -- rg "<forbidden_pattern>" <target_file>
+
+Gate result: ALL PASS required. Any FAIL -> return to PLAN.
 
 # Verification
 - Diff inspected: yes/no -- [summary]
@@ -674,11 +808,11 @@ style_policy_source: [STYLE_POLICY.md artifact|INTAKE Stack/Style field|SKIPPED:
 style_policy_resolved: [yes|no]
 startup_verified: [true|false]
 startup_fingerprint:
-line_count: [number]
-first_100_chars: "[string]"
-last_100_chars: "[string]"
-sha256_first_1kb: "[hash or N/A]"
-verified_at: [ISO-8601 UTC]
+  line_count: [number]
+  first_100_chars: "[string]"
+  last_100_chars: "[string]"
+  sha256_first_1kb: "[hash or N/A]"
+  verified_at: [ISO-8601 UTC]
 
 ## Startup Verification
 
@@ -767,6 +901,10 @@ spec_version: [x.y.z or n/a]
 ## Phase Status
 
 phase_status: {sensei: [phase|n/a], tester: [phase|n/a], dev: [phase|n/a], merge: [pending|complete|n/a]}
+
+## Reinforcement Log
+
+- [timestamp] -- [target files] -- [trigger] -- [scope]
 
 ## Confirmed Items
 

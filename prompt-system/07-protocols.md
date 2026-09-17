@@ -1,6 +1,6 @@
 # 07-protocols
 
-Cross-cutting protocol details: artifact handling, pre-commit behavior, cross-team requirements, app lifecycle, library selection, session file locks, spec lifecycle, drift detection, discuss mode, and scrum planning. These were merged out of 11 separate deprecated modules; they are protocol detail that PATCH, REVIEW, and PLAN consume. "PATCH rule" sections below are cross-phase constraints that apply when PATCH touches the relevant domain — the PATCH execution protocol lives in `06-misc.md`.
+Cross-cutting protocol details: artifact handling, pre-commit behavior, cross-team requirements, app lifecycle, library selection, session file locks, spec lifecycle, drift detection, discuss mode, scrum planning, and prompt-system protection. These were merged out of 11 separate deprecated modules; they are protocol detail that PATCH, REVIEW, and PLAN consume. "PATCH rule" sections below are cross-phase constraints that apply when PATCH touches the relevant domain — the PATCH execution protocol lives in `06-misc.md`.
 
 ## Artifact handling
 
@@ -16,7 +16,8 @@ Categories and canonical examples:
 - **Test and coverage output**: `coverage/`, `.coverage`, `*.lcov`, `htmlcov/`, `junit.xml`, `test-results/`.
 - **AI session artifacts**: `sessions/`, `chat-export/`, `*.session.txt`, `*.session.md`, `*.session.json`, raw session dumps, exported conversation files, prompt-drafting scratch files. Rule: never commit raw AI session output. Sessions are ephemeral context, not source of truth.
 - **Tooling caches**: `.pre-commit-cache/`, `.mypy_cache/`, `.ruff_cache/`, `.pyrefly_cache/`, `.pytest_cache/`, `.turbo/`, `.next/`, `.nuxt/`, `.svelte-kit/`.
-- **Scratch and WIP files**: `*.tmp`, `*.bak`, `*.orig`, `scratch/`, `todo.md`, `WIP.md` at repo root.
+ - **Scratch and WIP files**: `*.tmp`, `*.bak`, `*.orig`, `scratch/`, `todo.md`, `WIP.md` at repo root.
+ - **OS temp directory**: the only allowed throwaway location is the OS temp directory (`$env:TEMP` on Windows, `/tmp` on Unix). Do not create repo-local temp directories for scratch work; use the OS temp directory instead.
 
 ### Review rule
 
@@ -66,6 +67,164 @@ The house preference is LF line endings for every repository, including on Windo
 
 Spawn rule: when a plan or patch sets up a new repo or touches repo hygiene, spawn `.gitattributes` with `* text=auto eol=lf` when the repo lacks one. Extend the existing file in the same patch that normalizes line endings.
 
+## Prompt-system protection
+
+The `prompt-system/` folder and its files are the core system and must be protected from modification when the prompt-system is deployed to a project. These files define the agent's behavior, rules, and conventions; editing them corrupts the system for all projects using it.
+
+### Hard rules
+
+- The `prompt-system/` folder must never be edited as part of a project's work. Changes to the system go through a separate governance session.
+- When deploying the prompt-system to a new project, the `prompt-system/` files are installed as read-only artifacts.
+- Any automated tool or agent must not modify `prompt-system/` files during normal project work.
+- The `prompt-system/` folder is excluded from project-level linting, formatting, and review rules.
+
+### Enforcement
+
+- `07-protocols.md` rule detection (H13-H39) must not fire against `prompt-system/` files. The system reads `STYLE_POLICY.md` for project-level exceptions and treats `prompt-system/` as an always-excluded directory.
+- Pre-commit hooks must not include `prompt-system/` in their staged-file patterns.
+- Discovery Protocol searches must exclude `prompt-system/` from the project source tree.
+
+### Exception
+
+- Updates to the prompt-system itself (new rules, rubric changes, style updates) are performed in a dedicated governance session and deployed via the sync mechanism (`sync.ps1`), not through normal project PATCH flows.
+
+## Discovery Protocol
+
+Trigger: CHECKLIST init for any non-greenfield target.
+
+Search budget: max 15 `rg`/`glob` invocations, max 100 hits.
+
+Search scope excludes `prompt-system/` (core system, never part of project work). All other directories are searched.
+
+### Mandatory searches
+
+1. **Pattern search** - dominant idioms in target file:
+   - Error types: `rg "(Error|Exception|ValidationError)" <target_file>`
+   - Validation calls: `rg "(validate|check|verify|guard)" <target_file>`
+   - Helper imports: `rg "import.*from.*(utils|helpers|services)" <target_file>`
+   - DI patterns: `rg "(new |@Inject|@Injectable|container\.resolve)" <target_file>`
+
+2. **Ownership trace** - who owns the concern:
+   - Forward imports: `rg "import.*<target_module>" src/ --max-count 50`
+   - Reverse imports: `rg "<target_module>" src/ --max-count 50`
+   - Method calls: `rg "<concern_method>" src/ --max-count 50`
+
+3. **Library scan** - available dependencies:
+   - Read manifest: `package.json`, `pyproject.toml`, `Cargo.toml`, `go.mod`
+   - Extract dependency names and versions
+
+4. **Helper search** - existing utilities:
+   - `rg "export.*<concern_type>" src/ --max-count 50`
+   - `rg "function <concern_name>" src/ --max-count 50`
+
+5-15. **Pattern-specific searches** based on discovered idioms (e.g., if validation pattern found, search for all validation utilities).
+
+### Ownership resolution
+
+- Count direct imports + method calls per module
+- Owner = module with highest reference count
+- Tie-breaker: module with oldest git touch (most established)
+- Owner confidence: high (margin >2x), medium (margin 1.5x-2x), low (margin <1.5x)
+
+### Rule detection
+
+For each rule in `rules.md` H13-H39:
+1. Check if rule applies to target file's context
+2. If yes: add to `system_evidence.rule_triggers` with evidence
+3. If rule has auto-exception: evaluate exception conditions
+4. If exception triggered: mark rule as `auto_excepted` with reason
+5. If exception not triggered: mark rule as `active` (must be enforced)
+
+### Architecture doc scanning
+
+Scan for project architecture/style docs:
+- `ARCHITECTURE.md`
+- `ADR/` directory
+- `docs/architecture/`
+- `STYLE_POLICY.md`
+- Module-level `README.md` files
+
+Extract declared rules using pattern matching:
+- "All validation MUST go through X" → `must_use: X`
+- "Controllers must not contain business logic" → `layer_constraint: controller`
+- "Use dependency injection" → `di_required: true`
+
+### Output format
+
+Write to session state as `system_evidence`:
+
+```yaml
+system_evidence:
+  discovered_at: <ISO-8601 UTC>
+  target_file: <path>
+  
+  pattern_owner: <module>
+  pattern_owner_location: <file:line>
+  owner_confidence: high|medium|low
+  
+  must_use:
+    - <module.method> (<file:line>) [rule: H15]
+  
+  must_not_duplicate:
+    - <file:lines> -- <pattern> [rule: H13]
+  
+  must_use_library:
+    - <name> (<version>) [rule: H14]
+  
+  must_route_through:
+    - <layer> [rule: H16]
+  
+  dominant_idiom:
+    type: <error|validation|di|logging>
+    location: <file:line>
+    frequency: <N>
+    confidence: high|medium|low
+  
+  rule_triggers:
+    - rule: H13
+      active: true|false
+      auto_excepted: true|false
+      reason: <if auto-excepted>
+    
+  available_libraries:
+    - <name> (<version>) from <manifest>
+  
+  existing_utilities:
+    - file: <path>
+      lines: <range>
+      pattern: <type>
+  
+  architecture_flags:
+    high_coupling:
+      - module: <path>
+        fan_in: <N>
+        fan_out: <N>
+    circular_dependency:
+      - cycle: [<module_list>]
+    pattern_concentration:
+      - pattern: <description>
+        occurrences: <N>
+        files: [<paths>]
+```
+
+### Exception handling
+
+System reads `STYLE_POLICY.md` for project-level rule exceptions:
+- `rule_exceptions.H13: disabled|advisory|mandatory`
+- `rule_exceptions.H14: disabled|advisory|mandatory`
+- etc.
+
+Project-level exceptions override system defaults. If a rule is disabled for the project, it does not fire. If set to advisory, it flags but doesn't block. If mandatory (default), it blocks on violation.
+
+### Greenfield handling
+
+For greenfield targets (no existing source files):
+- Discovery runs on the project's `05-impl-style.md` defaults and stack conventions
+- `system_evidence` records declared conventions as constraints
+- No ownership resolution (no existing code to own the concern)
+- No duplication detection (no existing utilities)
+- Library scan still runs (from manifest)
+
 ## Pre-commit behavior
 
 Pre-commit hooks (`.pre-commit-config.yaml`, `lefthook.yml`, `husky`) run the order below, and the PATCH per-edit lint gate must mirror it. This section is for PATCH and REVIEW when the touched code includes scripts, package config, CI/CD config, or tooling setup.
@@ -74,14 +233,14 @@ Pre-commit hooks (`.pre-commit-config.yaml`, `lefthook.yml`, `husky`) run the or
 
 A well-configured pre-commit setup must run at minimum:
 
-| Check          | Purpose                                                                           | Priority                       |
-| -------------- | --------------------------------------------------------------------------------- | ------------------------------ |
-| Formatter      | Auto-fix style before commit                                                      | First; always runs before lint |
-| Linter         | Catch code-quality issues after formatting                                        | Second                         |
-| `tsc --noEmit` | Catch TypeScript type errors before they reach CI                                 | Third (TS projects only)       |
-| Test runner    | Run fast unit tests only; no integration tests                                    | Fourth                         |
-| Secret scanner | Block credentials from entering the repo                                          | Always present                 |
-| File hygiene   | Trailing whitespace, end-of-file newline, LF line endings, merge-conflict markers | Always present                 |
+| Check | Purpose | Priority |
+|---|---|---|
+| Formatter | Auto-fix style before commit | First; always runs before lint |
+| Linter | Catch code-quality issues after formatting | Second |
+| `tsc --noEmit` | Catch TypeScript type errors before they reach CI | Third (TS projects only) |
+| Test runner | Run fast unit tests only; no integration tests | Fourth |
+| Secret scanner | Block credentials from entering the repo | Always present |
+| File hygiene | Trailing whitespace, end-of-file newline, LF line endings, merge-conflict markers | Always present |
 
 Not every project needs all of these. A project with no test suite should not have a failing test hook. Use judgment; flag absence only when the missing check has real risk.
 
@@ -106,6 +265,12 @@ Before recommending a pre-commit setup, identify:
 3. **Existing hook config** - check for `.pre-commit-config.yaml`, `.husky/`, `lint-staged` config in `package.json`.
 
 If any of these exist, the recommendation must align with them. Do not suggest replacing an existing working setup.
+
+### Hook tool preference
+
+- **Node.js projects**: MUST use Husky + lint-staged. `.pre-commit-config.yaml` is not the preferred path for Node.js; use Husky unless the project already has a working pre-commit setup that must be preserved.
+- **Python projects**: MUST use `.pre-commit-config.yaml` with local hooks. Husky is not the preferred path for Python.
+- **CI pipelines**: `.github/workflows/*` and `.gitlab-ci.yml` are forbidden in managed repos. PLAN must not recommend CI pipelines; REVIEW flags their presence as a soft-tier `S-precommit` finding.
 
 ### REVIEW rule (pre-commit)
 
@@ -156,7 +321,6 @@ If any `.sh` or `.ps1` scripts exist in the repo that should run as hooks, they 
 ### A11y and SEO validation
 
 For projects with frontend UI:
-
 - Run axe-core or pa11y against changed pages/components when the change touches markup, templates, or component structure
 - Run lighthouse CI or equivalent for SEO score when the change touches page-level content, meta tags, or routing
 - A11y/SEO failures are soft-tier findings (S23-S26) unless they constitute an accessibility violation under applicable law (e.g., WCAG 2.1 AA required for public sector) - in which case they escalate to H-tier with legal risk noted
@@ -196,42 +360,37 @@ Each entry in `CHANGES_REQUIRED.md` must use this template exactly. Do not omit 
 **Depends on**: <finding ID or fix from the current repo that requires this, or N/A>
 
 ### Context
-
 <2-4 sentences. Why is this change needed? What breaks or degrades without it?
 Link to the relevant finding, PR, or issue if available.>
 
 ### Required change
-
 <Exact description of what must be done in the target repo.
 Be concrete: name the file, function, endpoint, schema field, or config key.
 Do not write "improve X" - write "add field Y to schema Z" or "change endpoint A to return B".>
 
 ### Acceptance criteria
-
 - [ ] <Observable, testable outcome 1>
 - [ ] <Observable, testable outcome 2>
 - [ ] <Add as many as needed - each must be independently verifiable>
 
 ### Contract / interface changes
-
 <If the change affects a shared API, event schema, database schema, or SDK contract,
 describe the before and after here. Include field names, types, and any versioning impact.
 If no contract changes: N/A>
 
 ### Suggested implementation notes
-
 <Optional. Hints, references, or constraints the receiving team should know.
 Do not prescribe the implementation - only surface constraints and prior art.>
 ```
 
 ### Priority definitions
 
-| Priority   | Meaning                                                                                           |
-| ---------- | ------------------------------------------------------------------------------------------------- |
-| `BLOCKING` | The current repo's fix or feature cannot ship without this change. Treat as a release blocker.    |
-| `HIGH`     | Significant degradation, data inconsistency, or security risk if unaddressed before next release. |
-| `MEDIUM`   | Quality or maintainability concern; should be addressed within the current sprint or milestone.   |
-| `LOW`      | Nice-to-have alignment; no immediate impact if deferred.                                          |
+| Priority | Meaning |
+|---|---|
+| `BLOCKING` | The current repo's fix or feature cannot ship without this change. Treat as a release blocker. |
+| `HIGH` | Significant degradation, data inconsistency, or security risk if unaddressed before next release. |
+| `MEDIUM` | Quality or maintainability concern; should be addressed within the current sprint or milestone. |
+| `LOW` | Nice-to-have alignment; no immediate impact if deferred. |
 
 ### REVIEW rule (cross-team)
 
@@ -341,11 +500,7 @@ One canonical error shape across the entire API. Use RFC 7807 `application/probl
   "detail": "One or more fields failed validation",
   "instance": "/orders",
   "errors": [
-    {
-      "field": "quantity",
-      "code": "must_be_positive",
-      "message": "quantity must be > 0"
-    }
+    { "field": "quantity", "code": "must_be_positive", "message": "quantity must be > 0" }
   ]
 }
 ```
@@ -355,7 +510,7 @@ Hard rules:
 - `type` is a URI (URL or URN) the client can dereference for human-readable documentation. It is stable; renaming it is a breaking change.
 - `title` is human-readable summary, stable per `type`.
 - `status` mirrors the HTTP status code; the body never lies about the status.
-- `detail` is the human-readable explanation for _this_ occurrence (may include field values); safe to surface in UI.
+- `detail` is the human-readable explanation for *this* occurrence (may include field values); safe to surface in UI.
 - `instance` is the request path that produced the error; never the internal trace ID.
 - `errors[]` is a per-field detail array for `400`/`422`; absent for non-validation errors.
 - **No stack traces, no internal paths, no SQL fragments, no secret material in the response body** (H7). The trace ID belongs in a `Trace-Id` response header, surfaced in trusted internal logs only.
@@ -520,7 +675,6 @@ Do not adopt the candidate without an explicit exception when it is archived or 
 - H8 remains the hard-tier audit for known CVEs and unreviewed dependency versions. This section governs selection before adoption; it does not replace the review rubric.
 
 <HIGH_PRIO>
-
 ## Session file locks
 
 Per-file serialization for concurrent editing sessions operating on the same repository checkout. Prevents two sessions from silently bundling each other's uncommitted hunks into one commit by ensuring one file has at most one writer at a time. Loaded for all phases where file writes may occur. On a `READ_ONLY` host, locks are inert.
@@ -528,8 +682,11 @@ Host capability reaches the script via the `BABA_READ_ONLY` environment flag; wh
 
 ### Hard rules
 
-- One file, one writer. A session must hold the lock for a file before any write to that file, and must not hold the lock for any file outside its `## Edited Files` ledger.
-- Lock acquisition is required on **first write in any phase**, not just PATCH. Reads never acquire locks. The cost of this choice is a read-then-write race that the commit/push gate re-checks at staging time.
+<MUST>One file, one writer. A session must hold the lock for a file before any write to that file, and must not hold the lock for any file outside its `## Edited Files` ledger.</MUST>
+<MUST>Lock acquisition is required on first write in any phase, not just PATCH. Reads never acquire locks. The cost of this choice is a read-then-write race that the commit/push gate re-checks at staging time.</MUST>
+<MUST_NOT>Skip lock acquisition when a shell tool can invoke the lock script.</MUST_NOT>
+<MUST_NOT>Auto-steal a live peer lock.</MUST_NOT>
+<MUST_NOT>Release a lock whose `owner` is not this session id.</MUST_NOT>
 - Stale locks are never auto-stolen. Surface the choice to the user.
 - The commit/push gate staging is refused if any path in the proposed commit is not currently locked by this session or released by this session within the current PATCH/DIRECT step.
 - A session never releases a lock whose `owner` is not its own session id. Releasing a peer's lock is a protocol violation and surfaces as BLOCKED.
@@ -556,16 +713,14 @@ The presence of a live peer does not change behavior directly. It only means loc
 
 ### Acquisition
 
-Before the first write to a file:
+<MUST>Before the first write to a file, acquire the lock. Lock acquisition MUST complete before the per-edit lint gate runs for the first write to the file; lint auto-fixes that occur before lock acquisition are a protocol breach.</MUST>
 
 1. Verify the file is in the session's `## Edited Files` ledger. A file not in the ledger is not eligible for a lock, and acquiring one anyway is BLOCKED.
 2. Compute the flat name per the Lock directory section.
 3. Attempt to create the lock directory atomically: POSIX `mkdir .session-locks/<flat-name>.lock` and treat `EEXIST` as "already locked"; Windows PowerShell `New-Item -ItemType Directory -Path .session-locks/<flat-name>.lock -ErrorAction Stop` and treat the thrown `IOException` as "already locked".
-   Use `New-LockDirectoryAtomic` (create without `-Force`); a `-Force` create is never atomic and silently steals.
+Use `New-LockDirectoryAtomic` (create without `-Force`); a `-Force` create is never atomic and silently steals.
 4. On success, write `owner` and `acquired_at` into the new directory. The lock is held.
 5. On "already locked", read the existing `owner` and `acquired_at`. If `acquired_at` is within `SESSION_LOCK_TTL_MINUTES`, the peer is live; enter Wait and surface. Otherwise the lock is stale; enter Stale lock handling.
-
-Lock acquisition MUST complete before the per-edit lint gate runs for the first write to the file. Lint auto-fixes that occur before lock acquisition are a protocol breach.
 
 Before the create attempt, a per-file acquisition also refuses when a live peer dependency lock covers the flat name, and session identity always comes from the once-per-session cache, never from a per-call generated fallback.
 
@@ -602,7 +757,7 @@ The model records the stale-lock event in the session's state file under `## Loc
 
 ### Commit/push gate integration
 
-The commit/push gate must, before staging, call into session file locks to verify: for every path in the proposed commit, the current session holds the lock or released it within the current PATCH/DIRECT step.
+<MUST>The commit/push gate must, before staging, call into session file locks to verify: for every path in the proposed commit, the current session holds the lock or released it within the current PATCH/DIRECT step.</MUST>
 Verification also scans every lock's `dependencies.txt`, so a file covered by a live peer dependency lock refuses staging even without an exact-path lock.
 Any path that fails this check is surfaced to the user with the same three options as Wait and surface, and staging is refused until the user decides.
 The re-read check that defends against the read-then-write race lives in the commit/push gate right after the lock check: re-read the working-tree version of each path, diff it against the in-memory expected content, and refuse to stage any path with unowned hunks.
@@ -615,7 +770,7 @@ The named constants below are the single source of truth and must be referenced 
 - `SESSION_LOCK_WAIT_ATTEMPTS = 3`
 - `SESSION_LOCK_WAIT_INTERVAL_SECONDS = 60`
 
-The WAIT\_\* values are retained for protocol compatibility and hosted runners; interactive acquisition attempts once and surfaces instead of sleeping.
+The WAIT_* values are retained for protocol compatibility and hosted runners; interactive acquisition attempts once and surfaces instead of sleeping.
 
 ### Dependency locks
 
@@ -646,10 +801,10 @@ The presence of `dependencies.txt` distinguishes a dependency lock from a per-fi
 
 #### Block rule (interaction matrix)
 
-| Holder \ Requester              | Per-file lock on Y       | Dependency lock on X                                               |
-| ------------------------------- | ------------------------ | ------------------------------------------------------------------ |
-| Per-file lock on Y              | Wait/skip/override-steal | **No block** - per-file does not block dependency acquisition on X |
-| Dependency lock on X (covers Y) | Wait/skip/override-steal | Wait/skip/override-steal                                           |
+| Holder \ Requester | Per-file lock on Y | Dependency lock on X |
+|---|---|---|
+| Per-file lock on Y | Wait/skip/override-steal | **No block** - per-file does not block dependency acquisition on X |
+| Dependency lock on X (covers Y) | Wait/skip/override-steal | Wait/skip/override-steal |
 
 A dependency lock on X blocks another session's per-file acquisition on any file in X's dependency set. A per-file lock on Y does NOT block a dependency lock acquisition on X (where Y is in X's dependency set), because the dependency lock is the canonical claim and acquires first.
 
@@ -667,13 +822,9 @@ The session state file uses `## Locked Paths` with two subsections:
 
 ```markdown
 ## Locked Paths
-
 ### Per-file
-
 - [flat-name] -- [owner] -- [acquired_at] -- [status: held|released]
-
 ### Dependency
-
 - [root flat-name] -- [owner] -- [acquired_at] -- [dependency count] -- [status: held|released]
 ```
 
@@ -709,7 +860,6 @@ Every spec lives at `SPECS/NNN-name/spec.md` where `NNN` is a zero-padded sequen
 
 ```md
 # <Title>
-
 Status: <Draft|RFC|Stable|Deprecated>
 Version: <x.y.z>
 Layer: <L1|L2>
@@ -718,28 +868,23 @@ Created: <ISO date>
 Updated: <ISO date>
 
 ## User Stories
-
 - [P1] As a <role>, I want <capability> so that <benefit>.
   Given <context>, When <action>, Then <observable outcome>.
 - ...
 
 ## Functional Requirements
-
 - FR-001: the system MUST <behavior>.
 - ...
 
 ## Success Criteria
-
 - SC-001: <measurable outcome>.
 - ...
 
 ## Assumptions
-
 - <assumption>
 
 ## Open Questions
-
-- [NEEDS CLARIFICATION: <question>] (max 3)
+- [NEEDS CLARIFICATION: <question>]  (max 3)
 ```
 
 - `[NEEDS CLARIFICATION]` markers are bounded to 3 per spec; answers use the decision format with the recommended option first.
@@ -768,9 +913,9 @@ Promotion order: `Draft -> RFC -> Stable`; `Deprecated` is a terminal state reac
 `SPECS/index.md` is the registry: one append-audit entry per spec status row.
 
 ```md
-| id  | name              | version | status | layer | implements | updated    | session      |
-| --- | ----------------- | ------- | ------ | ----- | ---------- | ---------- | ------------ |
-| 001 | user-registration | 1.1.0   | Stable | L1    | NONE       | 2026-08-20 | <session_id> |
+| id | name | version | status | layer | implements | updated | session |
+|---|---|---|---|---|---|---|---|
+| 001 | user-registration | 1.1.0 | Stable | L1 | NONE | 2026-08-20 | <session_id> |
 ```
 
 - Append-audit semantics: rows are appended, never edited in place; every promotion or demotion appends a new row with the current timestamp and the writing session id. The latest row per id is the live state.
@@ -921,22 +1066,22 @@ Scrum planning covers the optional upstream pipeline (INTAKE, BACKLOG, SPRINT, T
 
 Each backlog item scores three factors, each 1-10. `ICE = Impact * Confidence * Ease`.
 
-| Factor         | Definition                                                                        |
-| -------------- | --------------------------------------------------------------------------------- |
-| **Impact**     | How much this item moves the goal (value delivered, effort removed, risk retired) |
-| **Confidence** | How sure we are the approach, scope, and estimate are right                       |
-| **Ease**       | Inverse of implementation effort; derived from the size band                      |
+| Factor | Definition |
+|---|---|
+| **Impact** | How much this item moves the goal (value delivered, effort removed, risk retired) |
+| **Confidence** | How sure we are the approach, scope, and estimate are right |
+| **Ease** | Inverse of implementation effort; derived from the size band |
 
 Ties are broken by size (smaller first), then by milestone target date.
 
 ### Size bands (sanity check, not hard law)
 
 | Size | LOC band | Ease guidance |
-| ---- | -------- | ------------- |
-| XS   | ~50-150  | 8-10          |
-| S    | ~150-300 | 6-8           |
-| M    | ~300-400 | 4-6           |
-| L    | >400     | 1-4           |
+|---|---|---|
+| XS | ~50-150 | 8-10 |
+| S | ~150-300 | 6-8 |
+| M | ~300-400 | 4-6 |
+| L | >400 | 1-4 |
 
 The band is a sanity check, not a hard law. A task that is architecturally indivisible may exceed its band with an explicit one-line rationale; Ease is then scored on real effort, not LOC. Size never overrides the smallest-architecturally-sound-fix principle.
 
@@ -992,7 +1137,6 @@ A protocol that enhances CHECKLIST file inventory initialization when the target
 
    ```markdown
    File inventory:
-
    - [ ] src/auth/login-handler.ts -- 142 LOC -- pending -- discovery: keyword-match(3), entry-dist(2), layer:controller, test:yes
    - [ ] src/auth/token-service.ts -- 98 LOC -- pending -- discovery: keyword-match(2), entry-dist(1), layer:service, test:yes
    ```
