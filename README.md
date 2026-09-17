@@ -35,6 +35,7 @@
 A lightweight, high-performance TypeScript logger for Node.js and the Browser. Supports auto-detected themes, hex-to-ANSI mapping, gradients, and custom palettes.
 
 ## <a id="1"></a>Table of Contents
+
 - [Feature Comparison](https://github.com/simwai/colorino/blob/main/FEATURE_COMPARISON.md)
 
 ## <a id="2"></a>Installation
@@ -276,15 +277,18 @@ Returns a new logger instance.
 
 ## <a id="5"></a>Extending Colorino
 
-Extend `ColorinoNode` (Node) or `ColorinoBrowser` (Browser) to add custom behavior.
+Wrap or compose `createColorino()` to add custom behavior or log methods.
 
 ```ts
-import { ColorinoNode } from 'colorino/node'
+import { createColorino } from 'colorino'
 
-class MyLogger extends ColorinoNode {
-  success(message: string) {
-    this.info('✅', message)
-  }
+const logger = createColorino()
+
+export const customLogger = {
+  ...logger,
+  success(...args: unknown[]) {
+    logger.info('✅', ...args)
+  },
 }
 ```
 
