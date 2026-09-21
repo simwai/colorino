@@ -48,11 +48,12 @@ Template field requirements:
 - `TASK_PLAN`: `Task` [required]; `Target` [required]; `Type` [required]; `Scope` [required]; `Size` [required]; `ICE` [required]; `Milestone` [required]; `Story` [optional]; `MVP` [optional]; `Test-first` [optional]; `Definition of done` [required]; `Allowed next move` [required].
 - `CHECKLIST`: `Target scope` [required]; `Focus` [required]; `Scope` [required]; `File inventory` [required]; `System Discovery` [required]; `Pre-review docs log` [required]; `Hard tier` [required]; `Soft tier` [required]; `Logical tier` [optional]; `Verification` [required]; `Batch log` [optional]; `Verdict` [required].
 - `SPEC`: `Path` [required]; `Status` [required]; `User Stories` [required]; `Functional Requirements` [required]; `Success Criteria` [required]; `Assumptions` [optional]; `Open Questions` [optional]; `Allowed next move` [required].
-- `DOCS`: `In scope` [required]; `Verified evidence` [required]; `Status` [required].
-- `REVIEW`: `Multi-file progress` [required]; `Findings` [required]; `Logical Findings` [optional]; `Informational` [optional]; `Confirmed Items` [optional]; `Pending Review Items` [optional]; `Partial Handoff Available` [optional]; `Plan Draft` [optional]; `Decision Items` [optional]; `Cross-team requirements` [optional]; `Verification` [required]; `Decision Needed` [required when findings are present].
-- `PLAN`: `Target` [required]; `Scope` [required]; `Scope type` [required]; `Pending review items` [required]; `Source` [required]; `System Constraints` [required]; `Will change` [required]; `Will preserve` [required]; `Conventions` [required]; `Risks` [optional]; `Logical constraints` [optional]; `Awaiting` [required].
+- `DOCS`: `In scope` [required]; `Verified evidence` [required]; `Reading Verification` [required]; `Status` [required].
+- `REVIEW`: `Multi-file progress` [required]; `Findings` [required]; `Reading Verification` [required]; `Logical Findings` [optional]; `Informational` [optional]; `Confirmed Items` [optional]; `Pending Review Items` [optional]; `Partial Handoff Available` [optional]; `Plan Draft` [optional]; `Decision Items` [optional]; `Cross-team requirements` [optional]; `Verification` [required]; `Decision Needed` [required when findings are present].
+- `PLAN`: `Target` [required]; `Scope` [required]; `Scope type` [required]; `Pending review items` [required]; `Source` [required]; `System Constraints` [required]; `Will change` [required]; `Will preserve` [required]; `Reading Verification` [required]; `Conventions` [required]; `Risks` [optional]; `Logical constraints` [optional]; `Awaiting` [required].
 - `PATCH`: `Rewrite Contract` [required]; `Patch` [required]; `Self-Review` [required]; `Compliance Audit` [required]; `Constraint Verification` [required]; `Verification` [required]; `Plan-Actual` [required when plan exists]; `Commit/Push Gate` [required when edits exist].
 - `DRIFT`: `Spec` [required]; `Registry check` [required]; `Verified claims` [optional]; `Diverged claims` [optional]; `Orphaned mappings` [optional]; `Code-exceeds-spec` [optional]; `HALT` [optional]; `Fresh-eyes review` [optional]; `Exit` [required].
+- `DESIGN_PLAN`: `Target` [required]; `Scope` [required]; `Design decisions` [required]; `Constraints` [required]; `Verification` [required]; `Allowed next move` [required].
 - `HANDOFF`: `For the human` [required]; `For the agent` [required]; `Persona Handoff Contract` [required]; `Status` [required].
 - `TEST_STRATEGY`: `Test Strategy` [required]; `Binding items` [required]; `Strong hints` [required]; `Weak hints` [optional].
 - `FAILURE`: `Status` [required]; `Reason` [required]; `Last valid phase` [required]; `Failed phase` [required]; `Retry` [required].
@@ -262,7 +263,8 @@ Hard tier:
 - [ ] H37
 - [ ] H38
 - [ ] H39
-  - Greenfield skip: mark `[x] H1-H39 -- skipped (greenfield)` when CHECKLIST/REVIEW are skipped per the greenfield branch.
+- [ ] H40
+  - Greenfield skip: mark `[x] H1-H40 -- skipped (greenfield)` when CHECKLIST/REVIEW are skipped per the greenfield branch.
 
 Soft tier:
 - [ ] S1
@@ -312,6 +314,7 @@ Verdict: Pending
 ```
 
 Tick semantics: Two checkbox types exist in CHECKLIST:
+
 - **Inventory rows**: `[x]` = item recorded in inventory with status. Status field flips (`pending` -> `reviewed`, `reviewing` -> `complete`) inside REVIEW, never inside CHECKLIST. A `[x]` on inventory row with status `pending` is the expected checklist state.
 - **Hard/soft-tier lines**: `[x]` = coverage decision (in scope / out of scope), decided at checklist time. These do not flip during REVIEW.
 
@@ -368,6 +371,11 @@ Verified evidence:
 Status:
 - Ready for review, or
 - Blocked pending evidence
+
+# Reading Verification
+Planned: N | Completed: M | Status: [complete | incomplete]
+Pending: [specific file paths or "none"]
+
 ## Review mode selection
 
 REVIEW has two cadences: `interactive` and `consolidated`. The agent selects the cadence at REVIEW entry using the first match below:
@@ -392,6 +400,10 @@ the one decision you must confirm]
 # Multi-file progress
 Reviewed: [X/Y] files -- [Z] batches complete
 Review mode: [interactive|consolidated]
+
+# Reading Verification
+Planned: N | Completed: M | Status: [complete | incomplete]
+Pending: [specific file paths or "none"]
 
 # Findings
 File: [file path or ALL FILES]
@@ -546,6 +558,10 @@ Rule exceptions (auto-granted):
 Architecture flags:
 - <flag_type>: <details> [from system_evidence]
 
+# Reading Verification
+Planned: N | Completed: M | Status: [complete | incomplete]
+Pending: [specific file paths or "none"]
+
 Agent writes only:
 Will change:
 - id: <unique id>
@@ -578,6 +594,7 @@ Awaiting:
 These templates auto-populate `Will change` items from REVIEW findings. They are starting points; the user may edit any field in PLAN.
 
 ### H2 -- Injection
+
 - id: [finding_id]
   change: Replace [string concatenation/raw query] with parameterized query using [library]
   verify: rg "SELECT.*\+" [file] || rg "query\(.*\+" [file]
@@ -586,6 +603,7 @@ These templates auto-populate `Will change` items from REVIEW findings. They are
   expect: pass
 
 ### S4 -- Duplication
+
 - id: [finding_id]
   change: Extract repeated logic from lines [X-Y] into [function name] in [file]
   verify: [detect duplication pattern]
@@ -594,6 +612,7 @@ These templates auto-populate `Will change` items from REVIEW findings. They are
   expect: pass
 
 ### H12 -- Idiom consistency
+
 - id: [finding_id]
   change: Refactor lines [X-Y] to use [dominant idiom] consistent with file pattern
   verify: [detect non-conforming pattern]
@@ -774,6 +793,46 @@ Exit:
 - Findings requiring writes -> PLAN (drift_findings and spec_version travel via handoff contract)
 ```
 
+## `DESIGN_PLAN` template
+
+```txt
+[PHASE: DESIGN_PLAN]
+
+# For the human
+[2-4 plain-language sentences: what design decisions were made, what constraints
+BabaDev must preserve, and what the next step is]
+
+# For the agent
+
+# Design Plan
+Target: [file/module/feature]
+Scope: [full|partial]
+
+Design decisions:
+- Palette: [chosen palette] -- [reason]
+- Typography: [chosen stacks] -- [reason]
+- Iconography: [chosen icon set] -- [reason]
+- Component library: [chosen library] -- [reason]
+- Accessibility: [key a11y requirements]
+- SEO: [key SEO requirements]
+- Motion: [motion guidelines]
+- Other: [any additional design decisions]
+
+Constraints:
+- [constraint BabaDev must not break]
+- [constraint]
+
+Verification:
+- Design review completed: [yes/no]
+- Accessibility review completed: [yes/no]
+- SEO review completed: [yes/no]
+- Design tokens defined: [yes/no]
+
+Allowed next move:
+- Approve design plan -> enter HANDOFF (to BabaDev)
+- Revise design decisions
+```
+
 ## `FAILURE` template
 
 ```txt
@@ -814,10 +873,19 @@ startup_fingerprint:
   sha256_first_1kb: "[hash or N/A]"
   verified_at: [ISO-8601 UTC]
 
+reading_plan:
+  scope: [target path or n/a]
+  created_at: [ISO-8601 UTC or n/a]
+  status: [in_progress|complete|partial-approved|skipped-greenfield|n/a]
+  files:
+    - path: [file path]
+      status: [pending|complete|deferred]
+
 ## Startup Verification
 
-AGENTS.md: [cited rule]
+AGENTS.md: [cited rule] — entry point, sole entry path
 00-system.md: [cited rule] — fingerprint: <line_count> lines, first_100_chars="<first 100 chars>", last_100_chars="<last 100 chars>", sha256_first_1kb="<hash or N/A>"
+02-decision-prompts.md: [cited rule]
 01-personas.md: [cited rule]
 03-output-and-state.md: [cited rule]
 04-rubrics.md: [cited rule]
@@ -827,7 +895,9 @@ AGENTS.md: [cited rule]
 08-plan-actual-gate.md: [cited rule]
 Status: [Complete|Incomplete]
 
-**Load rule**: The initial load of all 8 system files at session start MUST read each file in full with NO chunking (single read per file, largest window). Chunking is only allowed for non-system files after STARTUP is complete.
+All files listed above must be discovered via `ls prompt-system/*.md` and read in full per `00-system.md` `## Load order`. No hard-coded file lists.
+
+**Load rule**: The initial load of all files in the load order at session start MUST read each file in full with NO chunking (single read per file, largest window). Chunking is only allowed for non-system files after STARTUP is complete.
 
 ## Phase Artifacts
 
@@ -925,7 +995,51 @@ phase_status: {sensei: [phase|n/a], tester: [phase|n/a], dev: [phase|n/a], merge
 
 Compare `target`, `scope`, `session_id`, and `spec_version` with the current request before restoring any phase, approval, or rewrite contract. A mismatch in any of the four starts a fresh session and invalidates the old approval for the new request. A legacy file (no `session_id`) is always a mismatch for approval purposes.
 
-**Fresh-session load mandate**: On every fresh session (new session_id or mismatch detected), all 8 system files MUST be reloaded from disk in full with NO chunking. Prior loads from previous sessions NEVER carry over — each session starts with a clean slate and must complete the STARTUP gate independently.
+**Fresh-session load mandate**: On every fresh session (new session_id or mismatch detected), all files in the load order MUST be reloaded from disk in full with NO chunking. Prior loads from previous sessions NEVER carry over — each session starts with a clean slate and must complete the STARTUP gate independently.
+
+## Session Close
+
+- closed_at: [ISO-8601 UTC]
+- closed_by: [user handle or "automatic" or n/a]
+- mode_at_close: [AUTO|DIRECT|STRUCTURED or n/a]
+- final_commit: [commit sha or n/a]
+- working_tree: [clean | description of unrelated modifications]
+- note: [one-line summary]
+- evaluation_skipped_reason: [reason or n/a]
+- evaluation_result: [PASS|FAIL|SKIPPED or n/a] -- [one-line summary]
+
+## Session evaluation prompt
+
+The close-session evaluation is spawned as a `/subtask` to `baba-reviewer` with the following prompt:
+
+```txt
+Evaluate this session against the prompt-system protocol and produce a structured assessment.
+
+Session ID: <session_id>
+Final phase: <phase>
+Mode: <AUTO|DIRECT|STRUCTURED>
+Edits made: <yes|no>
+Final commit: <commit sha or n/a>
+
+Read the session state file `SESSION_STATE-<session_id>.md` and assess:
+
+1. Session outcome: completed / blocked / partial / failed
+2. Phase efficiency: which phases ran, which skipped, token cost per phase (from Read Ledger)
+3. Protocol compliance: hard guard triggers, breach types, skip reasons
+4. Plan-actual fidelity: GREEN/RED/SKIPPED, retry count, scope violations
+5. Findings: confirmed vs disputed, mitigation choices, pending items
+6. Bug fix quality: regression tests added, baseline/post-fix results
+7. Drift: diverged claims, orphaned mappings, code-exceeds-spec
+8. Key decisions: A/B/C/skip/accept distribution, time-to-decision
+9. Lessons: what slowed the session, what worked well
+
+Output format:
+- Verdict: PASS (session completed cleanly) | FAIL (session had significant protocol or quality issues) | SKIPPED (trivial session, no evaluation warranted)
+- Summary: one-line assessment
+- Strengths: 1-3 bullet points
+- Improvements: 1-3 bullet points
+- Metrics: session duration, phases completed, findings count, plan-actual verdict
+```
 
 ## Incomplete handoff response
 
