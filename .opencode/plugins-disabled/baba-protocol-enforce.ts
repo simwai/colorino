@@ -357,13 +357,10 @@ export default async ({ client, $, project, directory, worktree }: {
       }
     },
 
-    "experimental.chat.messages.transform": async ({
-      input,
-      output,
-    }: {
-      input: any;
-      output: { messages: any[] };
-    }) => {
+    "experimental.chat.messages.transform": async (
+      input: any,
+      output: { messages: any[] },
+    ) => {
       const sessionId = input.sessionID ?? input.session_id;
       if (!sessionId) return;
 
