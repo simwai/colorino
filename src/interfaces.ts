@@ -56,7 +56,9 @@ export interface ColorinoBrowserInterface extends Colorino {
   css(text: string, style: CssConsoleStyle): string | BrowserCssArg
 }
 
-export interface ColorinoNodeInterface extends Colorino {}
+export interface ColorinoNodeInterface extends Colorino {
+  setFileLogPath(path: string): void
+}
 
 export interface ColorSupportDetectorInterface {
   getColorLevel(): ColorLevel

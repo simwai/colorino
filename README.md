@@ -190,6 +190,20 @@ const logger = createColorino(
 )
 ```
 
+### Changing the Log File Path at Runtime
+
+You can change the log file path after creating the logger:
+
+```typescript
+logger.setFileLogPath('./logs/new-application.log')
+```
+
+- The new path is validated (must be non-empty)
+- Parent directories are created automatically
+- Log rotation (`maxBytes`, `maxFiles`) applies to the new file independently
+- The old log file is left untouched
+- If file logging was not enabled at creation, this method does nothing silently
+
 Invalid `fileLogging` options throw `InputValidationError` at creation time:
 `path` must be non-empty, `maxBytes` must be positive, and `maxFiles` must be at least `1`.
 
@@ -421,6 +435,10 @@ A factory function to create your own customized logger instances.
 - `options` (`ColorinoOptions`): An object to control behavior:
   - `theme: 'dark' | 'light'` (default `auto`): Force a specific theme instead of auto-detecting.
   - `level: LogLevel` (default `'trace'`): Minimum severity threshold; levels below it are suppressed. Read it with `.getLevel()` and change it at runtime with `.setLevel(level)`.
+
+Node.js logger instances also expose:
+
+- `.setFileLogPath(path)` (Node.js only): Change the active log file path at runtime when `fileLogging` is configured. Parent directories are created automatically and rotation settings apply independently to the new file.
 
 ## <a id="8"></a>Extending Colorino
 

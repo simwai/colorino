@@ -171,11 +171,15 @@ export class ColorinoNode
   protected override writeToFile(level: ConsoleMethod, args: unknown[]): void {
     if (!this.fileLogger) return
 
-    try {
-      this.fileLogger.write(level, args, value => this.formatValue(value))
-    } catch {
-      return
-    }
+    const writeResult = from(() =>
+      this.fileLogger!.write(level, args, value => this.formatValue(value))
+    )
+    if (writeResult.ok) return
+  }
+
+  setFileLogPath(path: string): void {
+    if (!this.fileLogger) return
+    this.fileLogger.setPath(path)
   }
 
   protected isBrowser(): boolean {

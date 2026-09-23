@@ -16,11 +16,12 @@ const ansiPattern = new RegExp(
 )
 
 export class ColorinoFileLogger {
-  private readonly path: string
+  private path: string
   private readonly maxBytes: number
   private readonly maxFiles: number
   private readonly stripAnsi: boolean
   private readonly timezone: string | undefined
+  private readonly validator: InputValidator
 
   constructor(options: ColorinoFileLoggingOptions, validator: InputValidator) {
     const validationResult = validator.validateFileLoggingOptions(options)
@@ -31,6 +32,7 @@ export class ColorinoFileLogger {
     this.maxFiles = options.maxFiles ?? 5
     this.stripAnsi = options.stripAnsi ?? true
     this.timezone = options.timezone === 'local' ? undefined : options.timezone
+    this.validator = validator
 
     mkdirSync(dirname(this.path), { recursive: true })
   }
@@ -47,6 +49,20 @@ export class ColorinoFileLogger {
     const line = `[${this.timestamp()}] ${level.toUpperCase()} ${output}\n`
     this.rotateIfNeeded(Buffer.byteLength(line, 'utf8'))
     appendFileSync(this.path, line, 'utf8')
+  }
+
+  setPath(newPath: string): void {
+    const validationResult = this.validator.validateFileLoggingOptions({
+      path: newPath,
+      maxBytes: this.maxBytes,
+      maxFiles: this.maxFiles,
+      stripAnsi: this.stripAnsi,
+      timezone: this.timezone === undefined ? 'local' : this.timezone,
+    })
+    if (!validationResult.ok) throw validationResult.error
+
+    mkdirSync(dirname(newPath), { recursive: true })
+    this.path = newPath
   }
 
   private rotateIfNeeded(incomingBytes: number): void {
