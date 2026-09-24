@@ -100,16 +100,16 @@ myLogger.info('Rebranded info!')
 
 `createColorino(palette?, options?)` accepts:
 
-| Option                     | Type                | Default  | Description                                                                                      |
-| -------------------------- | ------------------- | -------- | ------------------------------------------------------------------------------------------------ |
-| `theme`                    | `ThemeOption`       | `'auto'` | Control the active color theme or force a specific mode (`'dark'`, `'light'`, or a `ThemeName`). |
-| `maxDepth`                 | `number`            | `5`      | Maximum depth when pretty-printing objects in log output.                                        |
-| `areNodeFramesVisible`     | `boolean`           | `true`   | Show Node.js internal frames (e.g., `node:internal/...`) in stack traces.                        |
-| `areColorinoFramesVisible` | `boolean`           | `false`  | Show Colorino internal frames in stack traces (useful for debugging Colorino).                   |
-| `isOsc11Enabled`           | `boolean`           | `true`   | Enables auto light/dark theme detection via OSC 11.                                              |
-| `logLevel`                 | `LogLevelOptions`   | -        | Configure log level filtering (min level, allow-list, deny-list).                                |
-| `metadata`                 | `MetadataOptions`   | -        | Attach metadata tags like call-site info to every log call.                                      |
-| `fileLogging`              | `FileLoggingConfig` | -        | Write logs to a local file (Node.js only).                                                       |
+| Option                     | Type                                   | Default  | Description                                                                                      |
+| -------------------------- | -------------------------------------- | -------- | ------------------------------------------------------------------------------------------------ |
+| `theme`                    | `TerminalTheme \| ThemeName \| 'auto'` | `'auto'` | Control the active color theme or force a specific mode (`'dark'`, `'light'`, or a `ThemeName`). |
+| `maxDepth`                 | `number`                               | `5`      | Maximum depth when pretty-printing objects in log output.                                        |
+| `areNodeFramesVisible`     | `boolean`                              | `true`   | Show Node.js internal frames (e.g., `node:internal/...`) in stack traces.                        |
+| `areColorinoFramesVisible` | `boolean`                              | `false`  | Show Colorino internal frames in stack traces (useful for debugging Colorino).                   |
+| `isOsc11Enabled`           | `boolean`                              | `true`   | Enables auto light/dark theme detection via OSC 11.                                              |
+| `logLevel`                 | `{ min?, allow?, deny? }`              | -        | Configure log level filtering (min level, allow-list, deny-list).                                |
+| `metadata`                 | `{ callSite?, timestamp? }`            | -        | Attach metadata tags like call-site info to every log call.                                      |
+| `fileLogging`              | `FileLoggingConfig`                    | -        | Write logs to a local file (Node.js only).                                                       |
 
 #### <a id="3-3-1"></a>Available Theme Presets
 
